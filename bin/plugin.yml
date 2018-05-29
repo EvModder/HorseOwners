@@ -1,0 +1,236 @@
+name: HorseOwners
+main: Evil_Code_HorseOwners.HorseManager
+Author: EvModder
+version: 2.1.1
+
+commands:
+   horsemanager:
+      description: HorseManager commands & info
+      usage: /hm ?
+      aliases: [horse-manager,hmanager,horsem,hm]
+      permission: evp.horseowners.commands
+      permission-message: You do not have permission to do this.
+
+   allowride:
+      description: Grant one ride
+      usage: /hm allowride <Player> [horse]
+      aliases: [allow-ride,letride,oneride,unlockride,allowhorse]
+      permission: evp.horseowners.allowride
+      permission-message: You do not have permission to do this.
+
+      
+   claimhorse:
+      description: Claim your steed
+      usage: /hm claim [name]
+      aliases: [nhorse,namehorse,renamehorse,myhorse,nh]
+      permission: evp.horseowners.claim
+      permission-message: You do not have permission to do this.
+
+   copyhorse:
+      description: Make a copy of a horse
+      usage: /hm copy [horse]
+      aliases: [pastehorse]
+      permission: evp.horseowners.copy
+      permission-message: You do not have permission to do this.
+
+   freehorse:
+      description: Grant your steed its freedom
+      usage: /hm free [horse]
+      aliases: [unclaimhorse,releasehorse,freeh,unclaimh]
+      permission: evp.horseowners.claim
+      permission-message: You do not have permission to do this.
+
+   gethorse:
+      description: Teleport one of your horses to you
+      usage: /hm get [horse]
+      aliases: [fetchorse,fetchhorse,fetch-horse,bringhorse,tphorse,tpherehorse]
+      permission: evp.horseowners.tpcommand
+      permission-message: You do not have permission to do this.
+
+   inspecthorse:
+      description: View speed/health/etc for a horse
+      usage: /hm inspect [horse]
+      aliases: [horsespeed,shorse,ihorse,horsei,seehorse,horsestats,
+      checkhorse,speedh,i-horse,horse-i,hstats,hstat,stats-horse,viewhorse]
+      permission: evp.horseowners.inspect
+      permission-message: You do not have permission to do this.
+
+   listhorses:
+      description: Veiw a list of horses (& their owners)
+      usage: /hm list [@a]
+      aliases: [horselist,listh,hlist,horses,lhorse]
+      permission: evp.horseowners.list
+      permission-message: You do not have permission to do this.
+
+   lockhorse:
+      description: Give you steed an immutable name.
+      usage: /hm lock [horse]
+      permission: evp.horseowners.lock
+      permission-message: You do not have permission to do this.
+
+   summonshadowfax:
+      description: Summon the Lord of all Horses.
+      usage: /hm shadowfax
+      permission: evp.horseowners.shadowfax
+      permission-message: Unknown command
+
+   spawnhorse:
+      description: Spawn a custom horse.
+      usage: /hm spawn [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [-tamed]
+      permission: evp.horseowners.spawn
+      permission-message: You do not have permission to do this.
+
+   tophorse:
+      description: See the top horses on the server
+      usage: /hm ranklist [s/j/h]
+      aliases: [ranklisthorse,hranklist,rankhorse,rankshorse,rhorse,myhorse,hranks]
+      permission: evp.horseowners.ranklist
+      permission-message: You do not have permission to do this.
+
+   unleashhorse:
+      description: Helpful for glitched leash hitches
+      usage: /unleash [horse]
+      aliases: [unleash-horse,unleashorse,untiehorse,removelead,unleash,clearleash,untie]
+      permission: evp.horseowners.unleash
+      permission-message: You do not have permission to do this.
+
+permissions:
+   evp.horseowners.allowride:
+      description: Permission to give a 1-time access of your horse to another player via /letride [Player]
+      default: true
+
+   evp.horseowners.claim:
+      description: Permission to claim horses.
+      default: true
+
+   evp.horseowners.claim.coloredname:
+      description: Allow colors and basic formats when naming a horse.
+      default: false
+
+   evp.horseowners.claim.allformats:
+      description: Allow all formats when naming a horse.
+      default: false
+
+   evp.horseowners.copy:
+      description: Permission to copy horses
+      default: op
+
+   evp.horseowners.tpcommand:
+      description: Ability to summon a horse via /fetch-horse [name]
+      default: true
+
+   evp.horseowners.tpansworld.samegamemode:
+      description: Permission to teleport horses between worlds that share the same Gamemode
+      default: true
+
+   evp.horseowners.tpansworld.*:
+      description: Permission to bring horses from any world to any other world via. teleporting.
+      default: op
+
+   evp.horseowners.list:
+      description: The ability to view a list one's horses.
+      default: true
+
+   evp.horseowners.list.all:
+      description: The ability to view a list of all owned horses.
+      default: op
+
+   evp.horseowners.lock:
+      description: Prevent a horse from being re-named.
+      default: true
+
+   evp.horseowners.shadowfax:
+      description: The ability to summon Shadowfax.
+      default: false
+
+   evp.horseowners.spawn:
+      description: The ability to spawn a custom horse.
+      default: op
+
+   evp.horseowners.ranklist:
+      description: The ability to view a stat ranklist of all horses
+      default: op
+
+   evp.horseowners.unleash:
+      description: Unleash a horse (useful when the leadhitch doesn't render)
+      default: true
+
+
+# -------------- Permissions not directly tied to a specific command -------------- #
+   evp.horseowners.commands:
+      description: Permission to use commands.
+      default: true
+
+   evp.horseowners.commands.free:
+      description: Permission to use commands for free (if prices are set in the config)
+      default: false
+
+   evp.horseowners.override:
+      description: Permission to access other people's horses
+      default: false
+
+   evp.horseowners.inspect.rankings:
+      description: Ability to view a horse's rankings
+      default: op
+
+   evp.horseowners.inspect.name:
+      description: Ability to view a horse's name
+      default: op
+
+   evp.horseowners.inspect.owner:
+      description: Ability to view a horse's owner
+      default: op
+
+   evp.horseowners.inspect.tamer:
+      description: Ability to view a horse's tamer
+      default: op
+
+   evp.horseowners.inspect.jump:
+      description: Ability to view a horse's jump
+      default: op
+
+   evp.horseowners.inspect.speed:
+      description: Ability to view a horse's speed
+      default: op
+
+   evp.horseowners.inspect.health:
+      description: Ability to view a horse's health
+      default: op
+
+   evp.horseowners.inspect:
+      description: The ability to view a horse's stats
+      children:
+         evp.horseowners.inspect.name: true
+         evp.horseowners.inspect.rankings: true
+         evp.horseowners.inspect.owner: true
+         evp.horseowners.inspect.tamer: true
+         evp.horseowners.inspect.jump: true
+         evp.horseowners.inspect.speed: true
+         evp.horseowners.inspect.health: true
+         evp.horseowners.inspect.lineage: true
+      default: op
+
+   evp.horseowners.inspect.others:
+      description: The ability to view another player's horses' stats
+      default: op
+
+   evp.horseowners.admin:
+      description: Full access to others' horses as well as one's own.
+      children:
+         evp.horseowners.override: true
+         evp.horseowners.commands: true
+         evp.horseowners.claim: true
+         evp.horseowners.coloredname: true
+         evp.horseowners.allformats: true
+         evp.horseowners.unleash: true
+         evp.horseowners.lock: true
+         evp.horseowners.tpcommand: true
+         evp.horseowners.tpansworld.anywhere: true
+         evp.horseowners.tpansworld.samegamemode: true
+         evp.horseowners.inspect: true
+         evp.horseowners.inpect.others: true
+         evp.horseowners.spawn: true
+         evp.horseowners.list: true
+         evp.horseowners.list.all: true
+         evp.horseowners.allowride: true
+      default: op

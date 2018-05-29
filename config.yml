@@ -1,0 +1,147 @@
+#------------------------------------------------------------------#
+#                        HorseOwners config                        #
+#------------------------------------------------------------------#
+
+# Should the server keep track of horses' ranking?
+# WARNING: Setting to false will clear existing rank data
+rank-claimed-horses: true
+
+# Should the server also record stats of unclaimed/wild horses?
+# WARNING: Requires rank-claimed-horses is set to true
+rank-unclaimed-horses: true
+
+# Should the server keep track of horses' locations?
+# WARNING: Setting to false will clear existing coordinate data
+save-horse-coordinates: true
+
+# Should the server keep track of horses' parents?
+# WARNING: Setting to false will clear existing lineage data
+save-horse-lineage: true
+
+# Allow players to "lock" a horse's name
+# WARNING: Setting to false will clear existing name-lock data
+enable-name-locks: true
+
+# A list of the types of "Horses" players can claim
+# WARNING: Removing entities from this list will prevent future
+# claims but NOT delete existing claims of these entities!
+valid-horses:
+  - HORSE
+  - DONKEY
+  - MULE
+  - LLAMA
+
+# Enable/Disable ALL entity/horse teleportation done by this plugin
+enable-teleporting: true
+
+# Enable this to allow players to teleport leashed mobs
+teleport-leashed-mobs: true
+
+# Restrict teleportation to named mobs only (encourages nametag use)
+teleport-leashed-mobs-if-named: true
+
+# When a player teleports, bring nearby owned horses (~4 blocks)
+teleport-unleashed-owned-horses: true
+
+# Prevents players from teleporting horses to deadly locations.
+# Horses have a wider hitbox than players and suffocate in small spaces
+teleport-only-if-safe: true
+
+# Set to false to disable ALL trans-world horse teleportation
+teleport-across-worlds: true
+
+# Restrict characters in names to letters, numbers, and basic symbols
+# It is highly recommended you leave this set to true
+names-mostly-alphanumeric: true
+
+# Specify whether players must have a nametag to claim/rename horses
+nametag-required-to-rename: false
+
+# Already named horses are automatically claimed when tamed
+claim-on-tame: true
+
+# Enable configuration of max jump, speed, and health
+modified-breeding: true
+
+# These are currently set to the default Minecraft values
+max-jump: 5.5
+max-speed: 13.5
+max-health: 30
+
+# Assign a random name to a new foal at birth.
+# Requires modified-breeding: true
+name-at-birth: false
+
+# Automatically claim newly born foals.
+# Requires name-at-birth and modified-breeding are true
+claim-at-birth: true
+
+# If a foal's parents are owned by different players, who does it belong to?
+# Possible values: MOTHER, FATHER, and RANDOM. Requires claim-at-birth: true
+owner-at-birth-is-owner-of: RANDOM
+
+# Prevent chunks with claimed horses from being unloaded
+# while the horses' owner is online
+keep-horse-chunks-in-memory: false
+
+# Reduce fall damage that occurs when riding a good jumper horse
+reduce-fall-damage: true
+
+# Prevent players from unleashing horses they do not own
+prevent-lead-breaking: true
+
+# Prevent players from breaking fence posts if horses
+# they do not own that are leashed to them
+prevent-lead-fence-breaking: false
+
+# Prevent non-player (environmental) factors from breaking leads
+# Only applies to claimed horses leashed to a fence post
+# This is provided because Mojang is taking forever to fix:
+# https://bugs.mojang.com/browse/MC-14826
+prevent-glitch-lead-breaking: true
+
+# Allows players to leash mobs not normally leashable, such as
+# Zombies, Creepers, Silverfish, and Squids
+leash-other-mobs: true
+
+# Should players be able to feed someone else's (claimed) horse?
+feed-private-horse: true
+
+# Should players be able to breed someone else's (claimed) horse?
+breed-private-horse: true
+
+# Should players be able to ride someone else's (claimed) horse?
+ride-private-horse: false
+
+# Should players be able to hurt someone else's (claimed) horse?
+attack-private-horse: true
+
+# Should players be able to see chests on someone else's (claimed) horse?
+snoop-private-horse: false
+
+# Enable this if you plan on frequently editing the horses.yml file
+# while the server is running. It ensure your by-hand edits are not
+# overwritten, but may introduce some minor lag on larger servers
+config-update-checking: false
+
+min-name-length: 3
+max-name-length: 16
+
+# Command Prices:
+# if you want players to have to pay to use some (or all)
+# of the commands in this plugin, simply add
+# "[commandname]: [price]" as shown in the following examples:
+# 
+# allowride: 0
+# claimhorse: 100
+# freehorse: 0
+# gethorse: 10
+# inspecthorse: 0
+# listhorses: 1
+# lockhorse: 25
+# spawnhorse: 250
+# unleashhorse: 0
+# Note: Supports economies through Vault and EssentialsEco.
+# If you don't have one of these installed, this won't work
+# Use the permission "evp.horseowners.commands.free" to make
+# a player exempt from having to pay for commands.
