@@ -10,6 +10,7 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractHorse;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import Evil_Code_HorseOwners.HorseLibrary;
 
@@ -31,12 +32,12 @@ public class CommandGetHorse extends HorseCommand{
 		}
 		if(args.length < 1){
 			sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+'\n'+command.getUsage());
-			return false;
+			return true;
 		}
 		Player p = (Player) sender;
 		String target = StringUtils.join(args, ' ');
-		AbstractHorse horse;
-		Set<AbstractHorse> horses = new HashSet<AbstractHorse>();
+		Entity horse;
+		Set<Entity> horses = new HashSet<Entity>();
 
 		if(safeTeleports && HorseLibrary.safeForHorses(p.getLocation()) == false){
 			p.sendMessage(ChatColor.RED
@@ -75,11 +76,11 @@ public class CommandGetHorse extends HorseCommand{
 			if(plugin.isPrivateHorse(target) == false){
 				sender.sendMessage(ChatColor.RED+"Unknown horse '"+ChatColor.GRAY+target+ChatColor.RED+'\'');
 //				sender.sendMessage("�cUnclaimed horses cannot be teleported via command, you must first use /claimhorse");
-				return false;
+				return true;
 			}
 			else if(plugin.canAccess(p, target) == false){
 				p.sendMessage(ChatColor.RED+"You may not teleport horses which you do not own");
-				return false;
+				return true;
 			}
 			horse = plugin.findClaimedHorse(target, null);
 //			horse = HorseLibrary.findAnyHorse(target);
@@ -105,9 +106,9 @@ public class CommandGetHorse extends HorseCommand{
 		}
 
 		//Yay got to here! Hi horsie!
-		for(AbstractHorse h : horses){
+		for(Entity h : horses){
 			HorseLibrary.teleportEntityWithPassengers(h, p.getLocation());
-			if(saveCoords) plugin.updateData(h);
+			if(saveCoords && h instanceof AbstractHorse) plugin.updateData((AbstractHorse)h);
 		}
 		p.sendMessage(ChatColor.GREEN+"Fetched your horse"+(horses.size() > 1 ? "s!" : "!"));
 		return true;

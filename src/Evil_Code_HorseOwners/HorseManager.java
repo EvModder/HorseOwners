@@ -147,7 +147,7 @@ public final class HorseManager extends EvPlugin{
 	public Map<UUID, Set<String>> getHorseOwners(){return horseOwnersMap;}
 
 	public boolean isClaimableHorseType(Entity h){
-		return h instanceof AbstractHorse && claimableTypes.contains(h.getType());
+		return /*h instanceof AbstractHorse && */claimableTypes.contains(h.getType());
 	}
 
 	public boolean canAccess(Player p, String horseName){
@@ -314,11 +314,11 @@ public final class HorseManager extends EvPlugin{
 		return oneTimeAccess.remove(playerUUID+":"+HorseLibrary.cleanName(horseName));
 	}
 
-	public AbstractHorse findClaimedHorse(String horseName, World... worlds){
-		if(saveCoords){
-			horseName = HorseLibrary.cleanName(horseName);
-			if(horses.contains(horseName)) return null;
-
+	public Entity findClaimedHorse(String horseName, World... worlds){
+		getLogger().info("called!");
+		getLogger().info("savecoords: "+saveCoords);
+		getLogger().info("havecoords: "+horses.contains((horseName = HorseLibrary.cleanName(horseName))+".chunk-x"));
+		if(saveCoords && horses.contains((horseName = HorseLibrary.cleanName(horseName))+".chunk-x")){
 			getLogger().info("Starting horse search...");
 
 			int x = horses.getInt(horseName+".chunk-x"), z = horses.getInt(horseName+".chunk-z");
@@ -328,10 +328,8 @@ public final class HorseManager extends EvPlugin{
 				chunk.load(false);
 				getLogger().info("entities in chunk: "+chunk.getEntities().length);
 				for(Entity entity : chunk.getEntities()){
-					if(entity instanceof AbstractHorse){
-						AbstractHorse horse = (AbstractHorse) entity;
-						if(horse.getCustomName() != null
-								&& HorseLibrary.cleanName(horse.getCustomName()).equals(horseName)) return horse;
+					if(entity.getCustomName() != null && isClaimableHorseType(entity)){
+						if(HorseLibrary.cleanName(entity.getCustomName()).equals(horseName)) return entity;
 					}
 				}//for each entity
 			}//for each world
@@ -383,7 +381,7 @@ public final class HorseManager extends EvPlugin{
 		ConfigurationSection data = horses.getConfigurationSection(horseName);
 		if(data == null) data = horses.createSection(horseName);
 
-		if(saveRankings){
+		if(saveRankings && (rankUnclaimed || data.contains("owner"))){
 			double speed = HorseLibrary.getNormalSpeed(h);
 			double jump = HorseLibrary.getNormalJump(h);
 			int health = HorseLibrary.getNormalHealth(h);
@@ -414,6 +412,7 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	public int[] getRankings(String horseName){
+		if(!saveRankings) return new int[]{-1, -1, -1};
 		horseName = HorseLibrary.cleanName(horseName);
 
 		if(!horses.contains(horseName)) return null;
@@ -428,9 +427,9 @@ public final class HorseManager extends EvPlugin{
 			data = horses.getConfigurationSection(horse);
 			if(horse.equals(horseName)) continue;
 
-			double otherJump = data.getDouble("jump");
-			double otherSpeed = data.getDouble("speed");
-			double otherHealth = data.getDouble("health");
+			double otherJump = data.getDouble("jump", 0);
+			double otherSpeed = data.getDouble("speed", 0);
+			double otherHealth = data.getDouble("health", 0);
 
 			if(otherJump > jump) ++higherJumpCount;
 			else if(otherJump == jump) ++equalJumpCount;

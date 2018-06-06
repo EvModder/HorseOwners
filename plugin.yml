@@ -1,7 +1,7 @@
 name: HorseOwners
 main: Evil_Code_HorseOwners.HorseManager
 Author: EvModder
-version: 2.1.1
+version: 2.1.4
 
 commands:
    horsemanager:
@@ -83,7 +83,7 @@ commands:
    tophorse:
       description: See the top horses on the server
       usage: /hm ranklist [s/j/h]
-      aliases: [ranklisthorse,hranklist,rankhorse,rankshorse,rhorse,myhorse,hranks]
+      aliases: [ranklisthorse,hranklist,rankhorse,rankshorse,rhorse,hranks]
       permission: evp.horseowners.ranklist
       permission-message: You do not have permission to do this.
 
@@ -149,7 +149,7 @@ permissions:
 
    evp.horseowners.ranklist:
       description: The ability to view a stat ranklist of all horses
-      default: op
+      default: true
 
    evp.horseowners.unleash:
       description: Unleash a horse (useful when the leadhitch doesn't render)

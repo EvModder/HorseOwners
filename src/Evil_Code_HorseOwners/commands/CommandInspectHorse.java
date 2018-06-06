@@ -10,6 +10,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractHorse;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import Evil_Code_HorseOwners.HorseLibrary;
@@ -18,9 +19,9 @@ public class CommandInspectHorse extends HorseCommand{
 	private boolean doesRanking, rankUnclaimed, doesLineage;
 
 	public CommandInspectHorse(){
-		doesRanking = plugin.getConfig().getBoolean("rank-claimed-horses");
-		rankUnclaimed = plugin.getConfig().getBoolean("rank-unclaimed-horses");
-		doesLineage = plugin.getConfig().getBoolean("save-horse-lineage");
+		doesRanking = plugin.getConfig().getBoolean("rank-claimed-horses", true);
+		rankUnclaimed = plugin.getConfig().getBoolean("rank-unclaimed-horses", true);
+		doesLineage = plugin.getConfig().getBoolean("save-horse-lineage", true);
 	}
 
 	@Override
@@ -37,21 +38,23 @@ public class CommandInspectHorse extends HorseCommand{
 				return false;
 			}
 			String targetName = StringUtils.join(args, ' ');
-			if((h = plugin.findClaimedHorse(targetName, null)) == null
-					&& (h = HorseLibrary.findAnyHorse(targetName)) == null){
+			Entity entity = plugin.findClaimedHorse(targetName, null);
+			if(entity == null) entity = HorseLibrary.findAnyHorse(targetName);
+			if(entity == null || !(entity instanceof AbstractHorse)){
 				sender.sendMessage(ChatColor.RED+"Unable to find your horse! Perhaps the chunk it is in was unloaded?");
 				return false;
 			}
-			else if(plugin.isPrivateHorse(h.getCustomName()) == false){
+			else if(plugin.isPrivateHorse(entity.getCustomName()) == false){
 				sender.sendMessage(ChatColor.RED+"Unknown horse (check name spelling)"
 						+ChatColor.GRAY+'\n'+command.getUsage());
 				return false;
 			}
 			else if(p != null && !p.hasPermission("evp.horseowners.inspect.others")
-					&& !plugin.canAccess(p, h.getCustomName())){
+					&& !plugin.canAccess(p, entity.getCustomName())){
 				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
 				return false;
 			}
+			h = (AbstractHorse)entity;
 		}
 
 		//Yay got to here! Now what's it worth?

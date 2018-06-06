@@ -60,7 +60,7 @@ public class CommandHorseManager implements TabExecutor{//Cannot extend HorseCom
 					sender.sendMessage(cmd.getPermissionMessage());
 					return true;
 				}
-				return cmd.getExecutor().onCommand(sender, cmd, thisCmd, args);
+				return cmd.getExecutor().onCommand(sender, cmd, cmd.getName(), args);
 			}
 		}
 		return false;

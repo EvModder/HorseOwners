@@ -6,6 +6,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractHorse;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
 import Evil_Code_HorseOwners.HorseLibrary;
@@ -44,7 +45,8 @@ public class CommandCopyHorse extends HorseCommand {
 			p.sendMessage(ChatColor.RED+"You cannot copy horses which you do not own");
 			return false;
 		}
-		horse = plugin.findClaimedHorse(target, null);
+		Entity e = plugin.findClaimedHorse(target, null);
+		horse = (e != null && e instanceof AbstractHorse) ? (AbstractHorse)e : null;
 //		horse = HorseLibrary.findAnyHorse(target);
 		if(horse == null){
 			p.sendMessage(ChatColor.RED+"Unable to find your horse! Perhaps its location was unloaded?");
