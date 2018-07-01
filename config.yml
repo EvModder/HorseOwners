@@ -34,18 +34,21 @@ valid-horses:
 # Enable/Disable ALL entity/horse teleportation done by this plugin
 enable-teleporting: true
 
-# Enable this to allow players to teleport leashed mobs
+# Enable this to allow players to teleport mobs on a leash
 teleport-leashed-mobs: true
 
 # Restrict teleportation to named mobs only (encourages nametag use)
 teleport-leashed-mobs-if-named: true
 
 # When a player teleports, bring nearby owned horses (~4 blocks)
-teleport-unleashed-owned-horses: true
+teleport-unleashed-owned-horses: false
 
 # Prevents players from teleporting horses to deadly locations.
 # Horses have a wider hitbox than players and suffocate in small spaces
 teleport-only-if-safe: true
+
+# Prevent teleportation if leashed to a fence post
+teleport-only-if-untied: true
 
 # Set to false to disable ALL trans-world horse teleportation
 teleport-across-worlds: true

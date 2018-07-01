@@ -138,23 +138,18 @@ public class ClickListener implements Listener{
 		//leash any clicked LivingEntity, handy to have
 		else if(leashLivingEntities && evt.getRightClicked() instanceof LivingEntity){
 			LivingEntity le = (LivingEntity) evt.getRightClicked();
-			
-			if(le.isLeashed() && le.getLeashHolder() instanceof Player){
-				if(((Player)(le.getLeashHolder())).getName().equalsIgnoreCase(p.getName())){
-					evt.setCancelled(true);
-					le.setLeashHolder(null);
-					if(p.getGameMode() != GameMode.CREATIVE){
-						le.getWorld().dropItemNaturally(le.getLocation(), new ItemStack(Material.LEASH));
-					}
+
+			if(le.isLeashed() && le.getLeashHolder().getUniqueId().equals(p.getUniqueId())){
+				evt.setCancelled(true);
+				le.setLeashHolder(null);
+				if(p.getGameMode() != GameMode.CREATIVE){
+					le.getWorld().dropItemNaturally(le.getLocation(), new ItemStack(Material.LEASH));
 				}
 			}
-			
 			else if(p.getInventory().getItemInMainHand().getType() == Material.LEASH && !le.isLeashed()
 					&& le instanceof Player == false){//Errors happen when trying to leash other players
 				evt.setCancelled(true);
-				
 				le.setLeashHolder(p);
-				
 				if(p.getGameMode() != GameMode.CREATIVE){
 					if(p.getInventory().getItemInMainHand().getAmount() == 1){
 						p.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
@@ -165,7 +160,7 @@ public class ClickListener implements Listener{
 		}
 		else if(preventUnleashOther && evt.getRightClicked() instanceof LeashHitch){
 			LeashHitch leash = (LeashHitch) evt.getRightClicked();
-			
+
 			for(Entity e : leash.getNearbyEntities(15, 15, 15)){
 				if(e instanceof AbstractHorse && e.getCustomName() != null){
 					AbstractHorse h = (AbstractHorse) e;

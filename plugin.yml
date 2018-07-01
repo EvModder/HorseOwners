@@ -128,11 +128,11 @@ permissions:
       default: op
 
    evp.horseowners.list:
-      description: The ability to view a list one's horses.
+      description: The ability to view a list your claimed horses.
       default: true
 
    evp.horseowners.list.all:
-      description: The ability to view a list of all owned horses.
+      description: The ability to view a list of anyones horses
       default: op
 
    evp.horseowners.lock:

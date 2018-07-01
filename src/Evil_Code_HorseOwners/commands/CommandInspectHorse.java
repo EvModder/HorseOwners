@@ -71,47 +71,48 @@ public class CommandInspectHorse extends HorseCommand{
 			int[] rank = plugin.getRankings(name);
 
 			if(p.hasPermission("evp.horseowners.inspect.speed")){
-				builder.append("\n§7Speed: ").append(plugin.getHorseSpeed(name)).append("§cm/s")
-					.append("§7 [§e#").append(rank[2]);
+				builder.append("\n§7Speed: §f").append(plugin.getHorseSpeed(name)).append("§cm/s")
+					.append("§7 [§6#").append(rank[2]);
 				if(rank[3] != rank[2]) builder.append('-').append(rank[3]);
 				builder.append("§7]");
 			}
 			if(p.hasPermission("evp.horseowners.inspect.jump")){
-				builder.append("\n§7Jump: ").append(plugin.getHorseJump(name)).append("§cm")
-					.append("§7 [§e#").append(rank[0]);
+				builder.append("\n§7Jump: §f").append(plugin.getHorseJump(name)).append("§cm")
+					.append("§7 [§6#").append(rank[0]);
 				if(rank[1] != rank[0]) builder.append('-').append(rank[1]);
 				builder.append("§7]");
 			}
 			if(p.hasPermission("evp.horseowners.inspect.health")){
-				builder.append("\n§7Health: ").append(plugin.getHorseHealth(name)).append("§ch")
-					.append("§7 [§e#").append(rank[4]);
+				builder.append("\n§7Health: §f").append(plugin.getHorseHealth(name)).append("§ch")
+					.append("§7 [§6#").append(rank[4]);
 				if(rank[5] != rank[4]) builder.append('-').append(rank[5]);
 				builder.append("§7]");
 			}
 		}
 		else{
 			if(p.hasPermission("evp.horseowners.inspect.speed")){
-				builder.append("\n§7Speed: ").append(HorseLibrary.getNormalSpeed(h)).append("§cm/s");
+				builder.append("\n§7Speed: §f").append(HorseLibrary.getNormalSpeed(h)).append("§cm/s");
 			}
 			if(p.hasPermission("evp.horseowners.inspect.jump")){
-				builder.append("\n§7Jump: ").append(HorseLibrary.getNormalJump(h)).append("§cm");
+				builder.append("\n§7Jump: §f").append(HorseLibrary.getNormalJump(h)).append("§cm");
 			}
 			if(p.hasPermission("evp.horseowners.inspect.health")){
-				builder.append("\n§7Health: ").append(Math.rint(
+				builder.append("\n§7Health: §f").append(Math.rint(
 						h.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue())).append("§ch");
 			}
 		}
 		if(p.hasPermission("evp.horseowners.inspect.tamer")){
-			builder.append("\n§7Tamer: ").append(h.getOwner() == null ? "§cN/A" : h.getOwner().getName());
+			builder.append("\n§7Tamer: §f").append(h.getOwner() == null ? "§cN/A" : h.getOwner().getName());
 		}
 		if(p.hasPermission("evp.horseowners.inspect.owner")){
 			UUID uuid = (name == null ? null : plugin.getOwner(name));
 			OfflinePlayer owner = (uuid == null ? null : plugin.getServer().getOfflinePlayer(uuid));
-			builder.append("\n§7Official Owner: ").append(owner == null ? "§cN/A" : owner.getName());
+			builder.append("\n§7Owner: §f").append(owner == null ? "§cN/A" : owner.getName());
 		}
 		if(doesLineage && p.hasPermission("evp.horseowners.inspect.lineage")){
 			List<String> parents = plugin.getHorseLineage(h);
-			if(parents != null && !parents.isEmpty()) builder.append("\n§7Parents: ").append(parents);
+			if(parents != null && !parents.isEmpty())
+				builder.append("\n§7Parents: §f").append(String.join("§7, §f", parents));
 		}
 
 		sender.sendMessage(builder.toString());

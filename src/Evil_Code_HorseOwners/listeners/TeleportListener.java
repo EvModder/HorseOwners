@@ -1,9 +1,9 @@
 package Evil_Code_HorseOwners.listeners;
 
 import org.bukkit.entity.Entity;
+import java.util.UUID;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -15,15 +15,15 @@ import Evil_Code_HorseOwners.HorseLibrary;
 import Evil_Code_HorseOwners.HorseManager;
 
 public class TeleportListener implements Listener{
-	private boolean teleportLeashedMobs, teleportOnlyIfNamed, teleportUnleashedHorses;
+	final boolean leashedMobs, requireName, unleashedHorses, preventIfTied;
 	private HorseManager plugin;
 
 	public TeleportListener(){
 		plugin = HorseManager.getPlugin();
-		if(teleportLeashedMobs = plugin.getConfig().getBoolean("teleport-leashed-mobs")){
-			teleportOnlyIfNamed = plugin.getConfig().getBoolean("teleport-leashed-mobs-if-named");
-		}
-		teleportUnleashedHorses = plugin.getConfig().getBoolean("teleport-unleashed-owned-horses");
+		leashedMobs = plugin.getConfig().getBoolean("teleport-leashed-mobs", true);
+		requireName = plugin.getConfig().getBoolean("teleport-leashed-mobs-if-named", true);
+		preventIfTied = plugin.getConfig().getBoolean("teleport-only-if-untied", true);
+		unleashedHorses = plugin.getConfig().getBoolean("teleport-unleashed-owned-horses", false);
 	}
 
 	//Bring horses when teleporting
@@ -51,33 +51,28 @@ public class TeleportListener implements Listener{
 		if(HorseLibrary.notFar(evt.getFrom(), evt.getTo())) return;
 
 		boolean safeForHorses = HorseLibrary.safeForHorses(evt.getTo());
-		if(safeForHorses == false && teleportLeashedMobs == false) return;
+		if(safeForHorses == false && leashedMobs == false) return;
 
-		Player player = evt.getPlayer();
-		for(Entity e : player.getNearbyEntities(5, 5, 5)){
+		UUID pUUID = evt.getPlayer().getUniqueId();
+		for(Entity e : evt.getPlayer().getNearbyEntities(6, 6, 6)){
 			if(e instanceof LivingEntity){
-				if(e instanceof AbstractHorse){
-					if(safeForHorses){
-						AbstractHorse horse = (AbstractHorse)e;
-						boolean owned = horse.getCustomName() != null && plugin.isOwner(player.getUniqueId(), horse.getCustomName());
-						
-						if((horse.isLeashed() && horse.getLeashHolder().getUniqueId().equals(player.getUniqueId())) ||
-							(!horse.isLeashed() && teleportUnleashedHorses
-							 && player.getNearbyEntities(4, 1, 4).contains(horse) && owned))
-						{
-							plugin.getLogger().info("Teleporting horse, owned: "+owned);
-							HorseLibrary.teleportEntityWithPassengers(e, evt.getTo());
-						}//if leashed or if isOwner
-					}//if safe for horses
-				}//if entity == Horse
-				else if(teleportLeashedMobs && ((LivingEntity)e).isLeashed()
-					&& ((LivingEntity)e).getLeashHolder().getUniqueId().equals(player.getUniqueId())
-					&& (e.getCustomName() != null || teleportOnlyIfNamed == false))
-				{
-					plugin.getLogger().info("Teleporting with leashed LivingEntity");
-					HorseLibrary.teleportEntityWithPassengers(e, evt.getTo());
-				}//for(entities)
+				boolean isHorse = e instanceof AbstractHorse;
+				if(isHorse && !safeForHorses) continue;
+				LivingEntity le = (LivingEntity)e;
+				UUID leashHolder = le.isLeashed() ? le.getLeashHolder().getUniqueId() : null;
+				if(preventIfTied && leashHolder != null && !leashHolder.equals(pUUID)) continue;
+
+				if(le.isLeashed() && leashHolder.equals(pUUID)){
+					if(isHorse || (leashedMobs && (e.getCustomName() != null || !requireName))){
+						HorseLibrary.teleportEntityWithPassengers(e, evt.getTo());
+					}
+				}
+				else if(unleashedHorses && isHorse){
+					boolean owned = le.getCustomName() != null && plugin.isOwner(pUUID, le.getCustomName());
+					boolean nearby = evt.getPlayer().getNearbyEntities(4, 1, 4).contains(le);
+					if(nearby && owned) HorseLibrary.teleportEntityWithPassengers(e, evt.getTo());
+				}
 			}
-		}//for(surrounding entities)
-	}
+		}
+	}//on teleport
 }

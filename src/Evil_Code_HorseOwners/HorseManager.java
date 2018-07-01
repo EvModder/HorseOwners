@@ -70,6 +70,10 @@ public final class HorseManager extends EvPlugin{
 		topHealth = new Vector<String>();
 		for(String horseName : horses.getKeys(false)){
 			ConfigurationSection data = horses.getConfigurationSection(horseName);
+			if(data == null){
+				horses.set(horseName, null);
+				continue;
+			}
 			if(data.contains("owner")){
 				UUID uuid = UUID.fromString(data.getString("owner"));
 				if(horseOwnersMap.containsKey(uuid)) horseOwnersMap.get(uuid).add(horseName);
