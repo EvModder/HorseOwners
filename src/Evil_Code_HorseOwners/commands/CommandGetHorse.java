@@ -47,7 +47,6 @@ public class CommandGetHorse extends HorseCommand{
 
 		if(target.toLowerCase().equals("all")  || target.toLowerCase().equals("@a")){
 			int lost = 0;
-
 			World[] worlds = new World[]{p.getWorld()};//restrict to just this world
 
 			if(allowTransworld){
@@ -60,7 +59,7 @@ public class CommandGetHorse extends HorseCommand{
 					worlds = worldsList.toArray(worlds);
 				}
 			}
-			
+
 			for(String horseName : plugin.getHorseOwners().get(p.getUniqueId())){
 				p.sendMessage("Fetching: "+horseName);
 				horse = plugin.findClaimedHorse(horseName, worlds);
@@ -88,8 +87,7 @@ public class CommandGetHorse extends HorseCommand{
 				p.sendMessage(ChatColor.RED+"Unable to find your horse! Perhaps its location was unloaded?");
 				return true;
 			}
-			if(horse.getWorld().getName().equals(p.getWorld().getName()) == false)
-			{
+			if(horse.getWorld().getUID().equals(p.getWorld().getUID()) == false){
 				if(!allowTransworld || (!p.hasPermission("evp.horseowners.tpansworld.*") &&
 						(!p.hasPermission("evp.horseowners.tpansworld.samegamemode") ||
 								!p.getGameMode().equals(HorseLibrary.getWorldGameMode(horse.getWorld())))))

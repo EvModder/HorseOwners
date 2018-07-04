@@ -45,7 +45,7 @@ public class CommandClaimHorse extends HorseCommand{
 		}
 
 		if(h instanceof Tameable && ((Tameable)h).isTamed() == false){
-			p.sendMessage(ChatColor.GREEN+"You must first tame this horse before you can claim it");
+			p.sendMessage(ChatColor.RED+"You must first tame this horse before you can claim it");
 			return true;
 		}
 
@@ -78,7 +78,7 @@ public class CommandClaimHorse extends HorseCommand{
 			if(oldName != null){
 				if(newName.equals(oldName)){
 					if(isOwner){
-						p.sendMessage(ChatColor.GREEN+"This horse already has that name!");
+						p.sendMessage(ChatColor.RED+"This horse already has that name!");
 						return true;
 					}
 				}
