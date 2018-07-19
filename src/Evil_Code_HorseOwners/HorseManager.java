@@ -201,7 +201,7 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	public boolean isPrivateHorse(String horseName){
-		return horses.contains(HorseLibrary.cleanName(horseName)+".owner");
+		return horses.isConfigurationSection(HorseLibrary.cleanName(horseName));
 	}
 
 	public boolean addHorse(UUID playerUUID, Entity horse){
@@ -380,10 +380,13 @@ public final class HorseManager extends EvPlugin{
 		if(h.getCustomName() == null) return;
 		if(rankUnclaimed == false && isPrivateHorse(h.getCustomName()) == false) return;
 
-		String horseName = HorseLibrary.cleanName(h.getCustomName());
+		String displayName = h.getCustomName();
+		String horseName = HorseLibrary.cleanName(displayName);
 
 		ConfigurationSection data = horses.getConfigurationSection(horseName);
 		if(data == null) data = horses.createSection(horseName);
+
+		data.set("name", displayName); // Full name (including spaces and/or special chars)
 
 		if(saveRankings && (rankUnclaimed || data.contains("owner"))){
 			double speed = HorseLibrary.getNormalSpeed(h);

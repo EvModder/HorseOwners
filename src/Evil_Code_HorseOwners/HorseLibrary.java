@@ -40,7 +40,8 @@ public class HorseLibrary {
 	}
 
 	public static String cleanName(String horseName){
-		return horseName == null ? null : ChatColor.stripColor(horseName).replaceAll("[^a-zA-Z0-9_]", "");
+		return horseName == null ? null :
+			ChatColor.stripColor(horseName).replaceAll("[^a-zA-Z0-9_]", "").toLowerCase();
 	}
 
 	public static boolean notFar(Location from, Location to){
@@ -116,7 +117,7 @@ public class HorseLibrary {
 		horseName = cleanName(horseName);
 		for(World world : (worlds == null ? org.bukkit.Bukkit.getWorlds() : Arrays.asList(worlds))){
 			for(AbstractHorse horse : world.getEntitiesByClass(AbstractHorse.class)){
-				if(horse.getCustomName() != null && ChatColor.stripColor(horse.getCustomName()).equalsIgnoreCase(horseName)){
+				if(horse.getCustomName() != null && cleanName(horse.getCustomName()).equals(horseName)){
 					return horse;
 				}
 			}
