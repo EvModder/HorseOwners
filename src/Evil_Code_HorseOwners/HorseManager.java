@@ -452,6 +452,11 @@ public final class HorseManager extends EvPlugin{
 		};
 	}
 
+	public String getHorseName(String horseName){
+		horseName = HorseLibrary.cleanName(horseName);
+		if(!horses.contains(horseName)) return null;
+		return horses.getConfigurationSection(horseName).getString("name", null);
+	}
 	public double getHorseSpeed(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 		if(!saveRankings || !horses.contains(horseName)) return -1;

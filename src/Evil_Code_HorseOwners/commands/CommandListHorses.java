@@ -24,7 +24,7 @@ public class CommandListHorses extends HorseCommand{
 				if(owner != null) ownerName = owner.getName();
 				
 				for(String horseName : plugin.getHorseOwners().get(uuid)){
-					sender.sendMessage("§7Horse: §f"+horseName+"    §7Owner: §f"+ownerName);
+					sender.sendMessage("§7Horse: §f"+plugin.getHorseName(horseName)+"    §7Owner: §f"+ownerName);
 					++numHorses;
 				}
 			}
@@ -35,7 +35,7 @@ public class CommandListHorses extends HorseCommand{
 			if(plugin.getHorseOwners().containsKey(uuid)){
 				sender.sendMessage("§a}§e§m-----§7 [§aYour Horses§7] §e§m-----§a{");
 				Collection<String> horses = plugin.getHorseOwners().get(uuid);
-				for(String horseName : horses) sender.sendMessage("§7Horse: §f"+horseName);
+				for(String horseName : horses) sender.sendMessage("§7Horse: §f"+plugin.getHorseName(horseName));
 				if(horses.size() > 9) sender.sendMessage("§7Total: §f" + horses.size());
 			}
 			else sender.sendMessage("§cYou do not own any horses!");
@@ -47,7 +47,7 @@ public class CommandListHorses extends HorseCommand{
 			if(targetP != null && plugin.getHorseOwners().containsKey(targetP.getUniqueId())){
 				sender.sendMessage("§a}§e§m-----§7 [§a"+target+"'s Horses§7] §e§m-----§a{");
 				Collection<String> horses = plugin.getHorseOwners().get(targetP.getUniqueId());
-				for(String horseName : horses) sender.sendMessage("§7Horse: §f"+horseName);
+				for(String horseName : horses) sender.sendMessage("§7Horse: §f"+plugin.getHorseName(horseName));
 				if(horses.size() > 9) sender.sendMessage("§7Total: §f" + horses.size());
 			}
 			else sender.sendMessage("§c"+target+" does not own any horses!");
