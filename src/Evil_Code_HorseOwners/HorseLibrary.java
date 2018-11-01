@@ -20,7 +20,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import com.onarandombox.MultiverseCore.MultiverseCore;
 
 public class HorseLibrary {
-	public static SpeedCalculator speedCalc = new SpeedCalculator(org.bukkit.Bukkit.getBukkitVersion());
+	public static SpeedCalculator speedCalc = new SpeedCalculator(/*org.bukkit.Bukkit.getBukkitVersion()*/);
 	private static String defaultWorld = org.bukkit.Bukkit.getServer().getWorlds().get(0).getName();//[0] is the default world
 	private static GameMode defaultGameMode = org.bukkit.Bukkit.getServer().getDefaultGameMode();
 	//--------------- Library functions -----------------------------------------------------

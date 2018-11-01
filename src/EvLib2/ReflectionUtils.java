@@ -3,8 +3,6 @@ package EvLib2;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 
-
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -13,8 +11,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * @author DPOH-VAR
- * @version 1.0
+ * @author DPOH-VAR / EvModder
+ * @version 1.1
  */
 public class ReflectionUtils {
 	/**  prefix of bukkit classes */

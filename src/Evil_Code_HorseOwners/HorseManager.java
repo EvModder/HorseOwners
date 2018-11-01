@@ -333,7 +333,11 @@ public final class HorseManager extends EvPlugin{
 				getLogger().info("entities in chunk: "+chunk.getEntities().length);
 				for(Entity entity : chunk.getEntities()){
 					if(entity.getCustomName() != null && isClaimableHorseType(entity)){
-						if(HorseLibrary.cleanName(entity.getCustomName()).equals(horseName)) return entity;
+						getLogger().info("Horse: "+entity.getCustomName());
+						if(HorseLibrary.cleanName(entity.getCustomName()).equals(horseName)){
+							getLogger().info("Found!");
+							return entity;
+						}
 					}
 				}//for each entity
 			}//for each world

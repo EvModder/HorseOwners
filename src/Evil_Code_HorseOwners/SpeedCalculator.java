@@ -16,8 +16,8 @@ public class SpeedCalculator {
 	private Object movementSpeedEnumVal = classGenericAttributes.getField("MOVEMENT_SPEED").of(null).get();
 	private RefMethod methodGetValue = classAttributeInstance.getMethod("getValue");
 	private RefMethod methodSetValue = classAttributeInstance.getMethod("setValue", double.class);
-	
-	short[] version;//ie, [1,8,8] [1,7,10]
+
+	/*short[] version;//ie, [1,8,8] [1,7,10]
 	public SpeedCalculator(String v){
 		//String[] parts = v.split("-")[0].split(".");
 		
@@ -30,7 +30,7 @@ public class SpeedCalculator {
 //			Object clss = classGenericAttributes.getConstructor().create();
 //			movementSpeed = classGenericAttributes.getField("MOVEMENT_SPEED").of(clss).get();
 		//}
-	}
+	}*/
 	
 	public double getHorseSpeed(Entity h){
 //		if(version < 180) return -1;
@@ -51,14 +51,14 @@ public class SpeedCalculator {
 //		if(version < 180);//Error!
 //		else if(version <= 182) setHorseSpeed_v1_8_R1(h, speed);
 //		else if(version <= 188) setHorseSpeed_v1_8_R3(h, speed);
-		
+
 //		((EntityInsentient)((CraftLivingEntity)h).getHandle()).getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(speed);
-		
+
 		//use about .225 for normalish speed
 		Object handle = methodGetHandle.of(h).call();
 		Object attribute = methodGetAttributeInstance.of(handle).call(movementSpeedEnumVal);
 		methodSetValue.of(attribute).call(speed);
-		
+
 //		methodSetValue.of(methodGetAttributeInstance.of(methodGetHandle.of(h).call()).call(movementSpeedField)).call(speed);
 	}
 	
@@ -89,4 +89,3 @@ public class SpeedCalculator {
 		attributes.setValue(speed);
 	}*/
 }
-
