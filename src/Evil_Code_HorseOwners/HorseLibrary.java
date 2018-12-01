@@ -126,9 +126,18 @@ public class HorseLibrary {
 	}
 
 	public static boolean isLeashableBlock(Material mat){
-		return (mat == Material.FENCE || mat == Material.NETHER_FENCE || mat == Material.BIRCH_FENCE ||
-				mat == Material.SPRUCE_FENCE || mat == Material.JUNGLE_FENCE || mat == Material.ACACIA_FENCE ||
-				mat == Material.DARK_OAK_FENCE);
+		switch(mat){
+			case OAK_FENCE:
+			case ACACIA_FENCE:
+			case NETHER_BRICK_FENCE:
+			case BIRCH_FENCE:
+			case SPRUCE_FENCE:
+			case JUNGLE_FENCE:
+			case DARK_OAK_FENCE:
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	public static boolean containsIgnoreCaseAndColor(Set<String> list, String search){

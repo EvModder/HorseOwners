@@ -32,7 +32,7 @@ public class LeadBreakGlitchListener implements Listener{
 		{
 			for(Entity e : evt.getEntity().getNearbyEntities(15, 15, 15)){
 				if(e.getCustomName() != null && plugin.isClaimableHorseType(e) && e instanceof LivingEntity
-						&& plugin.isPrivateHorse(e.getCustomName()))
+						&& plugin.isClaimedHorse(e.getCustomName()))
 				{
 					LivingEntity h = (LivingEntity) e;
 					if(h.isLeashed() && h.getLeashHolder().getUniqueId().equals(evt.getEntity().getUniqueId())){
@@ -50,7 +50,7 @@ public class LeadBreakGlitchListener implements Listener{
 
 		for(Entity e : evt.getChunk().getEntities()){
 			if(e.getCustomName() != null && plugin.isClaimableHorseType(e) && e instanceof LivingEntity
-					&& plugin.isPrivateHorse(e.getCustomName()))
+					&& plugin.isClaimedHorse(e.getCustomName()))
 			{
 				final Location loc = plugin.getHorseHitch(e.getCustomName());
 				if(loc != null){

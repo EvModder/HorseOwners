@@ -62,7 +62,7 @@ public class CommandUnleashHorse extends HorseCommand{
 				if(noOtherLeashedMobs) ((LeashHitch)h.getLeashHolder()).remove();
 			}
 			h.setLeashHolder(null);
-			h.getWorld().dropItem(h.getLocation(), new ItemStack(Material.LEASH));
+			h.getWorld().dropItem(h.getLocation(), new ItemStack(Material.LEAD));
 			p.sendMessage("§aHorse unleashed!");
 		}
 		return true;

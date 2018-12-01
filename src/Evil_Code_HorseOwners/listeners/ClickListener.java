@@ -46,7 +46,7 @@ public class ClickListener implements Listener{
 			if(horse.isTamed() == false)return;
 
 			//  -=-=-=-=-=-=-=-=-=-=-=-=| Begin Horse Responses |=-=-=-=-=-=-=-=-=-=-=-=-
-			if(p.getInventory().getItemInMainHand().getType() == Material.LEASH && horse.isLeashed() == false){
+			if(p.getInventory().getItemInMainHand().getType() == Material.LEAD && horse.isLeashed() == false){
 				evt.setCancelled(true);
 				horse.setLeashHolder(p);
 
@@ -62,7 +62,7 @@ public class ClickListener implements Listener{
 					evt.setCancelled(true);
 					horse.setLeashHolder(null);
 					if(p.getGameMode() != GameMode.CREATIVE){
-						horse.getWorld().dropItemNaturally(horse.getLocation(), new ItemStack(Material.LEASH));
+						horse.getWorld().dropItemNaturally(horse.getLocation(), new ItemStack(Material.LEAD));
 					}
 				}
 			}
@@ -70,7 +70,7 @@ public class ClickListener implements Listener{
 			//p.sendMessage("�cYou do not have permission to unleash this horse.");
 
 			//if they do NOT own the horse and are NOT holding a leash
-			else if(horse.getCustomName() != null && plugin.isPrivateHorse(horse.getCustomName())){
+			else if(horse.getCustomName() != null && plugin.isClaimedHorse(horse.getCustomName())){
 				if(plugin.canAccess(p, horse.getCustomName()) == false){
 					if(breedPrivateHorse && HorseLibrary.isBreedingFood(p.getInventory().getItemInMainHand())
 							&& horse.canBreed()){
@@ -143,10 +143,10 @@ public class ClickListener implements Listener{
 				evt.setCancelled(true);
 				le.setLeashHolder(null);
 				if(p.getGameMode() != GameMode.CREATIVE){
-					le.getWorld().dropItemNaturally(le.getLocation(), new ItemStack(Material.LEASH));
+					le.getWorld().dropItemNaturally(le.getLocation(), new ItemStack(Material.LEAD));
 				}
 			}
-			else if(p.getInventory().getItemInMainHand().getType() == Material.LEASH && !le.isLeashed()
+			else if(p.getInventory().getItemInMainHand().getType() == Material.LEAD && !le.isLeashed()
 					&& le instanceof Player == false){//Errors happen when trying to leash other players
 				evt.setCancelled(true);
 				le.setLeashHolder(p);

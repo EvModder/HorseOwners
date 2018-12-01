@@ -25,7 +25,7 @@ public class ChunkUnloadListener implements Listener{
 	public void onChunkUnload(ChunkUnloadEvent evt){
 		for(Entity entity : evt.getChunk().getEntities()){
 			if(entity.getCustomName() != null && plugin.isClaimableHorseType(entity)
-				&& plugin.isPrivateHorse(entity.getCustomName()))
+				&& plugin.isClaimedHorse(entity.getCustomName()))
 			{
 				if(keepLoaded){
 					UUID uuid = plugin.getOwner(entity.getCustomName());

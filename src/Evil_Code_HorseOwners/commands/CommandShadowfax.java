@@ -49,7 +49,7 @@ public class CommandShadowfax implements CommandExecutor{
 			h.setCustomName("Shadowfax");
 			h.setMaximumAir(h.getMaximumAir()+10);
 			h.getInventory().setSaddle(new ItemStack(Material.SADDLE));
-			h.getInventory().setArmor(new ItemStack(Material.DIAMOND_BARDING));
+			h.getInventory().setArmor(new ItemStack(Material.DIAMOND_HORSE_ARMOR));
 			h.setMaxDomestication(10);
 			h.setDomestication(10);
 			p.sendMessage("§7Shadowfax has been summoned!");
