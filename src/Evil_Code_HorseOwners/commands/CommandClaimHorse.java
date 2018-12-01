@@ -52,7 +52,7 @@ public class CommandClaimHorse extends HorseCommand{
 		String oldName = h.getCustomName();
 		boolean isOwner = plugin.isOwner(p.getUniqueId(), oldName);
 		
-		if(oldName != null && plugin.isPrivateHorse(oldName) && isOwner == false){
+		if(oldName != null && plugin.isClaimedHorse(oldName) && isOwner == false){
 			p.sendMessage(ChatColor.RED+"This horse already belongs to someone!");
 			return false;
 		}
@@ -96,7 +96,7 @@ public class CommandClaimHorse extends HorseCommand{
 				p.sendMessage(ChatColor.RED+"Too long of a name!");
 				return false;
 			}
-			else if(plugin.isPrivateHorse(newName)){
+			else if(plugin.isClaimedHorse(newName)){
 				p.sendMessage(ChatColor.RED+"That name has already been taken!");
 				return false;
 			}

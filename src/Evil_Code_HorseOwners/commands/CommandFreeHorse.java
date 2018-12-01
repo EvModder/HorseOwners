@@ -15,7 +15,7 @@ public class CommandFreeHorse extends HorseCommand{
 		String horseName;
 		if(args.length > 0) horseName = StringUtils.join(args, ' ');
 		else if(p != null && p.isInsideVehicle() && plugin.isClaimableHorseType(p.getVehicle())){
-			if(p.getVehicle().getCustomName() == null || plugin.isPrivateHorse(p.getVehicle().getCustomName()) == false){
+			if(p.getVehicle().getCustomName() == null || plugin.isClaimedHorse(p.getVehicle().getCustomName()) == false){
 				sender.sendMessage(ChatColor.GRAY+"This horse is already ownerless!");
 				return false;
 			}
@@ -27,7 +27,7 @@ public class CommandFreeHorse extends HorseCommand{
 			return false;
 		}
 
-		if(plugin.isPrivateHorse(horseName) == false){
+		if(plugin.isClaimedHorse(horseName) == false){
 			sender.sendMessage(ChatColor.RED+"Unknown horse (check name spelling)"+ChatColor.GRAY+'\n'+command.getUsage());
 			return false;
 		}

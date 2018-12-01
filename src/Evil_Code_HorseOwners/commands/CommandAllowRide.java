@@ -30,7 +30,7 @@ public class CommandAllowRide extends HorseCommand{
 		String horseName;
 		if(args.length > 1) horseName = StringUtils.join(args, ' ', 1, args.length);
 		else if(p != null && p.isInsideVehicle() && p.getVehicle() instanceof Horse){
-			if((horseName=p.getVehicle().getCustomName()) == null || plugin.isPrivateHorse(horseName) == false){
+			if((horseName=p.getVehicle().getCustomName()) == null || plugin.isClaimedHorse(horseName) == false){
 				sender.sendMessage(ChatColor.GRAY+"This horse is ownerless, anyone can ride it!");
 				return false;
 			}
@@ -41,7 +41,7 @@ public class CommandAllowRide extends HorseCommand{
 			return false;
 		}
 
-		if(plugin.isPrivateHorse(horseName) == false){
+		if(plugin.isClaimedHorse(horseName) == false){
 			sender.sendMessage(ChatColor.RED+"This horse is ownerless, anyone can ride it!");
 			return false;
 		}

@@ -33,7 +33,7 @@ public class CommandLockHorse extends HorseCommand{
 			sender.sendMessage("§7This horse's has already been locked");
 			return false;
 		}
-		if(plugin.isPrivateHorse(horseName)){
+		if(plugin.isClaimedHorse(horseName)){
 			if(p != null && plugin.canAccess(p, horseName) == false){
 				sender.sendMessage("§cYou cannot lock horses which you do not own");
 				return false;

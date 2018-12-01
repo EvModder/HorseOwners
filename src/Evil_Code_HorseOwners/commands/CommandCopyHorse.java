@@ -36,7 +36,7 @@ public class CommandCopyHorse extends HorseCommand {
 			return true;
 		}
 
-		if(!plugin.isPrivateHorse(target)){
+		if(!plugin.isClaimedHorse(target)){
 			sender.sendMessage(ChatColor.RED+"Unknown horse '"+ChatColor.GRAY+target+ChatColor.RED+"'");
 //			sender.sendMessage(ChatColor.RED+"Unclaimed horses cannot be copied via command, you must first use /claimhorse");
 			return false;

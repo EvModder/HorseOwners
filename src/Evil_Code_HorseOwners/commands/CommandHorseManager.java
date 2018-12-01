@@ -51,9 +51,9 @@ public class CommandHorseManager implements TabExecutor{//Cannot extend HorseCom
 			return true;
 		}
 		for(String cmdName : pluginCommands.keySet()){
-
-			if(cmdName.replace("horse", "").equals(thisCmd) || cmdName.startsWith(thisCmd) || 
-					pluginCommands.get(cmdName).contains(thisCmd) || pluginCommands.get(cmdName).contains(thisCmd+"horse")){
+			if(cmdName.replace("horse", "").equals(thisCmd) || cmdName.startsWith(thisCmd)
+					|| pluginCommands.get(cmdName).contains(thisCmd)
+					|| pluginCommands.get(cmdName).contains(thisCmd+"horse")){
 				PluginCommand cmd = plugin.getCommand(cmdName);
 
 				if(sender.hasPermission(cmd.getPermission()) == false){

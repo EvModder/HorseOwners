@@ -160,7 +160,7 @@ public final class HorseManager extends EvPlugin{
 						&& HorseLibrary.containsIgnoreCaseAndColor(horseOwnersMap.get(p.getUniqueId()), horseName);
 		
 		if(isOwner) return true;
-		else if(isPrivateHorse(horseName) == false) return true;
+		else if(isClaimedHorse(horseName) == false) return true;
 		else if(p.hasPermission("evp.horseowners.override")){
 			p.sendMessage(ChatColor.GRAY+"Owner override");
 			return true;
@@ -173,7 +173,7 @@ public final class HorseManager extends EvPlugin{
 				&& HorseLibrary.containsIgnoreCaseAndColor(horseOwnersMap.get(playerUUID), horseName);
 		
 		if(isOwner) return true;
-		else if(isPrivateHorse(horseName) == false) return true;
+		else if(isClaimedHorse(horseName) == false) return true;
 		else{
 			Player p = getServer().getPlayer(playerUUID);
 			if(p != null && p.hasPermission("evp.horseowners.override")){
@@ -200,7 +200,11 @@ public final class HorseManager extends EvPlugin{
 		saveHorses();
 	}
 
-	public boolean isPrivateHorse(String horseName){
+	public boolean isClaimedHorse(String horseName){
+		return horses.contains(HorseLibrary.cleanName(horseName)+".owner");
+	}
+
+	public boolean horseExists(String horseName){
 		return horses.isConfigurationSection(HorseLibrary.cleanName(horseName));
 	}
 
@@ -305,10 +309,14 @@ public final class HorseManager extends EvPlugin{
 
 	public UUID getOwner(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
+		String uuid = horses.getString(horseName+".owner");
+		return uuid == null ? null : UUID.fromString(uuid);
+		/*
 		for(UUID uuid : horseOwnersMap.keySet()){
 			if(horseOwnersMap.get(uuid).contains(horseName)) return uuid;
 		}
 		return null;
+		*/
 	}
 
 	public void grantOneTimeAccess(UUID playerUUID, String horseName){
@@ -382,7 +390,7 @@ public final class HorseManager extends EvPlugin{
 
 	public void updateData(AbstractHorse h){
 		if(h.getCustomName() == null) return;
-		if(rankUnclaimed == false && isPrivateHorse(h.getCustomName()) == false) return;
+		if(rankUnclaimed == false && isClaimedHorse(h.getCustomName()) == false) return;
 
 		String displayName = h.getCustomName();
 		String horseName = HorseLibrary.cleanName(displayName);

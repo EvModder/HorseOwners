@@ -28,7 +28,7 @@ public class CommandUnleashHorse extends HorseCommand{
 			}
 			String horseName = StringUtils.join(args, ' ');
 			
-			if(plugin.isPrivateHorse(horseName) == false){
+			if(plugin.isClaimedHorse(horseName) == false){
 				sender.sendMessage("§cUnknown horse (check name spelling)");
 	//			sender.sendMessage("§cUnclaimed horses cannot be teleported via command, you must first use /claimhorse");
 				return false;

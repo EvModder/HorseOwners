@@ -41,10 +41,15 @@ public class CommandInspectHorse extends HorseCommand{
 			Entity entity = plugin.findClaimedHorse(targetName, null);
 			if(entity == null) entity = HorseLibrary.findAnyHorse(targetName);
 			if(entity == null || !(entity instanceof AbstractHorse)){
-				sender.sendMessage(ChatColor.RED+"Unable to find your horse! Perhaps the chunk it is in was unloaded?");
-				return false;
+				if(plugin.isClaimedHorse(targetName)){
+					sender.sendMessage(ChatColor.RED+"Unable to find your horse! Perhaps the chunk it is in was unloaded?");
+				}
+				else{
+					sender.sendMessage(ChatColor.RED+"Unknown horse (check name spelling)"+ChatColor.GRAY+'\n'+command.getUsage());
+				}
+				return true;
 			}
-			else if(plugin.isPrivateHorse(entity.getCustomName()) == false){
+			else if(plugin.isClaimedHorse(entity.getCustomName()) == false){
 				sender.sendMessage(ChatColor.RED+"Unknown horse (check name spelling)"
 						+ChatColor.GRAY+'\n'+command.getUsage());
 				return false;
@@ -66,7 +71,7 @@ public class CommandInspectHorse extends HorseCommand{
 			builder.append("§7Name: §f").append(name == null ? "§cN/A" : name);
 
 		if(name != null && doesRanking && p.hasPermission("evp.horseowners.inspect.rankings")
-				&& (rankUnclaimed || plugin.isPrivateHorse(name))){
+				&& (rankUnclaimed || plugin.isClaimedHorse(name))){
 			plugin.updateData(h);
 			int[] rank = plugin.getRankings(name);
 

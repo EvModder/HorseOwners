@@ -72,7 +72,7 @@ public class CommandGetHorse extends HorseCommand{
 			if(horses.size() == 0) return false;
 		}
 		else{
-			if(plugin.isPrivateHorse(target) == false){
+			if(plugin.isClaimedHorse(target) == false){
 				sender.sendMessage(ChatColor.RED+"Unknown horse '"+ChatColor.GRAY+target+ChatColor.RED+'\'');
 //				sender.sendMessage("�cUnclaimed horses cannot be teleported via command, you must first use /claimhorse");
 				return true;
