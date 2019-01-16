@@ -2,6 +2,7 @@ package EvLib2;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -22,6 +23,7 @@ import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * A Red-Black tree based {@link NavigableMap} implementation.
@@ -111,9 +113,26 @@ import java.util.function.Consumer;
  * @since 1.2
  */
 
-public class IndexTreeMap<K, V>extends AbstractMap<K, V>
-implements NavigableMap<K, V>, Cloneable, java.io.Serializable
+public class IndexTreeMultiMap2<K, C extends Cloneable & Collection<X>, X> extends AbstractMap<K, C>
+implements NavigableMap<K, C>, Cloneable, java.io.Serializable
 {
+	/**
+	 * Trashy hideous hot mess until I figure out something more proper
+	 */
+	@SuppressWarnings("unchecked")
+	private static <T> T reflClone(T t){
+		if(t == null) return null;
+		try{return (T)t.getClass().getMethod("clone").invoke(t);}
+		catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException
+			| NoSuchMethodException | SecurityException e){e.printStackTrace();}
+		return null;
+	}
+
+	/**
+	 * More madness
+	 */
+	private Supplier<C> supplier;
+
 	/**
 	 * The comparator used to maintain order in this tree map, or
 	 * null if it uses the natural ordering of its keys.
@@ -122,7 +141,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 */
 	private final Comparator<? super K> comparator;
 
-	private transient Entry<K, V> root;
+	private transient Entry<K, C, X> root;
 
 	/**
 	 * The number of entries in the tree
@@ -146,8 +165,9 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * {@code put(Object key, Object value)} call will throw a
 	 * {@code ClassCastException}.
 	 */
-	public IndexTreeMap(){
+	public IndexTreeMultiMap2(Supplier<C> supplier){
 		comparator = null;
+		this.supplier = supplier;
 	}
 
 	/**
@@ -165,8 +185,9 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *            If {@code null}, the {@linkplain Comparable natural
 	 *            ordering} of the keys will be used.
 	 */
-	public IndexTreeMap(Comparator<? super K> comparator){
+	public IndexTreeMultiMap2(Supplier<C> supplier, Comparator<? super K> comparator){
 		this.comparator = comparator;
+		this.supplier = supplier;
 	}
 
 	/**
@@ -186,8 +207,9 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * @throws NullPointerException
 	 *             if the specified map is null
 	 */
-	public IndexTreeMap(Map<? extends K, ? extends V> m){
+	public IndexTreeMultiMap2(Supplier<C> supplier, Map<? extends K, ? extends C> m){
 		comparator = null;
+		this.supplier = supplier;
 		putAll(m);
 	}
 
@@ -202,8 +224,9 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * @throws NullPointerException
 	 *             if the specified map is null
 	 */
-	public IndexTreeMap(SortedMap<K, ? extends V> m){
+	public IndexTreeMultiMap2(Supplier<C> supplier, SortedMap<K, ? extends C> m){
 		comparator = m.comparator();
+		this.supplier = supplier;
 		try{
 			buildFromSorted(m.size(), m.entrySet().iterator(), null, null);
 		}
@@ -219,6 +242,25 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 */
 	public int size(){
 		return size;
+	}
+
+	/**
+	 * Returns the number of mapped values in this map.
+	 *
+	 * @return the number of mapped values in this map
+	 */
+	public int valuesSize(){
+		return root == null ? 0 : root.size;
+	}
+
+	/**
+	 * Returns the number of values in the map associated with the given key
+	 *
+	 * @return the number of values in the map associated with the given key
+	 */
+	public int valuesSize(Object key){
+		Entry<K, C, X> e = getEntry(key);
+		return e == null ? 0 : e.value.size();
 	}
 
 	/**
@@ -254,8 +296,10 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * @since 1.2
 	 */
 	public boolean containsValue(Object value){
-		for(Entry<K, V> e = getFirstEntry(); e != null; e = successor(e))
+		for(Entry<K, C, X> e = getFirstEntry(); e != null; e = successor(e))
 			if(valEquals(value, e.value)) return true;
+		for(Entry<K, C, X> e = getFirstEntry(); e != null; e = successor(e))
+			if(e.value != null && e.value.contains(value)) return true;
 		return false;
 	}
 
@@ -285,8 +329,53 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public V get(Object key){
-		Entry<K, V> p = getEntry(key);
+	public C get(Object key){
+		Entry<K, C, X> p = getEntry(key);
+		return (p == null ? null : p.value);
+	}
+
+	/**
+	 * Returns the value(s) at the specified index
+	 *
+	 * <p>
+	 * More formally, returns the {@code values} for the key
+	 * {@code k} to some elements {@code values} such that the given
+	 * {@code index} falls somewhere within the {@code values}.
+	 * (There can be at most one such mapping.)
+	 *
+	 * @param index index of the value(s) to return
+	 * @return value(s) at the specified index
+	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
+	 *         ({@code index < 0 || index >= valuesSize()})
+	 */
+	public C atValueIndex(int index){
+		if(root == null){
+			throw new ArrayIndexOutOfBoundsException(index + " >= " + size);//size==0
+		}
+		if(index >= root.size){
+			throw new ArrayIndexOutOfBoundsException(index + " >= " + root.size);
+		}
+		return getEntryAtValueIndex(index).value;
+	}
+
+	/**
+	 * Returns the values at the specified key index
+	 *
+	 * <p>
+	 * More formally, returns the {@code values} for the key
+	 * in the map at {@code index}, the {@code i}th key-value mapping
+	 * (There can be at most one such mapping.)
+	 *
+	 * @param index index of the target key-mapping
+	 * @return value(s) mapped to by the key at the specified index
+	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
+	 *         ({@code index < 0 || index >= size()})
+	 */
+	public C atIndex(int index){
+		if(index >= size){
+			throw new ArrayIndexOutOfBoundsException(index + " >= " + size);
+		}
+		Entry<K, C, X> p = getEntryAtIndex(index);
 		return (p == null ? null : p.value);
 	}
 
@@ -325,11 +414,11 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             the specified map contains a null key and this map does not
 	 *             permit null keys
 	 */
-	public void putAll(Map<? extends K, ? extends V> map){
+	public void putAll(Map<? extends K, ? extends C> map){
 		int mapSize = map.size();
-		if(size == 0 && mapSize != 0 && map instanceof SortedMap) {
+		if(size == 0 && mapSize != 0 && map instanceof SortedMap){
 			Comparator<?> c = ((SortedMap<?, ?>)map).comparator();
-			if(c == comparator || (c != null && c.equals(comparator))) {
+			if(c == comparator || (c != null && c.equals(comparator))){
 				++modCount;
 				try{
 					buildFromSorted(mapSize, map.entrySet().iterator(), null, null);
@@ -356,13 +445,13 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	final Entry<K, V> getEntry(Object key){
+	final Entry<K, C, X> getEntry(Object key){
 		// Offload comparator-based version for sake of performance
 		if(comparator != null) return getEntryUsingComparator(key);
 		if(key == null) throw new NullPointerException();
 		@SuppressWarnings("unchecked")
 		Comparable<? super K> k = (Comparable<? super K>)key;
-		Entry<K, V> p = root;
+		Entry<K, C, X> p = root;
 		while(p != null){
 			int cmp = k.compareTo(p.key);
 			if(cmp < 0) p = p.left;
@@ -378,12 +467,12 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * that are less dependent on comparator performance, but is
 	 * worthwhile here.)
 	 */
-	final Entry<K, V> getEntryUsingComparator(Object key){
+	final Entry<K, C, X> getEntryUsingComparator(Object key){
 		@SuppressWarnings("unchecked")
 		K k = (K)key;
 		Comparator<? super K> cpr = comparator;
-		if(cpr != null) {
-			Entry<K, V> p = root;
+		if(cpr != null){
+			Entry<K, C, X> p = root;
 			while(p != null){
 				int cmp = cpr.compare(k, p.key);
 				if(cmp < 0) p = p.left;
@@ -395,26 +484,70 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	}
 
 	/**
+	 * Returns this map's entry for the given index
+	 *
+	 * @param index index [lower, upper) of value at entry to return
+	 * @return this map's entry containing the value for the given index, or
+	 *         {@code null} if the index falls outside of the range of the map
+	 */
+	final Entry<K, C, X> getEntryAtValueIndex(int index){
+		Entry<K, C, X> p = root;
+		while(p != null){
+			int leftSz = p.left != null ? p.left.size : 0;
+			if(leftSz > index) p = p.left;
+			else if(leftSz + p.value.size() <= index){
+				index -= leftSz;
+				index -= p.value.size();
+				p = p.right;
+			}
+			else return p;
+		}
+		return null;
+	}
+
+	/**
+	 * Returns this map's entry for the key at the given index
+	 *
+	 * @param index index of the key-mapping entry to return
+	 * @return this map's entry at the key corresponding to the given index, or
+	 *         {@code null} if the index falls outside of the range of the map
+	 */
+	final Entry<K, C, X> getEntryAtIndex(int index){
+		Entry<K, C, X> p = root;
+		while(p != null){
+			int leftSz = (p.left != null ? p.left.treeSz : 0);
+			if(leftSz > index) p = p.left;
+			else if(leftSz < index){
+				index -= leftSz;
+				--index;
+				p = p.right;
+			}
+			else return p;
+		}
+		return null;
+	}
+
+	/**
 	 * Gets the entry corresponding to the specified key; if no such entry
 	 * exists, returns the entry for the least key greater than the specified
 	 * key; if no such entry exists (i.e., the greatest key in the Tree is less
 	 * than the specified key), returns {@code null}.
 	 */
-	final Entry<K, V> getCeilingEntry(K key){
-		Entry<K, V> p = root;
+	final Entry<K, C, X> getCeilingEntry(K key){
+		Entry<K, C, X> p = root;
 		while(p != null){
 			int cmp = compare(key, p.key);
-			if(cmp < 0) {
+			if(cmp < 0){
 				if(p.left != null) p = p.left;
 				else return p;
 			}
-			else if(cmp > 0) {
-				if(p.right != null) {
+			else if(cmp > 0){
+				if(p.right != null){
 					p = p.right;
 				}
 				else{
-					Entry<K, V> parent = p.parent;
-					Entry<K, V> ch = p;
+					Entry<K, C, X> parent = p.parent;
+					Entry<K, C, X> ch = p;
 					while(parent != null && ch == parent.right){
 						ch = parent;
 						parent = parent.parent;
@@ -432,21 +565,21 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * exists, returns the entry for the greatest key less than the specified
 	 * key; if no such entry exists, returns {@code null}.
 	 */
-	final Entry<K, V> getFloorEntry(K key){
-		Entry<K, V> p = root;
+	final Entry<K, C, X> getFloorEntry(K key){
+		Entry<K, C, X> p = root;
 		while(p != null){
 			int cmp = compare(key, p.key);
-			if(cmp > 0) {
+			if(cmp > 0){
 				if(p.right != null) p = p.right;
 				else return p;
 			}
-			else if(cmp < 0) {
-				if(p.left != null) {
+			else if(cmp < 0){
+				if(p.left != null){
 					p = p.left;
 				}
 				else{
-					Entry<K, V> parent = p.parent;
-					Entry<K, V> ch = p;
+					Entry<K, C, X> parent = p.parent;
+					Entry<K, C, X> ch = p;
 					while(parent != null && ch == parent.left){
 						ch = parent;
 						parent = parent.parent;
@@ -466,21 +599,21 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * key greater than the specified key; if no such entry exists
 	 * returns {@code null}.
 	 */
-	final Entry<K, V> getHigherEntry(K key){
-		Entry<K, V> p = root;
+	final Entry<K, C, X> getHigherEntry(K key){
+		Entry<K, C, X> p = root;
 		while(p != null){
 			int cmp = compare(key, p.key);
-			if(cmp < 0) {
+			if(cmp < 0){
 				if(p.left != null) p = p.left;
 				else return p;
 			}
 			else{
-				if(p.right != null) {
+				if(p.right != null){
 					p = p.right;
 				}
 				else{
-					Entry<K, V> parent = p.parent;
-					Entry<K, V> ch = p;
+					Entry<K, C, X> parent = p.parent;
+					Entry<K, C, X> ch = p;
 					while(parent != null && ch == parent.right){
 						ch = parent;
 						parent = parent.parent;
@@ -497,21 +630,21 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * no such entry exists (i.e., the least key in the Tree is greater than
 	 * the specified key), returns {@code null}.
 	 */
-	final Entry<K, V> getLowerEntry(K key){
-		Entry<K, V> p = root;
+	final Entry<K, C, X> getLowerEntry(K key){
+		Entry<K, C, X> p = root;
 		while(p != null){
 			int cmp = compare(key, p.key);
-			if(cmp > 0) {
+			if(cmp > 0){
 				if(p.right != null) p = p.right;
 				else return p;
 			}
 			else{
-				if(p.left != null) {
+				if(p.left != null){
 					p = p.left;
 				}
 				else{
-					Entry<K, V> parent = p.parent;
-					Entry<K, V> ch = p;
+					Entry<K, C, X> parent = p.parent;
+					Entry<K, C, X> ch = p;
 					while(parent != null && ch == parent.left){
 						ch = parent;
 						parent = parent.parent;
@@ -537,13 +670,13 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	final int getKeyIndex(Object key){
+	public final int getKeyIndex(Object key){
 		// Offload comparator-based version for sake of performance
-		if(comparator != null) return getKeyIndexUsingComparator(key);
+		if(comparator != null) return getLowerIndexUsingComparator(key);
 		if(key == null) throw new NullPointerException();
 		@SuppressWarnings("unchecked")
 		Comparable<? super K> k = (Comparable<? super K>)key;
-		Entry<K, V> p = root;
+		Entry<K, C, X> p = root;
 		int index = 0;
 		while(p != null){
 			int cmp = k.compareTo(p.key);
@@ -567,12 +700,12 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * that are less dependent on comparator performance, but is
 	 * worthwhile here.)
 	 */
-	final int getKeyIndexUsingComparator(Object key){
+	public final int getKeyIndexUsingComparator(Object key){
 		@SuppressWarnings("unchecked")
 		K k = (K)key;
 		Comparator<? super K> cpr = comparator;
-		if(cpr != null) {
-			Entry<K, V> p = root;
+		if(cpr != null){
+			Entry<K, C, X> p = root;
 			int index = 0;
 			while(p != null){
 				int cmp = cpr.compare(k, p.key);
@@ -592,16 +725,152 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	}
 
 	/**
-	 * Associates the specified value with the specified key in this map.
-	 * If the map previously contained a mapping for the key, the old
-	 * value is replaced.
+	 * Returns this map's entry index for the given key, or {@code -1} if the map
+	 * does not contain an entry for the key.
+	 *
+	 * @return this map's entry index for the given key, or {@code -1} if the map
+	 *         does not contain an entry for the key
+	 * @throws ClassCastException
+	 *             if the specified key cannot be compared
+	 *             with the keys currently in the map
+	 * @throws NullPointerException
+	 *             if the specified key is null
+	 *             and this map uses natural ordering, or its comparator
+	 *             does not permit null keys
+	 */
+	public final int getLowerIndex(Object key){
+		// Offload comparator-based version for sake of performance
+		if(comparator != null) return getLowerIndexUsingComparator(key);
+		if(key == null) throw new NullPointerException();
+		@SuppressWarnings("unchecked")
+		Comparable<? super K> k = (Comparable<? super K>)key;
+		Entry<K, C, X> p = root;
+		int index = 0;
+		while(p != null){
+			int cmp = k.compareTo(p.key);
+			if(cmp < 0) p = p.left;
+			else if(cmp > 0){
+				if(p.left != null) index += p.left.size;
+				index += p.value.size();
+				p = p.right;
+			}
+			else{
+				if(p.left != null) index += p.left.size;
+				return index;
+			}
+		}
+		return -1;
+	}
+
+	/**
+	 * Version of getLowerIndex using comparator. Split off from getLowerIndex
+	 * for performance. (This is not worth doing for most methods,
+	 * that are less dependent on comparator performance, but is
+	 * worthwhile here.)
+	 */
+	public final int getLowerIndexUsingComparator(Object key){
+		@SuppressWarnings("unchecked")
+		K k = (K)key;
+		Comparator<? super K> cpr = comparator;
+		if(cpr != null){
+			Entry<K, C, X> p = root;
+			int index = 0;
+			while(p != null){
+				int cmp = cpr.compare(k, p.key);
+				if(cmp < 0) p = p.left;
+				else if(cmp > 0){
+					if(p.left != null) index += p.left.size;
+					index += p.value.size();
+					p = p.right;
+				}
+				else{
+					if(p.left != null) index += p.left.size;
+					return index;
+				}
+			}
+		}
+		return -1;
+	}
+
+	/**
+	 * Returns this map's entry index for the given key, or {@code size} if the map
+	 * does not contain an entry for the key.
+	 *
+	 * @return this map's entry index for the given key, or {@code size} if the map
+	 *         does not contain an entry for the key
+	 * @throws ClassCastException
+	 *             if the specified key cannot be compared
+	 *             with the keys currently in the map
+	 * @throws NullPointerException
+	 *             if the specified key is null
+	 *             and this map uses natural ordering, or its comparator
+	 *             does not permit null keys
+	 */
+	public final int getUpperIndex(Object key){
+		// Offload comparator-based version for sake of performance
+		if(comparator != null) return getUpperIndexUsingComparator(key);
+		if(key == null) throw new NullPointerException();
+		@SuppressWarnings("unchecked")
+		Comparable<? super K> k = (Comparable<? super K>)key;
+		Entry<K, C, X> p = root;
+		int index = 0;
+		while(p != null){
+			int cmp = k.compareTo(p.key);
+			if(cmp < 0) p = p.left;
+			else if(cmp > 0){
+				if(p.left != null) index += p.left.size;
+				index += p.value.size();
+				p = p.right;
+			}
+			else{
+				if(p.left != null) index += p.left.size;
+				return index + p.value.size();
+			}
+		}
+		return root != null ? root.size : 0;
+	}
+
+	/**
+	 * Version of getUpperIndex using comparator. Split off from getUpperIndex
+	 * for performance. (This is not worth doing for most methods,
+	 * that are less dependent on comparator performance, but is
+	 * worthwhile here.)
+	 */
+	public final int getUpperIndexUsingComparator(Object key){
+		@SuppressWarnings("unchecked")
+		K k = (K)key;
+		Comparator<? super K> cpr = comparator;
+		if(cpr != null){
+			Entry<K, C, X> p = root;
+			int index = 0;
+			while(p != null){
+				int cmp = cpr.compare(k, p.key);
+				if(cmp < 0) p = p.left;
+				else if(cmp > 0){
+					if(p.left != null) index += p.left.size;
+					index += p.value.size();
+					p = p.right;
+				}
+				else{
+					if(p.left != null) index += p.left.size;
+					return index + p.value.size();
+				}
+			}
+		}
+		return root != null ? root.size : 0;
+	}
+
+	/**
+	 * Associates the specified values with the specified key in this map.
+	 * If the map previously contained a mapping for the key, the new values are
+	 * added to the old values
 	 *
 	 * @param key
 	 *            key with which the specified value is to be associated
-	 * @param value
-	 *            value to be associated with the specified key
+	 * @param values
+	 *            values to be associated with the specified key
 	 *
-	 * @return the previous value associated with {@code key}, or
+	 * @return the previous values associated with {@code key}, or
 	 *         {@code null} if there was no mapping for {@code key}.
 	 *         (A {@code null} return can also indicate that the map
 	 *         previously associated {@code null} with {@code key}.)
@@ -613,27 +882,39 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public V put(K key, V value){
-		Entry<K, V> t = root;
-		if(t == null) {
+	public C put(K key, C values){
+		Entry<K, C, X> t = root;
+		if(t == null){
 			compare(key, key); // type (and possibly null) check
 
-			root = new Entry<>(key, value, null);
+			root = new Entry<>(key, values, null);
+			root.size = values.size();
 			size = 1;
 			++modCount;
 			return null;
 		}
 		int cmp;
-		Entry<K, V> parent;
+		Entry<K, C, X> parent;
 		// split comparator and comparable paths
 		Comparator<? super K> cpr = comparator;
-		if(cpr != null) {
+		if(cpr != null){
 			do{
 				parent = t;
 				cmp = cpr.compare(key, t.key);
 				if(cmp < 0) t = t.left;
 				else if(cmp > 0) t = t.right;
-				else return t.setValue(value);
+				else{
+					int numNew = t.value.size();
+					C oldValue = reflClone(t.value);
+					if(t.addValues(values)){
+						numNew = t.value.size() - numNew;
+						while(t != null){
+							t.size += numNew;
+							t = t.parent;
+						}
+					}
+					return oldValue;
+				}
 			}
 			while(t != null);
 		}
@@ -646,21 +927,259 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 				cmp = k.compareTo(t.key);
 				if(cmp < 0) t = t.left;
 				else if(cmp > 0) t = t.right;
-				else return t.setValue(value);
+				else{
+					int numNew = t.value.size();
+					C oldValue = reflClone(t.value);
+					if(t.addValues(values)){
+						numNew = t.value.size() - numNew;
+						while(t != null){
+							t.size += numNew;
+							t = t.parent;
+						}
+					}
+					return oldValue;
+				}
 			}
 			while(t != null);
 		}
-		Entry<K, V> e = new Entry<>(key, value, parent);
+		t = parent;
+		while(t != null){
+			++t.treeSz;
+			t.size += values.size();
+			t = t.parent;
+		}
+		Entry<K, C, X> e = new Entry<>(key, values, parent);
 		if(cmp < 0) parent.left = e;
 		else parent.right = e;
-		while(parent != null){
-			++parent.treeSz;
-			parent = parent.parent;
-		}
 		fixAfterInsertion(e);
 		++size;
 		++modCount;
 		return null;
+	}
+
+	/**
+	 * Associates the specified value with the specified key in this map.
+	 * If the map previously contained a mapping for the key, the new value is
+	 * added to the old values
+	 *
+	 * @param key
+	 *            key with which the specified value is to be associated
+	 * @param value
+	 *            value to be associated with the specified key
+	 *
+	 * @return the previous values associated with {@code key}, or
+	 *         {@code null} if there was no mapping for {@code key}.
+	 *         (A {@code null} return can also indicate that the map
+	 *         previously associated {@code null} with {@code key}.)
+	 *
+	 * @throws IllegalAccessException
+	 *             if the class or its nullary constructor is not accessible.
+	 * @throws InstantiationException
+	 *             if this Class represents an abstract class, an interface, an array class,
+	 *             a primitive type, or void; or if the class has no nullary constructor;
+	 *             or if the instantiation fails for some other reason.
+	 * @throws ClassCastException
+	 *             if the specified key cannot be compared
+	 *             with the keys currently in the map
+	 * @throws NullPointerException
+	 *             if the specified key is null
+	 *             and this map uses natural ordering, or its comparator
+	 *             does not permit null keys
+	 */
+	public C put(K key, X value){
+		Entry<K, C, X> t = root;
+		if(t == null){
+			compare(key, key); // type (and possibly null) check
+			C values = supplier.get();
+			values.add(value);
+			root = new Entry<>(key, values, null);
+			root.size = 1;
+			size = 1;
+			++modCount;
+			return null;
+		}
+		int cmp;
+		Entry<K, C, X> parent;
+		// split comparator and comparable paths
+		Comparator<? super K> cpr = comparator;
+		if(cpr != null) {
+			do{
+				parent = t;
+				cmp = cpr.compare(key, t.key);
+				if(cmp < 0) t = t.left;
+				else if(cmp > 0) t = t.right;
+				else{
+					C oldValue = reflClone(t.value);
+					if(t.addValue(value)){
+						while(t != null){
+							++t.size;
+							t = t.parent;
+						}
+					}
+					return oldValue;
+				}
+			}
+			while(t != null);
+		}
+		else{
+			if(key == null) throw new NullPointerException();
+			@SuppressWarnings("unchecked")
+			Comparable<? super K> k = (Comparable<? super K>)key;
+			do{
+				parent = t;
+				cmp = k.compareTo(t.key);
+				if(cmp < 0) t = t.left;
+				else if(cmp > 0) t = t.right;
+				else{
+					C oldValue = reflClone(t.value);
+					if(t.addValue(value)){
+						while(t != null){
+							++t.size;
+							t = t.parent;
+						}
+					}
+					return oldValue;
+				}
+			}
+			while(t != null);
+		}
+		t = parent;
+		while(t != null){
+			++t.treeSz;
+			++t.size;
+			t = t.parent;
+		}
+		C values = supplier.get();
+		values.add(value);
+		Entry<K, C, X> e = new Entry<>(key, values, parent);
+		if(cmp < 0) parent.left = e;
+		else parent.right = e;
+		fixAfterInsertion(e);
+		++size;
+		++modCount;
+		return null;
+	}
+
+	/**
+	 * Updates the mapping at the given value index with the new values
+	 * The new values are added to the old values at the specified index
+	 *
+	 * @param index
+	 *            index [lower, upper) of the values-mapping which will be updated
+	 * @param values
+	 *            new values to be added with the existing values at the specified index
+	 *
+	 * @return the previous values from the mapping at the given value index
+	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
+	 *         ({@code index < 0 || index >= valuesSize()})
+	 */
+	public C putAtValueIndex(int index, C values){
+		if(root == null){
+			throw new ArrayIndexOutOfBoundsException(index + " >= 0");
+		}
+		if(index >= root.size){
+			throw new ArrayIndexOutOfBoundsException(index + " >= " + root.size);
+		}
+		Entry<K, C, X> p = getEntryAtValueIndex(index);
+		C oldValue = p.value;
+		int numNew = p.value.size();
+		if(p.addValues(values)){
+			numNew = p.value.size() - numNew;
+			while(p != null){
+				p.size += numNew;
+				p = p.parent;
+			}
+		}
+		return oldValue;
+	}
+
+	/**
+	 * Updates the mapping at the given value index with the new value
+	 * The new value is added to the existing values at the specified index
+	 *
+	 * @param index
+	 *            index [lower, upper) of the values-mapping which will be updated
+	 * @param value
+	 *            new value to be added with the values at the specified index
+	 *
+	 * @return the previous values from the mapping at the given value index
+	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
+	 *         ({@code index < 0 || index >= valuesSize()})
+	 */
+	public C putAtValueIndex(int index, X value){
+		if(root == null){
+			throw new ArrayIndexOutOfBoundsException(index + " >= 0");
+		}
+		if(index >= root.size){
+			throw new ArrayIndexOutOfBoundsException(index + " >= " + root.size);
+		}
+		Entry<K, C, X> p = getEntryAtValueIndex(index);
+		C oldValue = p.value;
+		if(p.addValue(value)){
+			while(p != null){
+				++p.size;
+				p = p.parent;
+			}
+		}
+		return oldValue;
+	}
+
+	/**
+	 * Updates an existing key-value mapping at the given index with new values
+	 * The new values are added to the old values at the specified key index
+	 *
+	 * @param index
+	 *            index of the key for the mapping which will be updated
+	 * @param values
+	 *            values to be associated with the key at the specified index
+	 *
+	 * @return the previous values associated with {@code key}
+	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
+	 *         ({@code index < 0 || index >= size()})
+	 */
+	public C putAtIndex(int index, C values){
+		if(index >= size){
+			throw new ArrayIndexOutOfBoundsException(index + " >= " + size);
+		}
+		Entry<K, C, X> p = getEntryAtIndex(index);
+		C oldValue = p.value;
+		int numNew = p.value.size();
+		if(p.addValues(values)){
+			numNew = p.value.size() - numNew;
+			while(p != null){
+				p.size += numNew;
+				p = p.parent;
+			}
+		}
+		return oldValue;
+	}
+
+	/**
+	 * Updates a key-value mapping at the given index with the new value
+	 * The new value is added to the existing values at the specified key index
+	 *
+	 * @param index
+	 *            index of the key for the mapping which will be updated
+	 * @param value
+	 *            value to be associated with the key at the specified index
+	 *
+	 * @return the previous values associated with {@code key}
+	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
+	 *         ({@code index < 0 || index >= size()})
+	 */
+	public C putAtIndex(int index, X value){
+		if(index >= size){
+			throw new ArrayIndexOutOfBoundsException(index + " >= " + size);
+		}
+		Entry<K, C, X> p = getEntryAtIndex(index);
+		C oldValue = p.value;
+		if(p.addValue(value)){
+			while(p != null){
+				++p.size;
+				p = p.parent;
+			}
+		}
+		return oldValue;
 	}
 
 	/**
@@ -680,11 +1199,118 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public V remove(Object key){
-		Entry<K, V> p = getEntry(key);
+	public C remove(Object key){
+		Entry<K, C, X> p = getEntry(key);
 		if(p == null) return null;
 
-		V oldValue = p.value;
+		C oldValue = p.value;
+		deleteEntry(p);
+		return oldValue;
+	}
+
+	/**
+	 * Removes the given value from the mapping for this key
+	 * from this IndexTreeMap if both the value and the key are present.
+	 *
+	 * @param key
+	 *            key for which mapping should be removed
+	 * @param value
+	 *            value which should be removed from the mapping
+	 * @return true if the mapping was found and the value was removed
+	 * @throws ClassCastException
+	 *             if the specified key cannot be compared
+	 *             with the keys currently in the map
+	 * @throws NullPointerException
+	 *             if the specified key is null
+	 *             and this map uses natural ordering, or its comparator
+	 *             does not permit null keys
+	 */
+	public boolean remove(Object key, Object value){
+		Entry<K, C, X> p = getEntry(key);
+		if(p == null) return false;
+
+		if(p.removeValue(value)){
+			Entry<K, C, X> parent = p.parent;
+			while(parent != null){
+				--parent.size;
+				parent = parent.parent;
+			}
+			if(p.value.isEmpty()) deleteEntry(p);
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Removes the given values from the mapping for this key
+	 * from this IndexTreeMap if the key mapping can be found
+	 *
+	 * @param key
+	 *            key for which mapping should be removed
+	 * @param values
+	 *            values which should be removed from the mapping for the key
+	 * @return true if the mapping was found one or more values were removed
+	 * @throws ClassCastException
+	 *             if the specified key cannot be compared
+	 *             with the keys currently in the map
+	 * @throws NullPointerException
+	 *             if the specified key is null
+	 *             and this map uses natural ordering, or its comparator
+	 *             does not permit null keys
+	 */
+	public boolean remove(Object key, C values){
+		Entry<K, C, X> p = getEntry(key);
+		if(p == null) return false;
+
+		int oldSize = p.value.size();
+		if(p.removeValues(values)){
+			int numRemoved = oldSize - p.value.size();
+			Entry<K, C, X> parent = p.parent;
+			while(parent != null){
+				parent.size -= numRemoved;
+				parent = parent.parent;
+			}
+			if(p.value.isEmpty()) deleteEntry(p);
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Removes the mapping for the value(s) at the given index
+	 *
+	 * @param index index [lower, upper) used to find the mapped values to remove
+	 * @return the removed values
+	 * @throws ArrayIndexOutOfBoundsException if the index is out of range
+	 *         ({@code index < 0 || index >= valuesSize()})
+	 */
+	public C removeAtValueIndex(int index){
+		if(root == null){
+			throw new ArrayIndexOutOfBoundsException(index + " >= 0");
+		}
+		if(index >= root.size){
+			throw new ArrayIndexOutOfBoundsException(index + " >= " + root.size);
+		}
+		Entry<K, C, X> p = getEntryAtValueIndex(index);
+		C oldValue = p.value;
+		deleteEntry(p);
+		return oldValue;
+	}
+
+	/**
+	 * Removes the mapping for the key at the given index
+	 *
+	 * @param index index of the key whose entry will be deleted
+	 * @return the values mapped to by the given key index prior to deletion
+	 * @throws ArrayIndexOutOfBoundsException if the key index is out of range
+	 *         ({@code index < 0 || index >= size()})
+	 */
+	public C removeAtIndex(int index){
+		if(index >= size){
+			throw new ArrayIndexOutOfBoundsException(index + " >= " + size);
+		}
+		Entry<K, C, X> p = getEntryAtIndex(index);
+		C oldValue = p.value;
 		deleteEntry(p);
 		return oldValue;
 	}
@@ -707,9 +1333,9 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * @return a shallow copy of this map
 	 */
 	public Object clone(){
-		IndexTreeMap<?, ?> clone;
+		IndexTreeMultiMap2<?, ?, ?> clone;
 		try{
-			clone = (IndexTreeMap<?, ?>)super.clone();
+			clone = (IndexTreeMultiMap2<?, ?, ?>)super.clone();
 		}
 		catch(CloneNotSupportedException e){
 			throw new InternalError(e);
@@ -734,24 +1360,24 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	}
 
 	// NavigableMap API methods
-	public Map.Entry<K, V> firstEntry(){
+	public Map.Entry<K, C> firstEntry(){
 		return exportEntry(getFirstEntry());
 	}
 
-	public Map.Entry<K, V> lastEntry(){
+	public Map.Entry<K, C> lastEntry(){
 		return exportEntry(getLastEntry());
 	}
 
-	public Map.Entry<K, V> pollFirstEntry(){
-		Entry<K, V> p = getFirstEntry();
-		Map.Entry<K, V> result = exportEntry(p);
+	public Map.Entry<K, C> pollFirstEntry(){
+		Entry<K, C, X> p = getFirstEntry();
+		Map.Entry<K, C> result = exportEntry(p);
 		if(p != null) deleteEntry(p);
 		return result;
 	}
 
-	public Map.Entry<K, V> pollLastEntry(){
-		Entry<K, V> p = getLastEntry();
-		Map.Entry<K, V> result = exportEntry(p);
+	public Map.Entry<K, C> pollLastEntry(){
+		Entry<K, C, X> p = getLastEntry();
+		Map.Entry<K, C> result = exportEntry(p);
 		if(p != null) deleteEntry(p);
 		return result;
 	}
@@ -765,7 +1391,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             does not permit null keys
 	 * @since 1.6
 	 */
-	public Map.Entry<K, V> lowerEntry(K key){
+	public Map.Entry<K, C> lowerEntry(K key){
 		return exportEntry(getLowerEntry(key));
 	}
 
@@ -791,7 +1417,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             does not permit null keys
 	 * @since 1.6
 	 */
-	public Map.Entry<K, V> floorEntry(K key){
+	public Map.Entry<K, C> floorEntry(K key){
 		return exportEntry(getFloorEntry(key));
 	}
 
@@ -817,7 +1443,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             does not permit null keys
 	 * @since 1.6
 	 */
-	public Map.Entry<K, V> ceilingEntry(K key){
+	public Map.Entry<K, C> ceilingEntry(K key){
 		return exportEntry(getCeilingEntry(key));
 	}
 
@@ -843,7 +1469,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             does not permit null keys
 	 * @since 1.6
 	 */
-	public Map.Entry<K, V> higherEntry(K key){
+	public Map.Entry<K, C> higherEntry(K key){
 		return exportEntry(getHigherEntry(key));
 	}
 
@@ -867,8 +1493,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * there's no reason to create more than one.
 	 */
 	private transient EntrySet entrySet;
-	private transient KeySet<K> navigableKeySet;
-	private transient NavigableMap<K, V> descendingMap;
+	private transient KeySet<K, C, X> navigableKeySet;
+	private transient NavigableMap<K, C> descendingMap;
 
 	/**
 	 * Returns a {@link Set} view of the keys contained in this map.
@@ -902,7 +1528,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	}
 
 	public NavigableSet<K> navigableKeySet(){
-		KeySet<K> nks = navigableKeySet;
+		KeySet<K, C, X> nks = navigableKeySet;
 		return (nks != null) ? nks : (navigableKeySet = new KeySet<>(this));
 	}
 
@@ -910,6 +1536,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		return descendingMap().navigableKeySet();
 	}
 
+	//TODO: return Collection<X> instead?
 	/**
 	 * Returns a {@link Collection} view of the values contained in this map.
 	 *
@@ -933,14 +1560,15 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * {@code retainAll} and {@code clear} operations. It does not
 	 * support the {@code add} or {@code addAll} operations.
 	 */
-	@SuppressWarnings("unchecked") public Collection<V> values(){
-		Collection<V> vs = null;
+	@SuppressWarnings("unchecked")
+	public Collection<C> values(){
+		Collection<C> vs = null;
 		try{
 			Field transientField = getClass().getDeclaredField("values");
 			System.out.print("Access?: " + transientField.isAccessible());
 			transientField.setAccessible(true);
-			vs = (Collection<V>) transientField.get(this);
-			if(vs == null) {
+			vs = (Collection<C>) transientField.get(this);
+			if(vs == null){
 				vs = new Values();
 				transientField.set(this, vs);
 			}
@@ -974,13 +1602,13 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * {@code clear} operations. It does not support the
 	 * {@code add} or {@code addAll} operations.
 	 */
-	public Set<Map.Entry<K, V>> entrySet(){
+	public Set<Map.Entry<K, C>> entrySet(){
 		EntrySet es = entrySet;
 		return (es != null) ? es : (entrySet = new EntrySet());
 	}
 
-	public NavigableMap<K, V> descendingMap(){
-		NavigableMap<K, V> km = descendingMap;
+	public NavigableMap<K, C> descendingMap(){
+		NavigableMap<K, C> km = descendingMap;
 		return (km != null) ? km : (descendingMap =
 				new DescendingSubMap<>(this, true, null, true, true, null, true));
 	}
@@ -996,7 +1624,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             {@inheritDoc}
 	 * @since 1.6
 	 */
-	public NavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
+	public NavigableMap<K, C> subMap(
+K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
 		return new AscendingSubMap<>(this, false, fromKey, fromInclusive, false, toKey, toInclusive);
 	}
 
@@ -1011,7 +1640,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             {@inheritDoc}
 	 * @since 1.6
 	 */
-	public NavigableMap<K, V> headMap(K toKey, boolean inclusive){
+	public NavigableMap<K, C> headMap(K toKey, boolean inclusive){
 		return new AscendingSubMap<>(this, true, null, true, false, toKey, inclusive);
 	}
 
@@ -1026,7 +1655,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             {@inheritDoc}
 	 * @since 1.6
 	 */
-	public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive){
+	public NavigableMap<K, C> tailMap(K fromKey, boolean inclusive){
 		return new AscendingSubMap<>(this, false, fromKey, inclusive, true, null, true);
 	}
 
@@ -1040,7 +1669,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * @throws IllegalArgumentException
 	 *             {@inheritDoc}
 	 */
-	public SortedMap<K, V> subMap(K fromKey, K toKey){
+	public SortedMap<K, C> subMap(K fromKey, K toKey){
 		return subMap(fromKey, true, toKey, false);
 	}
 
@@ -1054,7 +1683,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * @throws IllegalArgumentException
 	 *             {@inheritDoc}
 	 */
-	public SortedMap<K, V> headMap(K toKey){
+	public SortedMap<K, C> headMap(K toKey){
 		return headMap(toKey, false);
 	}
 
@@ -1068,71 +1697,74 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * @throws IllegalArgumentException
 	 *             {@inheritDoc}
 	 */
-	public SortedMap<K, V> tailMap(K fromKey){
+	public SortedMap<K, C> tailMap(K fromKey){
 		return tailMap(fromKey, true);
 	}
 
-	@Override public boolean replace(K key, V oldValue, V newValue){
-		Entry<K, V> p = getEntry(key);
-		if(p != null && Objects.equals(oldValue, p.value)) {
+	@Override public boolean replace(K key, C oldValue, C newValue){
+		Entry<K, C, X> p = getEntry(key);
+		if(p != null && Objects.equals(oldValue, p.value)){
 			p.value = newValue;
 			return true;
 		}
 		return false;
 	}
 
-	@Override public V replace(K key, V value){
-		Entry<K, V> p = getEntry(key);
-		if(p != null) {
-			V oldValue = p.value;
+	@Override public C replace(K key, C value){
+		Entry<K, C, X> p = getEntry(key);
+		if(p != null){
+			C oldValue = reflClone(p.value);
 			p.value = value;
 			return oldValue;
 		}
 		return null;
 	}
 
-	@Override public void forEach(BiConsumer<? super K, ? super V> action){
+	@Override public void forEach(BiConsumer<? super K, ? super C> action){
 		Objects.requireNonNull(action);
 		int expectedModCount = modCount;
-		for(Entry<K, V> e = getFirstEntry(); e != null; e = successor(e)){
+		for(Entry<K, C, X> e = getFirstEntry(); e != null; e = successor(e)){
 			action.accept(e.key, e.value);
 
-			if(expectedModCount != modCount) {
+			if(expectedModCount != modCount){
 				throw new ConcurrentModificationException();
 			}
 		}
 	}
 
-	@Override public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function){
+	@Override public void replaceAll(
+			BiFunction<? super K, ? super C, ? extends C> function){
 		Objects.requireNonNull(function);
 		int expectedModCount = modCount;
 
-		for(Entry<K, V> e = getFirstEntry(); e != null; e = successor(e)){
-			e.value = function.apply(e.key, e.value);
+		for(Entry<K, C, X> e = getFirstEntry(); e != null; e = successor(e)){
+			C newValue = function.apply(e.key, e.value);
 
-			if(expectedModCount != modCount) {
+			e.value = newValue;
+
+			if(expectedModCount != modCount){
 				throw new ConcurrentModificationException();
 			}
 		}
 	}
 
 	// View class support
-	class Values extends AbstractCollection<V>{
-		public Iterator<V> iterator(){
+	class Values extends AbstractCollection<C>{
+		public Iterator<C> iterator(){
 			return new ValueIterator(getFirstEntry());
 		}
 
 		public int size(){
-			return IndexTreeMap.this.size();
+			return IndexTreeMultiMap2.this.size();
 		}
 
 		public boolean contains(Object o){
-			return IndexTreeMap.this.containsValue(o);
+			return IndexTreeMultiMap2.this.containsValue(o);
 		}
 
 		public boolean remove(Object o){
-			for(Entry<K, V> e = getFirstEntry(); e != null; e = successor(e)){
-				if(valEquals(e.getValue(), o)) {
+			for(Entry<K, C, X> e = getFirstEntry(); e != null; e = successor(e)){
+				if(valEquals(e.getValue(), o)){
 					deleteEntry(e);
 					return true;
 				}
@@ -1141,16 +1773,16 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 
 		public void clear(){
-			IndexTreeMap.this.clear();
+			IndexTreeMultiMap2.this.clear();
 		}
 
-		public Spliterator<V> spliterator(){
-			return new ValueSpliterator<K, V>(IndexTreeMap.this, null, null, 0, -1, 0);
+		public Spliterator<C> spliterator(){
+			return new ValueSpliterator<K, C, X>(IndexTreeMultiMap2.this, null, null, 0, -1, 0);
 		}
 	}
 
-	class EntrySet extends AbstractSet<Map.Entry<K, V>>{
-		public Iterator<Map.Entry<K, V>> iterator(){
+	class EntrySet extends AbstractSet<Map.Entry<K, C>>{
+		public Iterator<Map.Entry<K, C>> iterator(){
 			return new EntryIterator(getFirstEntry());
 		}
 
@@ -1158,7 +1790,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			if(!(o instanceof Map.Entry)) return false;
 			Map.Entry<?, ?> entry = (Map.Entry<?, ?>)o;
 			Object value = entry.getValue();
-			Entry<K, V> p = getEntry(entry.getKey());
+			Entry<K, C, X> p = getEntry(entry.getKey());
 			return p != null && valEquals(p.getValue(), value);
 		}
 
@@ -1166,8 +1798,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			if(!(o instanceof Map.Entry)) return false;
 			Map.Entry<?, ?> entry = (Map.Entry<?, ?>)o;
 			Object value = entry.getValue();
-			Entry<K, V> p = getEntry(entry.getKey());
-			if(p != null && valEquals(p.getValue(), value)) {
+			Entry<K, C, X> p = getEntry(entry.getKey());
+			if(p != null && valEquals(p.getValue(), value)){
 				deleteEntry(p);
 				return true;
 			}
@@ -1175,15 +1807,15 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 
 		public int size(){
-			return IndexTreeMap.this.size();
+			return IndexTreeMultiMap2.this.size();
 		}
 
 		public void clear(){
-			IndexTreeMap.this.clear();
+			IndexTreeMultiMap2.this.clear();
 		}
 
-		public Spliterator<Map.Entry<K, V>> spliterator(){
-			return new EntrySpliterator<K, V>(IndexTreeMap.this, null, null, 0, -1, 0);
+		public Spliterator<Map.Entry<K, C>> spliterator(){
+			return new EntrySpliterator<K, C, X>(IndexTreeMultiMap2.this, null, null, 0, -1, 0);
 		}
 	}
 
@@ -1195,21 +1827,24 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		return new DescendingKeyIterator(getLastEntry());
 	}
 
-	static final class KeySet<E>extends AbstractSet<E>implements NavigableSet<E>{
-		private final NavigableMap<E, ?> m;
+	static final class KeySet<K, C extends Cloneable & Collection<X>, X>
+	extends AbstractSet<K> implements NavigableSet<K>{
+		private final NavigableMap<K, C> m;
 
-		KeySet(NavigableMap<E, ?> map){
+		KeySet(NavigableMap<K, C> map){
 			m = map;
 		}
 
-		public Iterator<E> iterator(){
-			if(m instanceof IndexTreeMap) return ((IndexTreeMap<E, ?>)m).keyIterator();
-			else return ((IndexTreeMap.NavigableSubMap<E, ?>)m).keyIterator();
+		@SuppressWarnings("unchecked")
+		public Iterator<K> iterator(){
+			if(m instanceof IndexTreeMultiMap2) return ((IndexTreeMultiMap2<K, C, X>)m).keyIterator();
+			else return ((IndexTreeMultiMap2.NavigableSubMap<K, C, X>)m).keyIterator();
 		}
 
-		public Iterator<E> descendingIterator(){
-			if(m instanceof IndexTreeMap) return ((IndexTreeMap<E, ?>)m).descendingKeyIterator();
-			else return ((IndexTreeMap.NavigableSubMap<E, ?>)m).descendingKeyIterator();
+		@SuppressWarnings("unchecked")
+		public Iterator<K> descendingIterator(){
+			if(m instanceof IndexTreeMultiMap2) return ((IndexTreeMultiMap2<K, C, X>)m).descendingKeyIterator();
+			else return ((IndexTreeMultiMap2.NavigableSubMap<K, C, X>)m).descendingKeyIterator();
 		}
 
 		public int size(){
@@ -1224,33 +1859,33 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		public void clear(){
 			m.clear();
 		}
-		public E lower(E e){
-			return m.lowerKey(e);
+		public K lower(K k){
+			return m.lowerKey(k);
 		}
-		public E floor(E e){
-			return m.floorKey(e);
+		public K floor(K k){
+			return m.floorKey(k);
 		}
-		public E ceiling(E e){
-			return m.ceilingKey(e);
+		public K ceiling(K k){
+			return m.ceilingKey(k);
 		}
-		public E higher(E e){
-			return m.higherKey(e);
+		public K higher(K k){
+			return m.higherKey(k);
 		}
-		public E first(){
+		public K first(){
 			return m.firstKey();
 		}
-		public E last(){
+		public K last(){
 			return m.lastKey();
 		}
-		public Comparator<? super E> comparator(){
+		public Comparator<? super K> comparator(){
 			return m.comparator();
 		}
-		public E pollFirst(){
-			Map.Entry<E, ?> e = m.pollFirstEntry();
+		public K pollFirst(){
+			Map.Entry<K, ?> e = m.pollFirstEntry();
 			return (e == null) ? null : e.getKey();
 		}
-		public E pollLast(){
-			Map.Entry<E, ?> e = m.pollLastEntry();
+		public K pollLast(){
+			Map.Entry<K, ?> e = m.pollLastEntry();
 			return (e == null) ? null : e.getKey();
 		}
 		public boolean remove(Object o){
@@ -1258,29 +1893,29 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			m.remove(o);
 			return size() != oldSize;
 		}
-		public NavigableSet<E> subSet(E fromElement, boolean fromInclusive, E toElement, boolean toInclusive){
+		public NavigableSet<K> subSet(K fromElement, boolean fromInclusive, K toElement, boolean toInclusive){
 			return new KeySet<>(m.subMap(fromElement, fromInclusive, toElement, toInclusive));
 		}
-		public NavigableSet<E> headSet(E toElement, boolean inclusive){
+		public NavigableSet<K> headSet(K toElement, boolean inclusive){
 			return new KeySet<>(m.headMap(toElement, inclusive));
 		}
-		public NavigableSet<E> tailSet(E fromElement, boolean inclusive){
+		public NavigableSet<K> tailSet(K fromElement, boolean inclusive){
 			return new KeySet<>(m.tailMap(fromElement, inclusive));
 		}
-		public SortedSet<E> subSet(E fromElement, E toElement){
+		public SortedSet<K> subSet(K fromElement, K toElement){
 			return subSet(fromElement, true, toElement, false);
 		}
-		public SortedSet<E> headSet(E toElement){
+		public SortedSet<K> headSet(K toElement){
 			return headSet(toElement, false);
 		}
-		public SortedSet<E> tailSet(E fromElement){
+		public SortedSet<K> tailSet(K fromElement){
 			return tailSet(fromElement, true);
 		}
-		public NavigableSet<E> descendingSet(){
+		public NavigableSet<K> descendingSet(){
 			return new KeySet<>(m.descendingMap());
 		}
 
-		public Spliterator<E> spliterator(){
+		public Spliterator<K> spliterator(){
 			return keySpliteratorFor(m);
 		}
 	}
@@ -1288,12 +1923,12 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	/**
 	 * Base class for IndexTreeMap Iterators
 	 */
-	abstract class PrivateEntryIterator<T>implements Iterator<T>{
-		Entry<K, V> next;
-		Entry<K, V> lastReturned;
+	abstract class PrivateEntryIterator<T> implements Iterator<T>{
+		Entry<K, C, X> next;
+		Entry<K, C, X> lastReturned;
 		int expectedModCount;
 
-		PrivateEntryIterator(Entry<K, V> first){
+		PrivateEntryIterator(Entry<K, C, X> first){
 			expectedModCount = modCount;
 			lastReturned = null;
 			next = first;
@@ -1303,8 +1938,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return next != null;
 		}
 
-		final Entry<K, V> nextEntry(){
-			Entry<K, V> e = next;
+		final Entry<K, C, X> nextEntry(){
+			Entry<K, C, X> e = next;
 			if(e == null) throw new NoSuchElementException();
 			if(modCount != expectedModCount) throw new ConcurrentModificationException();
 			next = successor(e);
@@ -1312,8 +1947,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return e;
 		}
 
-		final Entry<K, V> prevEntry(){
-			Entry<K, V> e = next;
+		final Entry<K, C, X> prevEntry(){
+			Entry<K, C, X> e = next;
 			if(e == null) throw new NoSuchElementException();
 			if(modCount != expectedModCount) throw new ConcurrentModificationException();
 			next = predecessor(e);
@@ -1332,26 +1967,26 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 	}
 
-	final class EntryIterator extends PrivateEntryIterator<Map.Entry<K, V>>{
-		EntryIterator(Entry<K, V> first){
+	final class EntryIterator extends PrivateEntryIterator<Map.Entry<K, C>>{
+		EntryIterator(Entry<K, C, X> first){
 			super(first);
 		}
-		public Map.Entry<K, V> next(){
+		public Map.Entry<K, C> next(){
 			return nextEntry();
 		}
 	}
 
-	final class ValueIterator extends PrivateEntryIterator<V>{
-		ValueIterator(Entry<K, V> first){
+	final class ValueIterator extends PrivateEntryIterator<C>{
+		ValueIterator(Entry<K, C, X> first){
 			super(first);
 		}
-		public V next(){
+		public C next(){
 			return nextEntry().value;
 		}
 	}
 
 	final class KeyIterator extends PrivateEntryIterator<K>{
-		KeyIterator(Entry<K, V> first){
+		KeyIterator(Entry<K, C, X> first){
 			super(first);
 		}
 		public K next(){
@@ -1360,7 +1995,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	}
 
 	final class DescendingKeyIterator extends PrivateEntryIterator<K>{
-		DescendingKeyIterator(Entry<K, V> first){
+		DescendingKeyIterator(Entry<K, C, X> first){
 			super(first);
 		}
 		public K next(){
@@ -1394,14 +2029,15 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	/**
 	 * Return SimpleImmutableEntry for entry, or null if null
 	 */
-	static <K, V> Map.Entry<K, V> exportEntry(IndexTreeMap.Entry<K, V> e){
+	static <K, C extends Cloneable & Collection<X>, X> Map.Entry<K, C> exportEntry(
+			IndexTreeMultiMap2.Entry<K, C, X> e){
 		return (e == null) ? null : new AbstractMap.SimpleImmutableEntry<>(e);
 	}
 
 	/**
 	 * Return key for entry, or null if null
 	 */
-	static <K, V> K keyOrNull(IndexTreeMap.Entry<K, V> e){
+	static <K, C extends Cloneable & Collection<X>, X> K keyOrNull(IndexTreeMultiMap2.Entry<K, C, X> e){
 		return (e == null) ? null : e.key;
 	}
 
@@ -1411,7 +2047,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * @throws NoSuchElementException
 	 *             if the Entry is null
 	 */
-	static <K> K key(Entry<K, ?> e){
+	static <K> K key(Entry<K, ?, ?> e){
 		if(e == null) throw new NoSuchElementException();
 		return e.key;
 	}
@@ -1425,13 +2061,13 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	/**
 	 * @serial include
 	 */
-	abstract static class NavigableSubMap<K, V>extends AbstractMap<K, V>
-	implements NavigableMap<K, V>, java.io.Serializable{
+	abstract static class NavigableSubMap<K, C extends Cloneable & Collection<X>, X>
+	extends AbstractMap<K, C> implements NavigableMap<K, C>, java.io.Serializable{
 		private static final long serialVersionUID = -2102997345730753777L;
 		/**
 		 * The backing map.
 		 */
-		final IndexTreeMap<K, V> m;
+		final IndexTreeMultiMap2<K, C, X> m;
 
 		/**
 		 * Endpoints are represented as triples (fromStart, lo,
@@ -1445,9 +2081,9 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		final boolean fromStart, toEnd;
 		final boolean loInclusive, hiInclusive;
 
-		NavigableSubMap(IndexTreeMap<K, V> m, boolean fromStart, K lo, boolean loInclusive, boolean toEnd,
-				K hi, boolean hiInclusive){
-			if(!fromStart && !toEnd) {
+		NavigableSubMap(IndexTreeMultiMap2<K, C, X> m, boolean fromStart,
+				K lo, boolean loInclusive, boolean toEnd, K hi, boolean hiInclusive){
+			if(!fromStart && !toEnd){
 				if(m.compare(lo, hi) > 0) throw new IllegalArgumentException("fromKey > toKey");
 			}
 			else{
@@ -1467,7 +2103,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 
 		// internal utilities
 		final boolean tooLow(Object key){
-			if(!fromStart) {
+			if(!fromStart){
 				int c = m.compare(key, lo);
 				if(c < 0 || (c == 0 && !loInclusive)) return true;
 			}
@@ -1475,7 +2111,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 
 		final boolean tooHigh(Object key){
-			if(!toEnd) {
+			if(!toEnd){
 				int c = m.compare(key, hi);
 				if(c > 0 || (c == 0 && !hiInclusive)) return true;
 			}
@@ -1500,61 +2136,61 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		 * versions that invert senses for descending maps
 		 */
 
-		final IndexTreeMap.Entry<K, V> absLowest(){
-			IndexTreeMap.Entry<K, V> e = (fromStart ? m.getFirstEntry() :
+		final IndexTreeMultiMap2.Entry<K, C, X> absLowest(){
+			IndexTreeMultiMap2.Entry<K, C, X> e = (fromStart ? m.getFirstEntry() :
 				(loInclusive ? m.getCeilingEntry(lo) : m.getHigherEntry(lo)));
 			return (e == null || tooHigh(e.key)) ? null : e;
 		}
 
-		final IndexTreeMap.Entry<K, V> absHighest(){
-			IndexTreeMap.Entry<K, V> e = (toEnd ? m.getLastEntry() :
+		final IndexTreeMultiMap2.Entry<K, C, X> absHighest(){
+			IndexTreeMultiMap2.Entry<K, C, X> e = (toEnd ? m.getLastEntry() :
 				(hiInclusive ? m.getFloorEntry(hi) : m.getLowerEntry(hi)));
 			return (e == null || tooLow(e.key)) ? null : e;
 		}
 
-		final IndexTreeMap.Entry<K, V> absCeiling(K key){
+		final IndexTreeMultiMap2.Entry<K, C, X> absCeiling(K key){
 			if(tooLow(key)) return absLowest();
-			IndexTreeMap.Entry<K, V> e = m.getCeilingEntry(key);
+			IndexTreeMultiMap2.Entry<K, C, X> e = m.getCeilingEntry(key);
 			return (e == null || tooHigh(e.key)) ? null : e;
 		}
 
-		final IndexTreeMap.Entry<K, V> absHigher(K key){
+		final IndexTreeMultiMap2.Entry<K, C, X> absHigher(K key){
 			if(tooLow(key)) return absLowest();
-			IndexTreeMap.Entry<K, V> e = m.getHigherEntry(key);
+			IndexTreeMultiMap2.Entry<K, C, X> e = m.getHigherEntry(key);
 			return (e == null || tooHigh(e.key)) ? null : e;
 		}
 
-		final IndexTreeMap.Entry<K, V> absFloor(K key){
+		final IndexTreeMultiMap2.Entry<K, C, X> absFloor(K key){
 			if(tooHigh(key)) return absHighest();
-			IndexTreeMap.Entry<K, V> e = m.getFloorEntry(key);
+			IndexTreeMultiMap2.Entry<K, C, X> e = m.getFloorEntry(key);
 			return (e == null || tooLow(e.key)) ? null : e;
 		}
 
-		final IndexTreeMap.Entry<K, V> absLower(K key){
+		final IndexTreeMultiMap2.Entry<K, C, X> absLower(K key){
 			if(tooHigh(key)) return absHighest();
-			IndexTreeMap.Entry<K, V> e = m.getLowerEntry(key);
+			IndexTreeMultiMap2.Entry<K, C, X> e = m.getLowerEntry(key);
 			return (e == null || tooLow(e.key)) ? null : e;
 		}
 
 		/** Returns the absolute high fence for ascending traversal */
-		final IndexTreeMap.Entry<K, V> absHighFence(){
+		final IndexTreeMultiMap2.Entry<K, C, X> absHighFence(){
 			return (toEnd ? null : (hiInclusive ? m.getHigherEntry(hi) : m.getCeilingEntry(hi)));
 		}
 
 		/** Return the absolute low fence for descending traversal */
-		final IndexTreeMap.Entry<K, V> absLowFence(){
+		final IndexTreeMultiMap2.Entry<K, C, X> absLowFence(){
 			return (fromStart ? null : (loInclusive ? m.getLowerEntry(lo) : m.getFloorEntry(lo)));
 		}
 
 		// Abstract methods defined in ascending vs descending classes
 		// These relay to the appropriate absolute versions
 
-		abstract IndexTreeMap.Entry<K, V> subLowest();
-		abstract IndexTreeMap.Entry<K, V> subHighest();
-		abstract IndexTreeMap.Entry<K, V> subCeiling(K key);
-		abstract IndexTreeMap.Entry<K, V> subHigher(K key);
-		abstract IndexTreeMap.Entry<K, V> subFloor(K key);
-		abstract IndexTreeMap.Entry<K, V> subLower(K key);
+		abstract IndexTreeMultiMap2.Entry<K, C, X> subLowest();
+		abstract IndexTreeMultiMap2.Entry<K, C, X> subHighest();
+		abstract IndexTreeMultiMap2.Entry<K, C, X> subCeiling(K key);
+		abstract IndexTreeMultiMap2.Entry<K, C, X> subHigher(K key);
+		abstract IndexTreeMultiMap2.Entry<K, C, X> subFloor(K key);
+		abstract IndexTreeMultiMap2.Entry<K, C, X> subLower(K key);
 
 		/** Returns ascending iterator from the perspective of this submap */
 		abstract Iterator<K> keyIterator();
@@ -1577,20 +2213,20 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return inRange(key) && m.containsKey(key);
 		}
 
-		public final V put(K key, V value){
+		public final C put(K key, C value){
 			if(!inRange(key)) throw new IllegalArgumentException("key out of range");
 			return m.put(key, value);
 		}
 
-		public final V get(Object key){
+		public final C get(Object key){
 			return !inRange(key) ? null : m.get(key);
 		}
 
-		public final V remove(Object key){
+		public final C remove(Object key){
 			return !inRange(key) ? null : m.remove(key);
 		}
 
-		public final Map.Entry<K, V> ceilingEntry(K key){
+		public final Map.Entry<K, C> ceilingEntry(K key){
 			return exportEntry(subCeiling(key));
 		}
 
@@ -1598,7 +2234,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return keyOrNull(subCeiling(key));
 		}
 
-		public final Map.Entry<K, V> higherEntry(K key){
+		public final Map.Entry<K, C> higherEntry(K key){
 			return exportEntry(subHigher(key));
 		}
 
@@ -1606,7 +2242,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return keyOrNull(subHigher(key));
 		}
 
-		public final Map.Entry<K, V> floorEntry(K key){
+		public final Map.Entry<K, C> floorEntry(K key){
 			return exportEntry(subFloor(key));
 		}
 
@@ -1614,7 +2250,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return keyOrNull(subFloor(key));
 		}
 
-		public final Map.Entry<K, V> lowerEntry(K key){
+		public final Map.Entry<K, C> lowerEntry(K key){
 			return exportEntry(subLower(key));
 		}
 
@@ -1630,36 +2266,36 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return key(subHighest());
 		}
 
-		public final Map.Entry<K, V> firstEntry(){
+		public final Map.Entry<K, C> firstEntry(){
 			return exportEntry(subLowest());
 		}
 
-		public final Map.Entry<K, V> lastEntry(){
+		public final Map.Entry<K, C> lastEntry(){
 			return exportEntry(subHighest());
 		}
 
-		public final Map.Entry<K, V> pollFirstEntry(){
-			IndexTreeMap.Entry<K, V> e = subLowest();
-			Map.Entry<K, V> result = exportEntry(e);
+		public final Map.Entry<K, C> pollFirstEntry(){
+			IndexTreeMultiMap2.Entry<K, C, X> e = subLowest();
+			Map.Entry<K, C> result = exportEntry(e);
 			if(e != null) m.deleteEntry(e);
 			return result;
 		}
 
-		public final Map.Entry<K, V> pollLastEntry(){
-			IndexTreeMap.Entry<K, V> e = subHighest();
-			Map.Entry<K, V> result = exportEntry(e);
+		public final Map.Entry<K, C> pollLastEntry(){
+			IndexTreeMultiMap2.Entry<K, C, X> e = subHighest();
+			Map.Entry<K, C> result = exportEntry(e);
 			if(e != null) m.deleteEntry(e);
 			return result;
 		}
 
 		// Views
-		transient NavigableMap<K, V> descendingMapView;
+		transient NavigableMap<K, C> descendingMapView;
 		transient EntrySetView entrySetView;
-		transient KeySet<K> navigableKeySetView;
+		transient KeySet<K, C, X> navigableKeySetView;
 
 		public final NavigableSet<K> navigableKeySet(){
-			KeySet<K> nksv = navigableKeySetView;
-			return (nksv != null) ? nksv : (navigableKeySetView = new IndexTreeMap.KeySet<>(this));
+			KeySet<K, C, X> nksv = navigableKeySetView;
+			return (nksv != null) ? nksv : (navigableKeySetView = new IndexTreeMultiMap2.KeySet<>(this));
 		}
 
 		public final Set<K> keySet(){
@@ -1670,25 +2306,25 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return descendingMap().navigableKeySet();
 		}
 
-		public final SortedMap<K, V> subMap(K fromKey, K toKey){
+		public final SortedMap<K, C> subMap(K fromKey, K toKey){
 			return subMap(fromKey, true, toKey, false);
 		}
 
-		public final SortedMap<K, V> headMap(K toKey){
+		public final SortedMap<K, C> headMap(K toKey){
 			return headMap(toKey, false);
 		}
 
-		public final SortedMap<K, V> tailMap(K fromKey){
+		public final SortedMap<K, C> tailMap(K fromKey){
 			return tailMap(fromKey, true);
 		}
 
 		// View classes
-		abstract class EntrySetView extends AbstractSet<Map.Entry<K, V>>{
+		abstract class EntrySetView extends AbstractSet<Map.Entry<K, C>>{
 			private transient int size = -1, sizeModCount;
 
 			public int size(){
 				if(fromStart && toEnd) return m.size();
-				if(size == -1 || sizeModCount != m.modCount) {
+				if(size == -1 || sizeModCount != m.modCount){
 					sizeModCount = m.modCount;
 					size = 0;
 					Iterator<?> i = iterator();
@@ -1701,7 +2337,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			}
 
 			public boolean isEmpty(){
-				IndexTreeMap.Entry<K, V> n = absLowest();
+				IndexTreeMultiMap2.Entry<K, C, X> n = absLowest();
 				return n == null || tooHigh(n.key);
 			}
 
@@ -1710,7 +2346,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 				Map.Entry<?, ?> entry = (Map.Entry<?, ?>)o;
 				Object key = entry.getKey();
 				if(!inRange(key)) return false;
-				IndexTreeMap.Entry<?, ?> node = m.getEntry(key);
+				IndexTreeMultiMap2.Entry<?, ?, ?> node = m.getEntry(key);
 				return node != null && valEquals(node.getValue(), entry.getValue());
 			}
 
@@ -1719,8 +2355,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 				Map.Entry<?, ?> entry = (Map.Entry<?, ?>)o;
 				Object key = entry.getKey();
 				if(!inRange(key)) return false;
-				IndexTreeMap.Entry<K, V> node = m.getEntry(key);
-				if(node != null && valEquals(node.getValue(), entry.getValue())) {
+				IndexTreeMultiMap2.Entry<K, C, X> node = m.getEntry(key);
+				if(node != null && valEquals(node.getValue(), entry.getValue())){
 					m.deleteEntry(node);
 					return true;
 				}
@@ -1731,13 +2367,13 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		/**
 		 * Iterators for SubMaps
 		 */
-		abstract class SubMapIterator<T>implements Iterator<T>{
-			IndexTreeMap.Entry<K, V> lastReturned;
-			IndexTreeMap.Entry<K, V> next;
+		abstract class SubMapIterator<T> implements Iterator<T>{
+			IndexTreeMultiMap2.Entry<K, C, X> lastReturned;
+			IndexTreeMultiMap2.Entry<K, C, X> next;
 			final Object fenceKey;
 			int expectedModCount;
 
-			SubMapIterator(IndexTreeMap.Entry<K, V> first, IndexTreeMap.Entry<K, V> fence){
+			SubMapIterator(IndexTreeMultiMap2.Entry<K, C, X> first, IndexTreeMultiMap2.Entry<K, C, X> fence){
 				expectedModCount = m.modCount;
 				lastReturned = null;
 				next = first;
@@ -1748,8 +2384,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 				return next != null && next.key != fenceKey;
 			}
 
-			final IndexTreeMap.Entry<K, V> nextEntry(){
-				IndexTreeMap.Entry<K, V> e = next;
+			final IndexTreeMultiMap2.Entry<K, C, X> nextEntry(){
+				IndexTreeMultiMap2.Entry<K, C, X> e = next;
 				if(e == null || e.key == fenceKey) throw new NoSuchElementException();
 				if(m.modCount != expectedModCount) throw new ConcurrentModificationException();
 				next = successor(e);
@@ -1757,8 +2393,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 				return e;
 			}
 
-			final IndexTreeMap.Entry<K, V> prevEntry(){
-				IndexTreeMap.Entry<K, V> e = next;
+			final IndexTreeMultiMap2.Entry<K, C, X> prevEntry(){
+				IndexTreeMultiMap2.Entry<K, C, X> e = next;
 				if(e == null || e.key == fenceKey) throw new NoSuchElementException();
 				if(m.modCount != expectedModCount) throw new ConcurrentModificationException();
 				next = predecessor(e);
@@ -1786,11 +2422,11 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 
 		}
 
-		final class SubMapEntryIterator extends SubMapIterator<Map.Entry<K, V>>{
-			SubMapEntryIterator(IndexTreeMap.Entry<K, V> first, IndexTreeMap.Entry<K, V> fence){
+		final class SubMapEntryIterator extends SubMapIterator<Map.Entry<K, C>>{
+			SubMapEntryIterator(IndexTreeMultiMap2.Entry<K, C, X> first, IndexTreeMultiMap2.Entry<K, C, X> fence){
 				super(first, fence);
 			}
-			public Map.Entry<K, V> next(){
+			public Map.Entry<K, C> next(){
 				return nextEntry();
 			}
 			public void remove(){
@@ -1798,12 +2434,13 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			}
 		}
 
-		final class DescendingSubMapEntryIterator extends SubMapIterator<Map.Entry<K, V>>{
-			DescendingSubMapEntryIterator(IndexTreeMap.Entry<K, V> last, IndexTreeMap.Entry<K, V> fence){
+		final class DescendingSubMapEntryIterator extends SubMapIterator<Map.Entry<K, C>>{
+			DescendingSubMapEntryIterator(
+					IndexTreeMultiMap2.Entry<K, C, X> last, IndexTreeMultiMap2.Entry<K, C, X> fence){
 				super(last, fence);
 			}
 
-			public Map.Entry<K, V> next(){
+			public Map.Entry<K, C> next(){
 				return prevEntry();
 			}
 			public void remove(){
@@ -1812,8 +2449,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 
 		// Implement minimal Spliterator as KeySpliterator backup
-		final class SubMapKeyIterator extends SubMapIterator<K>implements Spliterator<K>{
-			SubMapKeyIterator(IndexTreeMap.Entry<K, V> first, IndexTreeMap.Entry<K, V> fence){
+		final class SubMapKeyIterator extends SubMapIterator<K> implements Spliterator<K>{
+			SubMapKeyIterator(IndexTreeMultiMap2.Entry<K, C, X> first, IndexTreeMultiMap2.Entry<K, C, X> fence){
 				super(first, fence);
 			}
 			public K next(){
@@ -1830,7 +2467,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 					action.accept(next());
 			}
 			public boolean tryAdvance(Consumer<? super K> action){
-				if(hasNext()) {
+				if(hasNext()){
 					action.accept(next());
 					return true;
 				}
@@ -1847,8 +2484,9 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			}
 		}
 
-		final class DescendingSubMapKeyIterator extends SubMapIterator<K>implements Spliterator<K>{
-			DescendingSubMapKeyIterator(IndexTreeMap.Entry<K, V> last, IndexTreeMap.Entry<K, V> fence){
+		final class DescendingSubMapKeyIterator extends SubMapIterator<K> implements Spliterator<K>{
+			DescendingSubMapKeyIterator(IndexTreeMultiMap2.Entry<K, C, X> last,
+					IndexTreeMultiMap2.Entry<K, C, X> fence){
 				super(last, fence);
 			}
 			public K next(){
@@ -1865,7 +2503,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 					action.accept(next());
 			}
 			public boolean tryAdvance(Consumer<? super K> action){
-				if(hasNext()) {
+				if(hasNext()){
 					action.accept(next());
 					return true;
 				}
@@ -1883,10 +2521,10 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	/**
 	 * @serial include
 	 */
-	static final class AscendingSubMap<K, V>extends NavigableSubMap<K, V>{
+	static final class AscendingSubMap<K, C extends Cloneable & Collection<X>, X> extends NavigableSubMap<K, C, X>{
 		private static final long serialVersionUID = 912986545866124777L;
 
-		AscendingSubMap(IndexTreeMap<K, V> m, boolean fromStart, K lo, boolean loInclusive, boolean toEnd,
+		AscendingSubMap(IndexTreeMultiMap2<K, C, X> m, boolean fromStart, K lo, boolean loInclusive, boolean toEnd,
 				K hi, boolean hiInclusive){
 			super(m, fromStart, lo, loInclusive, toEnd, hi, hiInclusive);
 		}
@@ -1895,24 +2533,24 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return m.comparator();
 		}
 
-		public NavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
+		public NavigableMap<K, C> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
 			if(!inRange(fromKey, fromInclusive)) throw new IllegalArgumentException("fromKey out of range");
 			if(!inRange(toKey, toInclusive)) throw new IllegalArgumentException("toKey out of range");
 			return new AscendingSubMap<>(m, false, fromKey, fromInclusive, false, toKey, toInclusive);
 		}
 
-		public NavigableMap<K, V> headMap(K toKey, boolean inclusive){
+		public NavigableMap<K, C> headMap(K toKey, boolean inclusive){
 			if(!inRange(toKey, inclusive)) throw new IllegalArgumentException("toKey out of range");
 			return new AscendingSubMap<>(m, fromStart, lo, loInclusive, false, toKey, inclusive);
 		}
 
-		public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive){
+		public NavigableMap<K, C> tailMap(K fromKey, boolean inclusive){
 			if(!inRange(fromKey, inclusive)) throw new IllegalArgumentException("fromKey out of range");
 			return new AscendingSubMap<>(m, false, fromKey, inclusive, toEnd, hi, hiInclusive);
 		}
 
-		public NavigableMap<K, V> descendingMap(){
-			NavigableMap<K, V> mv = descendingMapView;
+		public NavigableMap<K, C> descendingMap(){
+			NavigableMap<K, C> mv = descendingMapView;
 			return (mv != null) ? mv : (descendingMapView = new DescendingSubMap<>(m, fromStart, lo,
 					loInclusive, toEnd, hi, hiInclusive));
 		}
@@ -1930,32 +2568,32 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 
 		final class AscendingEntrySetView extends EntrySetView{
-			public Iterator<Map.Entry<K, V>> iterator(){
+			public Iterator<Map.Entry<K, C>> iterator(){
 				return new SubMapEntryIterator(absLowest(), absHighFence());
 			}
 		}
 
-		public Set<Map.Entry<K, V>> entrySet(){
+		public Set<Map.Entry<K, C>> entrySet(){
 			EntrySetView es = entrySetView;
 			return (es != null) ? es : (entrySetView = new AscendingEntrySetView());
 		}
 
-		IndexTreeMap.Entry<K, V> subLowest(){
+		IndexTreeMultiMap2.Entry<K, C, X> subLowest(){
 			return absLowest();
 		}
-		IndexTreeMap.Entry<K, V> subHighest(){
+		IndexTreeMultiMap2.Entry<K, C, X> subHighest(){
 			return absHighest();
 		}
-		IndexTreeMap.Entry<K, V> subCeiling(K key){
+		IndexTreeMultiMap2.Entry<K, C, X> subCeiling(K key){
 			return absCeiling(key);
 		}
-		IndexTreeMap.Entry<K, V> subHigher(K key){
+		IndexTreeMultiMap2.Entry<K, C, X> subHigher(K key){
 			return absHigher(key);
 		}
-		IndexTreeMap.Entry<K, V> subFloor(K key){
+		IndexTreeMultiMap2.Entry<K, C, X> subFloor(K key){
 			return absFloor(key);
 		}
-		IndexTreeMap.Entry<K, V> subLower(K key){
+		IndexTreeMultiMap2.Entry<K, C, X> subLower(K key){
 			return absLower(key);
 		}
 	}
@@ -1963,10 +2601,11 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	/**
 	 * @serial include
 	 */
-	static final class DescendingSubMap<K, V>extends NavigableSubMap<K, V>{
+	static final class DescendingSubMap<K, C extends Cloneable & Collection<X>, X> extends NavigableSubMap<K, C, X>{
 		private static final long serialVersionUID = 912986545866120777L;
 
-		DescendingSubMap(IndexTreeMap<K, V> m, boolean fromStart, K lo, boolean loInclusive, boolean toEnd, K hi, boolean hiInclusive){
+		DescendingSubMap(IndexTreeMultiMap2<K, C, X> m,
+				boolean fromStart, K lo, boolean loInclusive, boolean toEnd, K hi, boolean hiInclusive){
 			super(m, fromStart, lo, loInclusive, toEnd, hi, hiInclusive);
 		}
 
@@ -1976,24 +2615,24 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			return reverseComparator;
 		}
 
-		public NavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
+		public NavigableMap<K, C> subMap(K fromKey, boolean fromInclusive, K toKey, boolean toInclusive){
 			if(!inRange(fromKey, fromInclusive)) throw new IllegalArgumentException("fromKey out of range");
 			if(!inRange(toKey, toInclusive)) throw new IllegalArgumentException("toKey out of range");
 			return new DescendingSubMap<>(m, false, toKey, toInclusive, false, fromKey, fromInclusive);
 		}
 
-		public NavigableMap<K, V> headMap(K toKey, boolean inclusive){
+		public NavigableMap<K, C> headMap(K toKey, boolean inclusive){
 			if(!inRange(toKey, inclusive)) throw new IllegalArgumentException("toKey out of range");
 			return new DescendingSubMap<>(m, false, toKey, inclusive, toEnd, hi, hiInclusive);
 		}
 
-		public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive){
+		public NavigableMap<K, C> tailMap(K fromKey, boolean inclusive){
 			if(!inRange(fromKey, inclusive)) throw new IllegalArgumentException("fromKey out of range");
 			return new DescendingSubMap<>(m, fromStart, lo, loInclusive, false, fromKey, inclusive);
 		}
 
-		public NavigableMap<K, V> descendingMap(){
-			NavigableMap<K, V> mv = descendingMapView;
+		public NavigableMap<K, C> descendingMap(){
+			NavigableMap<K, C> mv = descendingMapView;
 			return (mv != null) ? mv : (descendingMapView = new AscendingSubMap<>(m, fromStart, lo,
 					loInclusive, toEnd, hi, hiInclusive));
 		}
@@ -2011,32 +2650,32 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 
 		final class DescendingEntrySetView extends EntrySetView{
-			public Iterator<Map.Entry<K, V>> iterator(){
+			public Iterator<Map.Entry<K, C>> iterator(){
 				return new DescendingSubMapEntryIterator(absHighest(), absLowFence());
 			}
 		}
 
-		public Set<Map.Entry<K, V>> entrySet(){
+		public Set<Map.Entry<K, C>> entrySet(){
 			EntrySetView es = entrySetView;
 			return (es != null) ? es : (entrySetView = new DescendingEntrySetView());
 		}
 
-		IndexTreeMap.Entry<K, V> subLowest(){
+		IndexTreeMultiMap2.Entry<K, C, X> subLowest(){
 			return absHighest();
 		}
-		IndexTreeMap.Entry<K, V> subHighest(){
+		IndexTreeMultiMap2.Entry<K, C, X> subHighest(){
 			return absLowest();
 		}
-		IndexTreeMap.Entry<K, V> subCeiling(K key){
+		IndexTreeMultiMap2.Entry<K, C, X> subCeiling(K key){
 			return absFloor(key);
 		}
-		IndexTreeMap.Entry<K, V> subHigher(K key){
+		IndexTreeMultiMap2.Entry<K, C, X> subHigher(K key){
 			return absLower(key);
 		}
-		IndexTreeMap.Entry<K, V> subFloor(K key){
+		IndexTreeMultiMap2.Entry<K, C, X> subFloor(K key){
 			return absCeiling(key);
 		}
-		IndexTreeMap.Entry<K, V> subLower(K key){
+		IndexTreeMultiMap2.Entry<K, C, X> subLower(K key){
 			return absHigher(key);
 		}
 	}
@@ -2050,23 +2689,24 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * user (see Map.Entry).
 	 */
 
-	static final class Entry<K, V>implements Map.Entry<K, V>{
+	static final class Entry<K, C extends Cloneable & Collection<X>, X> implements Map.Entry<K, C>{
 		K key;
-		V value;
-		Entry<K, V> left;
-		Entry<K, V> right;
-		Entry<K, V> parent;
+		private C value;
+		Entry<K, C, X> left;
+		Entry<K, C, X> right;
+		Entry<K, C, X> parent;
 		boolean color = BLACK;
-		int treeSz = 1;
+		int size, treeSz = 1;
 
 		/**
 		 * Make a new cell with given key, value, and parent, and with
 		 * {@code null} child links, and BLACK color.
 		 */
-		Entry(K key, V value, Entry<K, V> parent){
+		Entry(K key, C value, Entry<K, C, X> parent){
 			this.key = key;
 			this.value = value;
 			this.parent = parent;
+			this.size = value.size();
 		}
 
 		/**
@@ -2083,7 +2723,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		 *
 		 * @return the value associated with the key
 		 */
-		public V getValue(){
+		public C getValue(){
 			return value;
 		}
 
@@ -2092,10 +2732,47 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		 *
 		 * @return the value associated with the key before this method was called
 		 */
-		public V setValue(V value){
-			V oldValue = this.value;
+		public C setValue(C value){
+			if(this.value == null) return null;
+			C oldValue = reflClone(this.value);
 			this.value = value;
 			return oldValue;
+		}
+
+		/**
+		 * Adds the given value to the values currently associated with the key
+		 * 
+		 * @return true if the set changed as a result of the call
+		 */
+		public boolean addValue(X value){
+			return this.value.add(value);
+		}
+
+		/**
+		 * Adds the given values to the set of values currently associated with the key
+		 * 
+		 * @return true if the set changed as a result of the call
+		 */
+		public boolean addValues(Collection<X> values){
+			return this.value.addAll(values);
+		}
+
+		/**
+		 * Removes the given value from the set of values currently associated with the key
+		 * 
+		 * @return true if the set contained the specified value
+		 */
+		public boolean removeValue(Object value){
+			return this.value.remove(value);
+		}
+
+		/**
+		 * Removes the given values from the set of values currently associated with the key
+		 * 
+		 * @return true if the set changed as a result of the call
+		 */
+		public boolean removeValues(Collection<?> values){
+			return this.value.removeAll(values);
 		}
 
 		public boolean equals(Object o){
@@ -2121,8 +2798,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * IndexTreeMap's
 	 * key-sort function). Returns null if the IndexTreeMap is empty.
 	 */
-	final Entry<K, V> getFirstEntry(){
-		Entry<K, V> p = root;
+	final Entry<K, C, X> getFirstEntry(){
+		Entry<K, C, X> p = root;
 		if(p != null) while(p.left != null) p = p.left;
 		return p;
 	}
@@ -2132,8 +2809,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * IndexTreeMap's
 	 * key-sort function). Returns null if the IndexTreeMap is empty.
 	 */
-	final Entry<K, V> getLastEntry(){
-		Entry<K, V> p = root;
+	final Entry<K, C, X> getLastEntry(){
+		Entry<K, C, X> p = root;
 		if(p != null) while(p.right != null) p = p.right;
 		return p;
 	}
@@ -2141,16 +2818,16 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	/**
 	 * Returns the successor of the specified Entry, or null if no such.
 	 */
-	static <K, V> IndexTreeMap.Entry<K, V> successor(Entry<K, V> t){
+	static <K, C extends Cloneable & Collection<X>, X> Entry<K, C, X> successor(Entry<K, C, X> t){
 		if(t == null) return null;
-		else if(t.right != null) {
-			Entry<K, V> p = t.right;
+		else if(t.right != null){
+			Entry<K, C, X> p = t.right;
 			while(p.left != null) p = p.left;
 			return p;
 		}
 		else{
-			Entry<K, V> p = t.parent;
-			Entry<K, V> ch = t;
+			Entry<K, C, X> p = t.parent;
+			Entry<K, C, X> ch = t;
 			while(p != null && ch == p.right){
 				ch = p;
 				p = p.parent;
@@ -2162,16 +2839,16 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	/**
 	 * Returns the predecessor of the specified Entry, or null if no such.
 	 */
-	static <K, V> Entry<K, V> predecessor(Entry<K, V> t){
+	static <K, C extends Cloneable & Collection<X>, X> Entry<K, C, X> predecessor(Entry<K, C, X> t){
 		if(t == null) return null;
-		else if(t.left != null) {
-			Entry<K, V> p = t.left;
+		else if(t.left != null){
+			Entry<K, C, X> p = t.left;
 			while(p.right != null) p = p.right;
 			return p;
 		}
 		else{
-			Entry<K, V> p = t.parent;
-			Entry<K, V> ch = t;
+			Entry<K, C, X> p = t.parent;
+			Entry<K, C, X> ch = t;
 			while(p != null && ch == p.left){
 				ch = p;
 				p = p.parent;
@@ -2190,30 +2867,30 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * algorithms.
 	 */
 
-	private static <K, V> boolean colorOf(Entry<K, V> p){
+	private static <K, C extends Cloneable & Collection<X>, X> boolean colorOf(Entry<K, C, X> p){
 		return (p == null ? BLACK : p.color);
 	}
 
-	private static <K, V> Entry<K, V> parentOf(Entry<K, V> p){
+	private static <K, C extends Cloneable & Collection<X>, X> Entry<K, C, X> parentOf(Entry<K, C, X> p){
 		return (p == null ? null : p.parent);
 	}
 
-	private static <K, V> void setColor(Entry<K, V> p, boolean c){
+	private static <K, C extends Cloneable & Collection<X>, X> void setColor(Entry<K, C, X> p, boolean c){
 		if(p != null) p.color = c;
 	}
 
-	private static <K, V> Entry<K, V> leftOf(Entry<K, V> p){
+	private static <K, C extends Cloneable & Collection<X>, X> Entry<K, C, X> leftOf(Entry<K, C, X> p){
 		return (p == null) ? null : p.left;
 	}
 
-	private static <K, V> Entry<K, V> rightOf(Entry<K, V> p){
+	private static <K, C extends Cloneable & Collection<X>, X> Entry<K, C, X> rightOf(Entry<K, C, X> p){
 		return (p == null) ? null : p.right;
 	}
 
 	/** From CLR */
-	private void rotateLeft(Entry<K, V> p){
-		if(p != null) {
-			Entry<K, V> r = p.right;
+	private void rotateLeft(Entry<K, C, X> p){
+		if(p != null){
+			Entry<K, C, X> r = p.right;
 			p.right = r.left;
 			if(r.left != null) r.left.parent = p;
 			r.parent = p.parent;
@@ -2223,17 +2900,17 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			r.left = p;
 			p.parent = r;
 			// Tree size updates
-			--p.treeSz;
-			if(r.right != null) p.treeSz -= r.right.treeSz;
-			++r.treeSz;
-			if(p.left != null) r.treeSz += p.left.treeSz;
+			p.size -= r.value.size(); --p.treeSz;
+			if(r.right != null){p.size -= r.right.size; p.treeSz -= r.right.treeSz;}
+			r.size += p.value.size(); ++r.treeSz;
+			if(p.left != null){r.size += p.left.size; r.treeSz += p.left.treeSz;}
 		}
 	}
 
 	/** From CLR */
-	private void rotateRight(Entry<K, V> p){
-		if(p != null) {
-			Entry<K, V> l = p.left;
+	private void rotateRight(Entry<K, C, X> p){
+		if(p != null){
+			Entry<K, C, X> l = p.left;
 			p.left = l.right;
 			if(l.right != null) l.right.parent = p;
 			l.parent = p.parent;
@@ -2243,29 +2920,28 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			l.right = p;
 			p.parent = l;
 			// Tree size updates
-			--p.treeSz;
-			if(l.left != null) p.treeSz -= l.left.treeSz;
-			++l.treeSz;
-			if(p.right != null) l.treeSz += p.right.treeSz;
+			p.size -= l.value.size(); --p.treeSz;
+			if(l.left != null){p.size -= l.left.size; p.treeSz -= l.left.treeSz;}
+			l.size += p.value.size(); ++l.treeSz;
+			if(p.right != null){l.size += p.right.size; l.treeSz += p.right.treeSz;}
 		}
 	}
 
-
 	/** From CLR */
-	private void fixAfterInsertion(Entry<K, V> x){
+	private void fixAfterInsertion(Entry<K, C, X> x){
 		x.color = RED;
 
 		while(x != null && x != root && x.parent.color == RED){
-			if(parentOf(x) == leftOf(parentOf(parentOf(x)))) {
-				Entry<K, V> y = rightOf(parentOf(parentOf(x)));
-				if(colorOf(y) == RED) {
+			if(parentOf(x) == leftOf(parentOf(parentOf(x)))){
+				Entry<K, C, X> y = rightOf(parentOf(parentOf(x)));
+				if(colorOf(y) == RED){
 					setColor(parentOf(x), BLACK);
 					setColor(y, BLACK);
 					setColor(parentOf(parentOf(x)), RED);
 					x = parentOf(parentOf(x));
 				}
 				else{
-					if(x == rightOf(parentOf(x))) {
+					if(x == rightOf(parentOf(x))){
 						x = parentOf(x);
 						rotateLeft(x);
 					}
@@ -2275,15 +2951,15 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 				}
 			}
 			else{
-				Entry<K, V> y = leftOf(parentOf(parentOf(x)));
-				if(colorOf(y) == RED) {
+				Entry<K, C, X> y = leftOf(parentOf(parentOf(x)));
+				if(colorOf(y) == RED){
 					setColor(parentOf(x), BLACK);
 					setColor(y, BLACK);
 					setColor(parentOf(parentOf(x)), RED);
 					x = parentOf(parentOf(x));
 				}
 				else{
-					if(x == leftOf(parentOf(x))) {
+					if(x == leftOf(parentOf(x))){
 						x = parentOf(x);
 						rotateRight(x);
 					}
@@ -2299,22 +2975,29 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	/**
 	 * Delete node p, and then rebalance the tree.
 	 */
-	private void deleteEntry(Entry<K, V> p){
+	private void deleteEntry(Entry<K, C, X> p){
 		++modCount;
 		--size;
 
+		Entry<K, C, X> parent = p.parent;
+		while(parent != null){
+			--parent.treeSz;
+			parent.size -= p.value.size();
+			parent = parent.parent;
+		}
+
 		// If strictly internal, copy successor's element to p and then make p point to successor.
-		if(p.left != null && p.right != null) {
-			Entry<K, V> s = successor(p);
+		if(p.left != null && p.right != null){
+			Entry<K, C, X> s = successor(p);
 			p.key = s.key;
 			p.value = s.value;
 			p = s;
 		} // p has 2 children
 
 		// Start fixup at replacement node, if it exists.
-		Entry<K, V> replacement = (p.left != null ? p.left : p.right);
+		Entry<K, C, X> replacement = (p.left != null ? p.left : p.right);
 
-		if(replacement != null) {
+		if(replacement != null){
 			// Link replacement to parent
 			replacement.parent = p.parent;
 			if(p.parent == null) root = replacement;
@@ -2327,13 +3010,13 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			// Fix replacement
 			if(p.color == BLACK) fixAfterDeletion(replacement);
 		}
-		else if(p.parent == null) { // return if we are the only node.
+		else if(p.parent == null){ // return if we are the only node.
 			root = null;
 		}
 		else{ // No children. Use self as phantom replacement and unlink.
 			if(p.color == BLACK) fixAfterDeletion(p);
 
-			if(p.parent != null) {
+			if(p.parent != null){
 				if(p == p.parent.left) p.parent.left = null;
 				else if(p == p.parent.right) p.parent.right = null;
 				p.parent = null;
@@ -2342,24 +3025,24 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	}
 
 	/** From CLR */
-	private void fixAfterDeletion(Entry<K, V> x){
+	private void fixAfterDeletion(Entry<K, C, X> x){
 		while(x != root && colorOf(x) == BLACK){
-			if(x == leftOf(parentOf(x))) {
-				Entry<K, V> sib = rightOf(parentOf(x));
+			if(x == leftOf(parentOf(x))){
+				Entry<K, C, X> sib = rightOf(parentOf(x));
 
-				if(colorOf(sib) == RED) {
+				if(colorOf(sib) == RED){
 					setColor(sib, BLACK);
 					setColor(parentOf(x), RED);
 					rotateLeft(parentOf(x));
 					sib = rightOf(parentOf(x));
 				}
 
-				if(colorOf(leftOf(sib)) == BLACK && colorOf(rightOf(sib)) == BLACK) {
+				if(colorOf(leftOf(sib)) == BLACK && colorOf(rightOf(sib)) == BLACK){
 					setColor(sib, RED);
 					x = parentOf(x);
 				}
 				else{
-					if(colorOf(rightOf(sib)) == BLACK) {
+					if(colorOf(rightOf(sib)) == BLACK){
 						setColor(leftOf(sib), BLACK);
 						setColor(sib, RED);
 						rotateRight(sib);
@@ -2373,21 +3056,21 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 				}
 			}
 			else{ // symmetric
-				Entry<K, V> sib = leftOf(parentOf(x));
+				Entry<K, C, X> sib = leftOf(parentOf(x));
 
-				if(colorOf(sib) == RED) {
+				if(colorOf(sib) == RED){
 					setColor(sib, BLACK);
 					setColor(parentOf(x), RED);
 					rotateRight(parentOf(x));
 					sib = leftOf(parentOf(x));
 				}
 
-				if(colorOf(rightOf(sib)) == BLACK && colorOf(leftOf(sib)) == BLACK) {
+				if(colorOf(rightOf(sib)) == BLACK && colorOf(leftOf(sib)) == BLACK){
 					setColor(sib, RED);
 					x = parentOf(x);
 				}
 				else{
-					if(colorOf(leftOf(sib)) == BLACK) {
+					if(colorOf(leftOf(sib)) == BLACK){
 						setColor(rightOf(sib), BLACK);
 						setColor(sib, RED);
 						rotateLeft(sib);
@@ -2428,8 +3111,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		s.writeInt(size);
 
 		// Write out keys and values (alternating)
-		for(Iterator<Map.Entry<K, V>> i = entrySet().iterator(); i.hasNext();){
-			Map.Entry<K, V> e = i.next();
+		for(Iterator<Map.Entry<K, C>> i = entrySet().iterator(); i.hasNext();){
+			Map.Entry<K, C> e = i.next();
 			s.writeObject(e.getKey());
 			s.writeObject(e.getValue());
 		}
@@ -2451,13 +3134,13 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	}
 
 	/** Intended to be called only from TreeSet.readObject */
-	void readTreeSet(int size, java.io.ObjectInputStream s, V defaultVal)
+	void readTreeSet(int size, java.io.ObjectInputStream s, C defaultVal)
 			throws java.io.IOException, ClassNotFoundException{
 		buildFromSorted(size, null, s, defaultVal);
 	}
 
 	/** Intended to be called only from TreeSet.addAll */
-	void addAllForTreeSet(SortedSet<? extends K> set, V defaultVal){
+	void addAllForTreeSet(SortedSet<? extends K> set, C defaultVal){
 		try{
 			buildFromSorted(set.size(), set.iterator(), null, defaultVal);
 		}
@@ -2502,7 +3185,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *             propagated from readObject.
 	 *             This cannot occur if str is null.
 	 */
-	private void buildFromSorted(int size, Iterator<?> it, java.io.ObjectInputStream str, V defaultVal)
+	private void buildFromSorted(int size, Iterator<?> it, java.io.ObjectInputStream str, C defaultVal)
 			throws java.io.IOException, ClassNotFoundException{
 		this.size = size;
 		root = buildFromSorted(0, 0, size - 1, computeRedLevel(size), it, str, defaultVal);
@@ -2522,9 +3205,9 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 *                 Must be equal to computeRedLevel for tree of this size.
 	 */
 	@SuppressWarnings("unchecked")
-	private final Entry<K, V> buildFromSorted(int level, int lo, int hi,
+	private final Entry<K, C, X> buildFromSorted(int level, int lo, int hi,
 			int redLevel, Iterator<?> it,
-			java.io.ObjectInputStream str, V defaultVal) throws java.io.IOException, ClassNotFoundException{
+			java.io.ObjectInputStream str, C defaultVal) throws java.io.IOException, ClassNotFoundException{
 		/*
 		 * Strategy: The root is the middlemost element. To get to it, we
 		 * have to first recursively construct the entire left subtree,
@@ -2541,17 +3224,17 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 
 		int mid = (lo + hi) >>> 1;
 
-		Entry<K, V> left = null;
+		Entry<K, C, X> left = null;
 		if(lo < mid) left = buildFromSorted(level + 1, lo, mid - 1, redLevel, it, str, defaultVal);
 
 		// extract key and/or value from iterator or stream
 		K key;
-		V value;
-		if(it != null) {
-			if(defaultVal == null) {
+		C value;
+		if(it != null){
+			if(defaultVal == null){
 				Map.Entry<?, ?> entry = (Map.Entry<?, ?>)it.next();
 				key = (K)entry.getKey();
-				value = (V)entry.getValue();
+				value = (C)entry.getValue();
 			}
 			else{
 				key = (K)it.next();
@@ -2560,23 +3243,25 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 		else{ // use stream
 			key = (K)str.readObject();
-			value = (defaultVal != null ? defaultVal : (V)str.readObject());
+			value = (defaultVal != null ? defaultVal : (C)str.readObject());
 		}
 
-		Entry<K, V> middle = new Entry<>(key, value, null);
+		Entry<K, C, X> middle = new Entry<>(key, value, null);
 
 		// color nodes in non-full bottommost level red
 		if(level == redLevel) middle.color = RED;
 
-		if(left != null) {
+		if(left != null){
 			middle.left = left;
 			left.parent = middle;
+			middle.size += left.size;
 		}
 
-		if(mid < hi) {
-			Entry<K, V> right = buildFromSorted(level + 1, mid + 1, hi, redLevel, it, str, defaultVal);
+		if(mid < hi){
+			Entry<K, C, X> right = buildFromSorted(level + 1, mid + 1, hi, redLevel, it, str, defaultVal);
 			middle.right = right;
 			right.parent = middle;
+			middle.size += right.size;
 		}
 
 		return middle;
@@ -2606,31 +3291,33 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * structures. Callers must use plain default spliterators if this
 	 * returns null.
 	 */
-	static <K> Spliterator<K> keySpliteratorFor(NavigableMap<K, ?> m){
-		if(m instanceof IndexTreeMap) {
+	static <K, C extends Cloneable & Collection<X>, X> Spliterator<K> keySpliteratorFor(
+			NavigableMap<K, ? extends C> m){
+		if(m instanceof IndexTreeMultiMap2){
 			@SuppressWarnings("unchecked")
-			IndexTreeMap<K, Object> t = (IndexTreeMap<K, Object>)m;
+			IndexTreeMultiMap2<K, C, X> t = (IndexTreeMultiMap2<K, C, X>)m;
 			return t.keySpliterator();
 		}
-		if(m instanceof DescendingSubMap) {
-			DescendingSubMap<K, ?> dm = (DescendingSubMap<K, ?>)m;
-			IndexTreeMap<K, ?> tm = dm.m;
-			if(dm == tm.descendingMap) {
-				@SuppressWarnings("unchecked")
-				IndexTreeMap<K, Object> t = (IndexTreeMap<K, Object>)tm;
+		if(m instanceof DescendingSubMap){
+			@SuppressWarnings("unchecked")
+			DescendingSubMap<K, C, X> dm = (DescendingSubMap<K, C, X>)m;
+			IndexTreeMultiMap2<K, C, X> tm = dm.m;
+			if(dm == tm.descendingMap){
+				IndexTreeMultiMap2<K, C, X> t = (IndexTreeMultiMap2<K, C, X>)tm;
 				return t.descendingKeySpliterator();
 			}
 		}
-		NavigableSubMap<K, ?> sm = (NavigableSubMap<K, ?>)m;
+		@SuppressWarnings("unchecked")
+		NavigableSubMap<K, C, X> sm = (NavigableSubMap<K, C, X>)m;
 		return sm.keySpliterator();
 	}
 
 	final Spliterator<K> keySpliterator(){
-		return new KeySpliterator<K, V>(this, null, null, 0, -1, 0);
+		return new KeySpliterator<K, C, X>(this, null, null, 0, -1, 0);
 	}
 
 	final Spliterator<K> descendingKeySpliterator(){
-		return new DescendingKeySpliterator<K, V>(this, null, null, 0, -2, 0);
+		return new DescendingKeySpliterator<K, C, X>(this, null, null, 0, -2, 0);
 	}
 
 	/**
@@ -2658,16 +3345,16 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 	 * To boostrap initialization, external constructors use
 	 * negative size estimates: -1 for ascend, -2 for descend.
 	 */
-	static class IndexTreeMapSpliterator<K, V>{
-		final IndexTreeMap<K, V> tree;
-		IndexTreeMap.Entry<K, V> current; // traverser; initially first node in range
-		IndexTreeMap.Entry<K, V> fence; // one past last, or null
+	static class IndexTreeMapSpliterator<K, C extends Cloneable & Collection<X>, X>{
+		final IndexTreeMultiMap2<K, C, X> tree;
+		IndexTreeMultiMap2.Entry<K, C, X> current; // traverser; initially first node in range
+		IndexTreeMultiMap2.Entry<K, C, X> fence; // one past last, or null
 		int side; // 0: top, -1: is a left split, +1: right
 		int est; // size estimate (exact only for top-level)
 		int expectedModCount; // for CME checks
 
-		IndexTreeMapSpliterator(IndexTreeMap<K, V> tree, IndexTreeMap.Entry<K, V> origin,
-				IndexTreeMap.Entry<K, V> fence, int side, int est,
+		IndexTreeMapSpliterator(IndexTreeMultiMap2<K, C, X> tree, IndexTreeMultiMap2.Entry<K, C, X> origin,
+				IndexTreeMultiMap2.Entry<K, C, X> fence, int side, int est,
 				int expectedModCount){
 			this.tree = tree;
 			this.current = origin;
@@ -2679,9 +3366,9 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 
 		final int getEstimate(){ // force initialization
 			int s;
-			IndexTreeMap<K, V> t;
-			if((s = est) < 0) {
-				if((t = tree) != null) {
+			IndexTreeMultiMap2<K, C, X> t;
+			if((s = est) < 0){
+				if((t = tree) != null){
 					current = (s == -1) ? t.getFirstEntry() : t.getLastEntry();
 					s = est = t.size;
 					expectedModCount = t.modCount;
@@ -2696,22 +3383,23 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 	}
 
-	static final class KeySpliterator<K, V>extends IndexTreeMapSpliterator<K, V>implements Spliterator<K>{
-		KeySpliterator(IndexTreeMap<K, V> tree, IndexTreeMap.Entry<K, V> origin,
-				IndexTreeMap.Entry<K, V> fence, int side, int est, int expectedModCount){
+	static final class KeySpliterator<K, C extends Cloneable & Collection<X>, X>
+	extends IndexTreeMapSpliterator<K, C, X> implements Spliterator<K>{
+		KeySpliterator(IndexTreeMultiMap2<K, C, X> tree, IndexTreeMultiMap2.Entry<K, C, X> origin,
+				IndexTreeMultiMap2.Entry<K, C, X> fence, int side, int est, int expectedModCount){
 			super(tree, origin, fence, side, est, expectedModCount);
 		}
 
-		public KeySpliterator<K, V> trySplit(){
+		public KeySpliterator<K, C, X> trySplit(){
 			if(est < 0) getEstimate(); // force initialization
 			int d = side;
-			IndexTreeMap.Entry<K, V> e = current, f = fence,
+			IndexTreeMultiMap2.Entry<K, C, X> e = current, f = fence,
 					s = ((e == null || e == f) ? null : // empty
 						(d == 0) ? tree.root : // was top
 						(d > 0) ? e.right : // was right
 						(d < 0 && f != null) ? f.left : // was left
 						null);
-			if(s != null && s != e && s != f && tree.compare(e.key, s.key) < 0) { // e not already past s
+			if(s != null && s != e && s != f && tree.compare(e.key, s.key) < 0){ // e not already past s
 				side = 1;
 				return new KeySpliterator<>(tree, e, current = s, -1, est >>>= 1, expectedModCount);
 			}
@@ -2721,12 +3409,12 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		public void forEachRemaining(Consumer<? super K> action){
 			if(action == null) throw new NullPointerException();
 			if(est < 0) getEstimate(); // force initialization
-			IndexTreeMap.Entry<K, V> f = fence, e, p, pl;
-			if((e = current) != null && e != f) {
+			IndexTreeMultiMap2.Entry<K, C, X> f = fence, e, p, pl;
+			if((e = current) != null && e != f){
 				current = f; // exhaust
 				do{
 					action.accept(e.key);
-					if((p = e.right) != null) {
+					if((p = e.right) != null){
 						while((pl = p.left) != null) p = pl;
 					}
 					else{
@@ -2739,7 +3427,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 
 		public boolean tryAdvance(Consumer<? super K> action){
-			IndexTreeMap.Entry<K, V> e;
+			IndexTreeMultiMap2.Entry<K, C, X> e;
 			if(action == null) throw new NullPointerException();
 			if(est < 0) getEstimate(); // force initialization
 			if((e = current) == null || e == fence) return false;
@@ -2760,23 +3448,23 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 
 	}
 
-	static final class DescendingKeySpliterator<K, V>extends IndexTreeMapSpliterator<K, V>
-	implements Spliterator<K>{
-		DescendingKeySpliterator(IndexTreeMap<K, V> tree, IndexTreeMap.Entry<K, V> origin,
-				IndexTreeMap.Entry<K, V> fence, int side, int est, int expectedModCount){
+	static final class DescendingKeySpliterator<K, C extends Cloneable & Collection<X>, X>
+	extends IndexTreeMapSpliterator<K, C, X> implements Spliterator<K>{
+		DescendingKeySpliterator(IndexTreeMultiMap2<K, C, X> tree, IndexTreeMultiMap2.Entry<K, C, X> origin,
+				IndexTreeMultiMap2.Entry<K, C, X> fence, int side, int est, int expectedModCount){
 			super(tree, origin, fence, side, est, expectedModCount);
 		}
 
-		public DescendingKeySpliterator<K, V> trySplit(){
+		public DescendingKeySpliterator<K, C, X> trySplit(){
 			if(est < 0) getEstimate(); // force initialization
 			int d = side;
-			IndexTreeMap.Entry<K, V> e = current, f = fence,
+			IndexTreeMultiMap2.Entry<K, C, X> e = current, f = fence,
 					s = ((e == null || e == f) ? null : // empty
 						(d == 0) ? tree.root : // was top
 						(d < 0) ? e.left : // was left
 						(d > 0 && f != null) ? f.right : // was right
 						null);
-			if(s != null && s != e && s != f && tree.compare(e.key, s.key) > 0) { // e not already past s
+			if(s != null && s != e && s != f && tree.compare(e.key, s.key) > 0){ // e not already past s
 				side = 1;
 				return new DescendingKeySpliterator<>(tree, e, current = s, -1, est >>>= 1, expectedModCount);
 			}
@@ -2786,12 +3474,12 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		public void forEachRemaining(Consumer<? super K> action){
 			if(action == null) throw new NullPointerException();
 			if(est < 0) getEstimate(); // force initialization
-			IndexTreeMap.Entry<K, V> f = fence, e, p, pr;
-			if((e = current) != null && e != f) {
+			IndexTreeMultiMap2.Entry<K, C, X> f = fence, e, p, pr;
+			if((e = current) != null && e != f){
 				current = f; // exhaust
 				do{
 					action.accept(e.key);
-					if((p = e.left) != null) {
+					if((p = e.left) != null){
 						while((pr = p.right) != null) p = pr;
 					}
 					else{
@@ -2804,7 +3492,7 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 
 		public boolean tryAdvance(Consumer<? super K> action){
-			IndexTreeMap.Entry<K, V> e;
+			IndexTreeMultiMap2.Entry<K, C, X> e;
 			if(action == null) throw new NullPointerException();
 			if(est < 0) getEstimate(); // force initialization
 			if((e = current) == null || e == fence) return false;
@@ -2819,37 +3507,38 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 	}
 
-	static final class ValueSpliterator<K, V>extends IndexTreeMapSpliterator<K, V>implements Spliterator<V>{
-		ValueSpliterator(IndexTreeMap<K, V> tree, IndexTreeMap.Entry<K, V> origin,
-				IndexTreeMap.Entry<K, V> fence, int side, int est, int expectedModCount){
+	static final class ValueSpliterator<K, C extends Cloneable & Collection<X>, X>
+	extends IndexTreeMapSpliterator<K, C, X> implements Spliterator<C>{
+		ValueSpliterator(IndexTreeMultiMap2<K, C, X> tree, IndexTreeMultiMap2.Entry<K, C, X> origin,
+				IndexTreeMultiMap2.Entry<K, C, X> fence, int side, int est, int expectedModCount){
 			super(tree, origin, fence, side, est, expectedModCount);
 		}
 
-		public ValueSpliterator<K, V> trySplit(){
+		public ValueSpliterator<K, C, X> trySplit(){
 			if(est < 0) getEstimate(); // force initialization
 			int d = side;
-			IndexTreeMap.Entry<K, V> e = current, f = fence,
+			IndexTreeMultiMap2.Entry<K, C, X> e = current, f = fence,
 					s = ((e == null || e == f) ? null : // empty
 						(d == 0) ? tree.root : // was top
 						(d > 0) ? e.right : // was right
 						(d < 0 && f != null) ? f.left : // was left
 						null);
-			if(s != null && s != e && s != f && tree.compare(e.key, s.key) < 0) { // e not already past s
+			if(s != null && s != e && s != f && tree.compare(e.key, s.key) < 0){ // e not already past s
 				side = 1;
 				return new ValueSpliterator<>(tree, e, current = s, -1, est >>>= 1, expectedModCount);
 			}
 			return null;
 		}
 
-		public void forEachRemaining(Consumer<? super V> action){
+		public void forEachRemaining(Consumer<? super C> action){
 			if(action == null) throw new NullPointerException();
 			if(est < 0) getEstimate(); // force initialization
-			IndexTreeMap.Entry<K, V> f = fence, e, p, pl;
-			if((e = current) != null && e != f) {
+			IndexTreeMultiMap2.Entry<K, C, X> f = fence, e, p, pl;
+			if((e = current) != null && e != f){
 				current = f; // exhaust
 				do{
 					action.accept(e.value);
-					if((p = e.right) != null) {
+					if((p = e.right) != null){
 						while((pl = p.left) != null) p = pl;
 					}
 					else{
@@ -2861,8 +3550,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			}
 		}
 
-		public boolean tryAdvance(Consumer<? super V> action){
-			IndexTreeMap.Entry<K, V> e;
+		public boolean tryAdvance(Consumer<? super C> action){
+			IndexTreeMultiMap2.Entry<K, C, X> e;
 			if(action == null) throw new NullPointerException();
 			if(est < 0) getEstimate(); // force initialization
 			if((e = current) == null || e == fence) return false;
@@ -2877,38 +3566,38 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 		}
 	}
 
-	static final class EntrySpliterator<K, V>extends IndexTreeMapSpliterator<K, V>
-	implements Spliterator<Map.Entry<K, V>>{
-		EntrySpliterator(IndexTreeMap<K, V> tree, IndexTreeMap.Entry<K, V> origin,
-				IndexTreeMap.Entry<K, V> fence, int side, int est, int expectedModCount){
+	static final class EntrySpliterator<K, C extends Cloneable & Collection<X>, X>
+	extends IndexTreeMapSpliterator<K, C, X> implements Spliterator<Map.Entry<K, C>>{
+		EntrySpliterator(IndexTreeMultiMap2<K, C, X> tree, IndexTreeMultiMap2.Entry<K, C, X> origin,
+				IndexTreeMultiMap2.Entry<K, C, X> fence, int side, int est, int expectedModCount){
 			super(tree, origin, fence, side, est, expectedModCount);
 		}
 
-		public EntrySpliterator<K, V> trySplit(){
+		public EntrySpliterator<K, C, X> trySplit(){
 			if(est < 0) getEstimate(); // force initialization
 			int d = side;
-			IndexTreeMap.Entry<K, V> e = current, f = fence,
+			IndexTreeMultiMap2.Entry<K, C, X> e = current, f = fence,
 					s = ((e == null || e == f) ? null : // empty
 						(d == 0) ? tree.root : // was top
 						(d > 0) ? e.right : // was right
 						(d < 0 && f != null) ? f.left : // was left
 						null);
-			if(s != null && s != e && s != f && tree.compare(e.key, s.key) < 0) { // e not already past s
+			if(s != null && s != e && s != f && tree.compare(e.key, s.key) < 0){ // e not already past s
 				side = 1;
 				return new EntrySpliterator<>(tree, e, current = s, -1, est >>>= 1, expectedModCount);
 			}
 			return null;
 		}
 
-		public void forEachRemaining(Consumer<? super Map.Entry<K, V>> action){
+		public void forEachRemaining(Consumer<? super Map.Entry<K, C>> action){
 			if(action == null) throw new NullPointerException();
 			if(est < 0) getEstimate(); // force initialization
-			IndexTreeMap.Entry<K, V> f = fence, e, p, pl;
-			if((e = current) != null && e != f) {
+			IndexTreeMultiMap2.Entry<K, C, X> f = fence, e, p, pl;
+			if((e = current) != null && e != f){
 				current = f; // exhaust
 				do{
 					action.accept(e);
-					if((p = e.right) != null) {
+					if((p = e.right) != null){
 						while((pl = p.left) != null) p = pl;
 					}
 					else{
@@ -2920,8 +3609,8 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 			}
 		}
 
-		public boolean tryAdvance(Consumer<? super Map.Entry<K, V>> action){
-			IndexTreeMap.Entry<K, V> e;
+		public boolean tryAdvance(Consumer<? super Map.Entry<K, C>> action){
+			IndexTreeMultiMap2.Entry<K, C, X> e;
 			if(action == null) throw new NullPointerException();
 			if(est < 0) getEstimate(); // force initialization
 			if((e = current) == null || e == fence) return false;
@@ -2936,13 +3625,13 @@ implements NavigableMap<K, V>, Cloneable, java.io.Serializable
 					Spliterator.ORDERED;
 		}
 
-		@Override public Comparator<Map.Entry<K, V>> getComparator(){
+		@Override public Comparator<Map.Entry<K, C>> getComparator(){
 			// Adapt or create a key-based comparator
-			if(tree.comparator != null) {
+			if(tree.comparator != null){
 				return Map.Entry.comparingByKey(tree.comparator);
 			}
 			else{
-				return (Comparator<Map.Entry<K, V>> & Serializable)(e1, e2) -> {
+				return (Comparator<Map.Entry<K, C>> & Serializable)(e1, e2) -> {
 					@SuppressWarnings("unchecked")
 					Comparable<? super K> k1 = (Comparable<? super K>)e1.getKey();
 					return k1.compareTo(e2.getKey());
