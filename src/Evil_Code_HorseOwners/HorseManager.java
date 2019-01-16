@@ -24,6 +24,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 import EvLib2.EvPlugin;
 import EvLib2.FileIO;
+import EvLib2.IndexTreeMultiMap;
 import EvLib2.VaultHook;
 import Evil_Code_HorseOwners.commands.*;
 import Evil_Code_HorseOwners.listeners.*;
@@ -36,7 +37,8 @@ public final class HorseManager extends EvPlugin{
 	private YamlConfiguration horses;
 	private Map<UUID, Set<String>> horseOwnersMap;
 	private boolean saveCoords, saveRankings, saveLineage, saveLeashes, rankUnclaimed, safeEditing;
-	private Vector<String> topSpeed, topJump, topHealth;
+	Vector<String> topSpeed, topJump, topHealth;
+	IndexTreeMultiMap<Double, String> topSpeed2;
 
 	@Override public void onEvEnable(){
 		plugin = this;
@@ -68,6 +70,7 @@ public final class HorseManager extends EvPlugin{
 		topSpeed = new Vector<String>();
 		topJump = new Vector<String>();
 		topHealth = new Vector<String>();
+		topSpeed2 = new IndexTreeMultiMap<Double, String>();
 		for(String horseName : horses.getKeys(false)){
 			ConfigurationSection data = horses.getConfigurationSection(horseName);
 			if(data == null){
@@ -266,10 +269,12 @@ public final class HorseManager extends EvPlugin{
 		if(myHorses != null && myHorses.remove(horseName)){
 			if(safeEditing) loadHorses();
 			if(removeCompletely){
-				horses.set(horseName, null);
 				topSpeed.remove(horseName);
 				topJump.remove(horseName);
 				topHealth.remove(horseName);
+				ConfigurationSection cs = horses.getConfigurationSection(horseName);
+				topSpeed2.remove(cs.getDouble("speed", -1), horseName);
+				horses.set(horseName, null);
 			}
 			else horses.getConfigurationSection(horseName).set("owner", null);
 			if(myHorses.isEmpty()) horseOwnersMap.remove(playerUUID);
@@ -296,10 +301,12 @@ public final class HorseManager extends EvPlugin{
 			contained = true;
 			if(safeEditing) loadHorses();
 			if(removeCompletely){
-				horses.set(horseName, null);
 				topSpeed.remove(horseName);
 				topJump.remove(horseName);
 				topHealth.remove(horseName);
+				ConfigurationSection cs = horses.getConfigurationSection(horseName);
+				topSpeed2.remove(cs.getDouble("speed", -1), horseName);
+				horses.set(horseName, null);
 			}
 			else horses.set(horseName+".owner", null);
 			saveHorses();
@@ -354,6 +361,7 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	private void updateTopTen(String horseName, double speed, double jump, int health){
+		topSpeed2.put(speed, horseName);
 		if(topSpeed.size() < 10 || speed > getHorseSpeed(topSpeed.lastElement())
 				&& !topSpeed.contains(horseName)){
 			if(topSpeed.size() == 10) topSpeed.set(9, horseName);
@@ -457,6 +465,8 @@ public final class HorseManager extends EvPlugin{
 			if(otherHealth > health) ++higherHealthCount;
 			else if(otherHealth == health) ++equalHealthCount;
 		}
+		higherSpeedCount = topSpeed2.size() - topSpeed2.getUpperIndex(speed);
+		equalSpeedCount = topSpeed2.get(speed).size();
 		return new int[]{
 			higherJumpCount, higherJumpCount+equalJumpCount,
 			higherSpeedCount, higherSpeedCount+equalSpeedCount,
