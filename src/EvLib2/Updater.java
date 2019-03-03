@@ -210,7 +210,8 @@ public class Updater {
 		final File updaterFile = new File(pluginFile, "Updater");
 		final File updaterConfigFile = new File(updaterFile, "config.yml");
 		YamlConfiguration config = new YamlConfiguration();
-		config.options().header("This configuration file affects all plugins using the Updater system (version 2+ - http://forums.bukkit.org/threads/96681/ )" + '\n'
+		config.options().header("This configuration file affects all plugins using the Updater system "
+				+ "(version 2+ - http://forums.bukkit.org/threads/96681/ )" + '\n'
 				+ "If you wish to use your API key, read http://wiki.bukkit.org/ServerMods_API and place it below." + '\n'
 				+ "Some updating systems will not adhere to the disabled value, but these may be turned off in their plugin's configuration.");
 		config.addDefault(API_KEY_CONFIG_KEY, API_KEY_DEFAULT);
@@ -227,28 +228,27 @@ public class Updater {
 			} else {
 				config.load(updaterConfigFile);
 			}
-		} catch (final Exception e) {
-			final String message;
-			if (createFile) {
-				message = "The updater could not create configuration at " + updaterFile.getAbsolutePath();
-			} else {
-				message = "The updater could not load configuration at " + updaterFile.getAbsolutePath();
-			}
-			this.plugin.getLogger().log(Level.SEVERE, message, e);
 		}
-		if (config.getBoolean(DISABLE_CONFIG_KEY)) {
+		catch(Exception e) {
+			String message;
+			if(createFile) message = "The updater could not create configuration at " + updaterFile.getAbsolutePath();
+			else message = "The updater could not load configuration at " + updaterFile.getAbsolutePath();
+			plugin.getLogger().log(Level.SEVERE, message, e);
+		}
+		if(config.getBoolean(DISABLE_CONFIG_KEY)) {
 			this.result = UpdateResult.DISABLED;
 			return;
 		}
 		String key = config.getString(API_KEY_CONFIG_KEY);
-		if (API_KEY_DEFAULT.equalsIgnoreCase(key) || "".equals(key)) {
+		if(API_KEY_DEFAULT.equalsIgnoreCase(key) || "".equals(key)) {
 			key = null;
 		}
 		this.apiKey = key;
-		try {
+		try{
 			this.url = new URL(Updater.HOST + Updater.QUERY + this.id);
-		} catch (final MalformedURLException e) {
-			this.plugin.getLogger().log(Level.SEVERE, "The project ID provided for updating, " + this.id + " is invalid.", e);
+		}
+		catch(MalformedURLException e) {
+			plugin.getLogger().log(Level.SEVERE, "The project ID provided for updating, " + id + " is invalid.", e);
 			this.result = UpdateResult.FAIL_BADID;
 		}
 		if (this.result != UpdateResult.FAIL_BADID) {

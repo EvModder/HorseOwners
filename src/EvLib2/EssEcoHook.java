@@ -52,7 +52,7 @@ public class EssEcoHook {
 		return true;
 	}
 
-	//@Deprecated //Note: Deprecated in preference of playerToServer()
+	@Deprecated //Note: Deprecated in preference of playerToServer()
 	public static boolean chargeFee(OfflinePlayer p, double amount){
 		// check money
 		try{if(net.ess3.api.Economy.hasEnough(p.getName(), new BigDecimal(amount)) == false) return false;}

@@ -94,7 +94,7 @@ public class VaultHook {
 		else return EssEcoHook.setMoney(p, amount);
 	}
 
-	//@Deprecated //Note: Deprecated in preference of playerToServer()
+	@Deprecated //Note: Deprecated in preference of playerToServer()
 	public static boolean chargeFee(OfflinePlayer p, double amount){
 		if(VaultHook.vaultEnabled()){
 			EconomyResponse r = VaultHook.econ.withdrawPlayer(p, amount);
