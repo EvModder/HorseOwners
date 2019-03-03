@@ -18,7 +18,7 @@ abstract class HorseCommand implements CommandExecutor{
 		price = plugin.getConfig().getDouble(commandName);
 	}
 
-	@Override
+	@SuppressWarnings("deprecation") @Override
 	final public boolean onCommand(CommandSender sender, Command command, String label, String args[]){
 		if(price > 0 && sender instanceof Player && !sender.hasPermission("evp.horseowners.commands.free")){
 			if(VaultHook.hasAtLeast((Player)sender, price) == false){
@@ -26,7 +26,13 @@ abstract class HorseCommand implements CommandExecutor{
 				return true;
 			}
 			else if(onHorseCommand(sender, command, label, args)){
-				VaultHook.chargeFee((Player)sender, price);
+				if(plugin.getServer().getPluginManager().isPluginEnabled("Eventials")){
+					plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), 
+							"serverbal charge "+sender.getName()+" "+price);
+				}
+				else{
+					VaultHook.chargeFee((Player)sender, price);
+				}
 				sender.sendMessage("§7You were charged §c$"+price+"§7 for using this command.");
 				return true;
 			}

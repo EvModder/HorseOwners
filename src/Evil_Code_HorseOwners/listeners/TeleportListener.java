@@ -8,11 +8,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent;
-
-import com.onarandombox.MultiverseCore.MultiverseCore;
-
 import Evil_Code_HorseOwners.HorseLibrary;
 import Evil_Code_HorseOwners.HorseManager;
+import com.onarandombox.MultiverseCore.MultiverseCore;
 
 public class TeleportListener implements Listener{
 	final boolean leashedMobs, requireName, unleashedHorses, preventIfTied;
