@@ -82,8 +82,8 @@ public final class HorseManager extends EvPlugin{
 				if(horseOwnersMap.containsKey(uuid)) horseOwnersMap.get(uuid).add(horseName);
 				else horseOwnersMap.put(uuid, new HashSet<String>(Arrays.asList(horseName)));
 			}
-			if(saveRankings)
-				updateTopTen(horseName, data.getDouble("speed", 0), data.getDouble("jump", 0), data.getInt("health", 0));
+			if(saveRankings && data.contains("speed") && data.contains("jump") && data.contains("health"))
+				updateTopTen(horseName, data.getDouble("speed"), data.getDouble("jump"), data.getInt("health"));
 		}
 	}
 
@@ -362,6 +362,7 @@ public final class HorseManager extends EvPlugin{
 
 	private void updateTopTen(String horseName, double speed, double jump, int health){
 		topSpeed2.put(speed, horseName);
+		getLogger().info("TopSpeed after update: "+topSpeed2.toString());
 		if(topSpeed.size() < 10 || speed > getHorseSpeed(topSpeed.lastElement())
 				&& !topSpeed.contains(horseName)){
 			if(topSpeed.size() == 10) topSpeed.set(9, horseName);

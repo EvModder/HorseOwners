@@ -17,7 +17,10 @@ public class CommandAllowRide extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			args[0] = args[0].toLowerCase();
 			for(Player p : plugin.getServer().getOnlinePlayers()){
-				if(p.getName().startsWith(args[0])) tabCompletes.add(p.getName());
+				if(p.getName().startsWith(args[0])){
+					tabCompletes.add(p.getName());
+					if(tabCompletes.size() == 20) break;
+				}
 			}
 			return tabCompletes;
 		}
