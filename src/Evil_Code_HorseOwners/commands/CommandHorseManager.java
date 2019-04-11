@@ -1,6 +1,7 @@
 package Evil_Code_HorseOwners.commands;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,33 +13,43 @@ import org.bukkit.command.TabExecutor;
 import Evil_Code_HorseOwners.HorseManager;
 
 public class CommandHorseManager implements TabExecutor{//Cannot extend HorseCommand or money stuff gets weird
-	private HorseManager plugin;
-	private Map<String, List<String>> pluginCommands;
+	final HorseManager plugin;
+	final List<String> shortNames;
+	final Map<String, PluginCommand> executorLookup;
 
 	public CommandHorseManager(){
 		plugin = HorseManager.getPlugin();
 
 		// Load a list of this plugin's commands
-		pluginCommands = new HashMap<String, List<String>>();
+		shortNames = new ArrayList<String>();
+		executorLookup = new HashMap<String, PluginCommand>();
 		for(String cmdName : plugin.getDescription().getCommands().keySet()){
-			pluginCommands.put(cmdName, plugin.getCommand(cmdName).getAliases());
+			PluginCommand cmd = plugin.getCommand(cmdName);
+			shortNames.add(cmdName);
+			executorLookup.put(cmdName, cmd);
+			for(String cmdAlias : cmd.getAliases()) executorLookup.put(cmdAlias, cmd);
 		}
 
 		plugin.getCommand("horsemanager").setExecutor(this);
 	}
 
+	String getShortName(String cmdName){
+		return cmdName.toLowerCase().replace("horse", "");
+	}
+
+	boolean isHelpCommand(String cmd){
+		return cmd.isEmpty() || cmd.equals("?") || cmd.equals("help") || cmd.equals("info");
+	}
+
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
-		String thisCmd="";
+		String actualCmd = "";
 		if(args.length != 0){
-			thisCmd = args[0].toLowerCase().replace("horse", "");
-			String[] oldArgs = args;
-			args = new String[args.length-1];
-			for(int i=0; i<args.length; ++i) args[i] = oldArgs[i+1];
+			actualCmd = getShortName(args[0]);
+			args = Arrays.copyOfRange(args, 1, args.length);
 		}
 
-		//"hm ?" command (help):
-		if(thisCmd.isEmpty() || thisCmd.equals("?") || thisCmd.equals("help") || thisCmd.equals("info")){
+		if(isHelpCommand(actualCmd)){
 			sender.sendMessage("§6+ §7§m-------------------------------------§6 +");
 			// Send help/info/commands
 			for(String name : plugin.getDescription().getCommands().keySet()){
@@ -50,35 +61,26 @@ public class CommandHorseManager implements TabExecutor{//Cannot extend HorseCom
 //			sender.sendMessage("§6+ §7§m-------------------------§6 +");
 			return true;
 		}
-		for(String cmdName : pluginCommands.keySet()){
-			if(cmdName.replace("horse", "").equals(thisCmd) || cmdName.startsWith(thisCmd)
-					|| pluginCommands.get(cmdName).contains(thisCmd)
-					|| pluginCommands.get(cmdName).contains(thisCmd+"horse")){
-				PluginCommand cmd = plugin.getCommand(cmdName);
+		PluginCommand cmd = executorLookup.get(actualCmd);
+		if(cmd == null) return false;
 
-				if(sender.hasPermission(cmd.getPermission()) == false){
-					sender.sendMessage(cmd.getPermissionMessage());
-					return true;
-				}
-				return cmd.getExecutor().onCommand(sender, cmd, cmd.getName(), args);
-			}
+		if(sender.hasPermission(cmd.getPermission()) == false){
+			sender.sendMessage(cmd.getPermissionMessage());
+			return true;
 		}
-		return false;
+		return cmd.getExecutor().onCommand(sender, cmd, cmd.getName(), args);
 	}
 
-	@Override
-	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+	@Override public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args){
 		if(args.length == 1){
+			args[0] = args[0].toLowerCase();
 			List<String> completions = new ArrayList<String>();
-
-			for(String cmdName : pluginCommands.keySet()){
-				completions.add(cmdName);
-				completions.addAll(pluginCommands.get(cmdName));
-			}
-
-			List<String> possibleCompletions = TabCompletionHelper.getPossibleCompletionsForGivenArgs(args, completions);
-
-			return possibleCompletions;
+			for(String cmdName : shortNames) if(cmdName.startsWith(args[0])) completions.add(cmdName);
+			return completions;
+		}
+		else if(args.length > 1){
+			PluginCommand cmd = executorLookup.get(args[0]);
+			if(cmd != null) return cmd.tabComplete(sender, alias, Arrays.copyOfRange(args, 1, args.length));
 		}
 		return null;
 	}

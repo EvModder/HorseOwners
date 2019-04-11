@@ -1,5 +1,7 @@
 package Evil_Code_HorseOwners.commands;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.attribute.Attribute;
@@ -18,8 +20,25 @@ public class CommandCopyHorse extends HorseCommand {
 		safeTeleports = plugin.getConfig().getBoolean("teleport-only-if-safe");
 	}
 
-	@Override
-	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
+	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
+		if(args.length > 0 && sender instanceof Player){
+			String arg = String.join(" ", args).toLowerCase();
+			final List<String> tabCompletes = new ArrayList<String>();
+			byte shown = 0;
+			for(String horseName : sender.hasPermission("evp.horseowners.override")
+					? plugin.getAllHorses()
+					: plugin.getHorseOwners().get(((Player)sender).getUniqueId())){
+				if(horseName.startsWith(arg)){
+					tabCompletes.add(horseName);
+					if(++shown == 20) break;
+				}
+			}
+			return tabCompletes;
+		}
+		return null;
+	}
+
+	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	usage: /hm copy [horse]
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players");

@@ -1,13 +1,13 @@
 package Evil_Code_HorseOwners.commands;
 
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 import EvLib2.VaultHook;
 import Evil_Code_HorseOwners.HorseManager;
 
-abstract class HorseCommand implements CommandExecutor{
+abstract class HorseCommand implements TabExecutor{
 	HorseManager plugin;
 	double price;
 

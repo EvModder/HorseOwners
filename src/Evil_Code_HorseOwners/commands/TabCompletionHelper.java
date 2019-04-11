@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;	
 
 public class TabCompletionHelper {
-	 
 	public static List<String> getPossibleCompletionsForGivenArgs(String[] args, List<String> possibilitiesOfCompletion) {
 		String argumentToFindCompletionFor = args[args.length - 1];
 		List<String> listOfPossibleCompletions = new ArrayList<String>();

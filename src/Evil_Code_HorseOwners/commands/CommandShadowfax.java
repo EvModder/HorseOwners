@@ -18,13 +18,11 @@ import Evil_Code_HorseOwners.HorseLibrary;
 import Evil_Code_HorseOwners.HorseManager;
 
 public class CommandShadowfax implements CommandExecutor{
-
 	public CommandShadowfax(){
 		HorseManager.getPlugin().getCommand("summonshadowfax").setExecutor(this);
 	}
 
-	@Override
-	public boolean onCommand(CommandSender sender, Command command, String label, String args[]){
+	@Override public boolean onCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm shadowfax
 		if(sender instanceof Player == false){
 			sender.sendMessage("§cThis command can only be run by in-game players");

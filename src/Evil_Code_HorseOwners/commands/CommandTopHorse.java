@@ -1,5 +1,7 @@
 package Evil_Code_HorseOwners.commands;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.OfflinePlayer;
@@ -7,6 +9,18 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 public class CommandTopHorse extends HorseCommand{
+	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
+		if(args.length ==1){
+			final List<String> tabCompletes = new ArrayList<String>();
+			args[0] = args[0].toLowerCase();
+			if("speed".startsWith(args[0])) tabCompletes.add("speed");
+			if("jump".startsWith(args[0])) tabCompletes.add("jump");
+			if("health".startsWith(args[0])) tabCompletes.add("health");
+			return tabCompletes;
+		}
+		return null;
+	}
+
 	@Override
 	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm top

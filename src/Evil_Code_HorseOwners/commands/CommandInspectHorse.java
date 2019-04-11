@@ -1,5 +1,6 @@
 package Evil_Code_HorseOwners.commands;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +23,24 @@ public class CommandInspectHorse extends HorseCommand{
 		doesRanking = plugin.getConfig().getBoolean("rank-claimed-horses", true);
 		rankUnclaimed = plugin.getConfig().getBoolean("rank-unclaimed-horses", true);
 		doesLineage = plugin.getConfig().getBoolean("save-horse-lineage", true);
+	}
+
+	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
+		if(args.length > 0){
+			String arg = String.join(" ", args).toLowerCase();
+			final List<String> tabCompletes = new ArrayList<String>();
+			byte shown = 0;
+			for(String horseName : sender instanceof Player ?
+					plugin.getHorseOwners().get(((Player)sender).getUniqueId())
+					: plugin.getAllHorses()){
+				if(horseName.startsWith(arg)){
+					tabCompletes.add(horseName);
+					if(++shown == 20) break;
+				}
+			}
+			return tabCompletes;
+		}
+		return null;
 	}
 
 	@Override

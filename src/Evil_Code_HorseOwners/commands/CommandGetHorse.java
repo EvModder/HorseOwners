@@ -23,6 +23,23 @@ public class CommandGetHorse extends HorseCommand{
 		allowTransworld = plugin.getConfig().getBoolean("teleport-across-worlds");
 	}
 
+	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
+		if(args.length > 0 && sender instanceof Player){
+			String arg = String.join(" ", args).toLowerCase();
+			final List<String> tabCompletes = new ArrayList<String>();
+			//TODO: possible (but laggy): only list horses in same world if player lacks cross-world permission
+			byte shown = 0;
+			for(String horseName : plugin.getHorseOwners().get(((Player)sender).getUniqueId())){
+				if(horseName.startsWith(arg)){
+					tabCompletes.add(horseName);
+					if(++shown == 20) break;
+				}
+			}
+			return tabCompletes;
+		}
+		return null;
+	}
+
 	@Override
 	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm get [horse]

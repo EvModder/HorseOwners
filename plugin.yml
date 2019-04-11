@@ -52,7 +52,7 @@ commands:
       description: View speed/health/etc for a horse
       usage: /hm inspect [horse]
       aliases: [horsespeed,shorse,ihorse,horsei,seehorse,horsestats,
-      checkhorse,speedh,i-horse,horse-i,hstats,hstat,stats-horse,viewhorse]
+      checkhorse,speedh,ihorse,horsei,hstats,hstat,statshorse,viewhorse]
       permission: evp.horseowners.inspect
       permission-message: You do not have permission to do this.
 

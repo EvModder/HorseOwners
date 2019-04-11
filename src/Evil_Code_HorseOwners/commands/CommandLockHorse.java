@@ -1,11 +1,31 @@
 package Evil_Code_HorseOwners.commands;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class CommandLockHorse extends HorseCommand{
+	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
+		if(args.length > 0){
+			String arg = String.join(" ", args).toLowerCase();
+			final List<String> tabCompletes = new ArrayList<String>();
+			byte shown = 0;
+			for(String horseName : sender instanceof Player ?
+					plugin.getHorseOwners().get(((Player)sender).getUniqueId())
+					: plugin.getAllHorses()){
+				if(horseName.startsWith(arg)){
+					tabCompletes.add(horseName);
+					if(++shown == 20) break;
+				}
+			}
+			return tabCompletes;
+		}
+		return null;
+	}
+
 	@Override
 	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm lock [-name]

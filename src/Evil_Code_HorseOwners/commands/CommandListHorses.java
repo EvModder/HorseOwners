@@ -1,6 +1,7 @@
 package Evil_Code_HorseOwners.commands;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -8,8 +9,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class CommandListHorses extends HorseCommand{
-	@Override
-	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
+	@Override public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a){return null;}
+
+	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm list
 		boolean listAllPerm = sender.hasPermission("evp.horseowners.list.all");
 		String target = (sender instanceof Player == false || (listAllPerm && args.length == 1))

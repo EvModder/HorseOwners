@@ -1,5 +1,6 @@
 package Evil_Code_HorseOwners.commands;
 
+import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -12,8 +13,8 @@ import org.bukkit.inventory.ItemStack;
 import EvLib2.Text;
 
 public class CommandClaimHorse extends HorseCommand{
-	private boolean renameNametag, alphanumeric;
-	private int minNameLength, maxNameLength;
+	final boolean renameNametag, alphanumeric;
+	final int minNameLength, maxNameLength;
 
 	public CommandClaimHorse(){
 		renameNametag = plugin.getConfig().getBoolean("nametag-required-to-rename");
@@ -21,8 +22,12 @@ public class CommandClaimHorse extends HorseCommand{
 
 		minNameLength = plugin.getConfig().getInt("min-name-length");
 		maxNameLength = plugin.getConfig().getInt("max-name-length");
-		if(maxNameLength < minNameLength){int temp=maxNameLength; maxNameLength=minNameLength; minNameLength=temp;}//swap
+		if(maxNameLength < minNameLength) plugin.getLogger().severe(
+				"max-name-length("+maxNameLength+") is < than " +
+				"min-name-length("+minNameLength+")!");
 	}
+
+	@Override public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a){return null;}
 
 	@Override
 	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){

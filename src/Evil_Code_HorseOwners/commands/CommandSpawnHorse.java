@@ -1,6 +1,11 @@
 package Evil_Code_HorseOwners.commands;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -15,10 +20,45 @@ import Evil_Code_HorseOwners.HorseLibrary;
 
 @SuppressWarnings("deprecation")
 public class CommandSpawnHorse extends HorseCommand{
+	final HashMap<String, List<String>> flags;
+
+	public CommandSpawnHorse(){
+		flags = new HashMap<String, List<String>>();
+		flags.put("name:", null);
+		flags.put("speed:", null);
+		flags.put("jump:", null);
+		flags.put("health:", null);
+		flags.put("color", Arrays.stream(Color.values()).map(c -> c.toString()).collect(Collectors.toList()));
+		flags.put("variant:", Arrays.stream(Variant.values()).map(v -> v.toString()).collect(Collectors.toList()));
+		flags.put("style:", Arrays.stream(Style.values()).map(s -> s.toString()).collect(Collectors.toList()));
+		flags.put("tamed:", Arrays.asList("true", "false"));
+	}
+
+	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
+		if(args.length > 0){
+			HashSet<String> setFlags = new HashSet<String>();
+			String lastArg = args[args.length];
+			for(String arg : args){
+				int fi = arg.indexOf(':');
+				if(fi != -1 && fi != arg.length()-1) setFlags.add(arg.substring(0, fi+1).toLowerCase());
+				else if(!arg.equals(lastArg)) return null;
+			}
+			lastArg = lastArg.toLowerCase();
+			final List<String> tabCompletes = new ArrayList<String>();
+			for(String flag : flags.keySet()){
+				if(!setFlags.contains(flag) && flag.startsWith(lastArg)){
+					if(lastArg.equals(flag)) return flags.get(flag);
+					else tabCompletes.add(flag);
+				}
+			}
+			return tabCompletes;
+		}
+		return null;
+	}
 
 	@Override
 	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
-		//cmd:	usage: /hm spawn [n:name] [v:varient] [c:color] [t:style] [j:jump] [s:speed] [h:health] [tamed]
+		//cmd:	usage: /hm spawn [n:name] [s:speed] [j:jump] [h:health] [c:color] [v:variant] [t:style] [tamed]
 		//hm spawn n:fat c:white t:white s:50 j:20 h:60
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players");
@@ -86,6 +126,7 @@ public class CommandSpawnHorse extends HorseCommand{
 					return true;
 				}
 			}
+			else if(arg.startsWith("TAME")) tamed = arg.split(":")[1].equals("TRUE");
 		}
 
 		Player p = (Player) sender;
