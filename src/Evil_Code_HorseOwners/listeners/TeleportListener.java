@@ -2,6 +2,7 @@ package Evil_Code_HorseOwners.listeners;
 
 import org.bukkit.entity.Entity;
 import java.util.UUID;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
@@ -52,25 +53,31 @@ public class TeleportListener implements Listener{
 		if(safeForHorses == false && leashedMobs == false) return;
 
 		UUID pUUID = evt.getPlayer().getUniqueId();
+		boolean failedLeashedHorseTp = false;
 		for(Entity e : evt.getPlayer().getNearbyEntities(6, 6, 6)){
 			if(e instanceof LivingEntity){
 				boolean isHorse = e instanceof AbstractHorse;
-				if(isHorse && !safeForHorses) continue;
+				boolean canTp = false;
 				LivingEntity le = (LivingEntity)e;
 				UUID leashHolder = le.isLeashed() ? le.getLeashHolder().getUniqueId() : null;
 				if(preventIfTied && leashHolder != null && !leashHolder.equals(pUUID)) continue;
 
 				if(le.isLeashed() && leashHolder.equals(pUUID)){
-					if(isHorse || (leashedMobs && (e.getCustomName() != null || !requireName))){
-						HorseLibrary.teleportEntityWithPassengers(e, evt.getTo());
+					canTp = isHorse || (leashedMobs && (e.getCustomName() != null || !requireName));
+					if(isHorse && !safeForHorses){
+						failedLeashedHorseTp = true;
+						continue;
 					}
 				}
 				else if(unleashedHorses && isHorse){
 					boolean owned = le.getCustomName() != null && plugin.isOwner(pUUID, le.getCustomName());
 					boolean nearby = evt.getPlayer().getNearbyEntities(4, 1, 4).contains(le);
-					if(nearby && owned) HorseLibrary.teleportEntityWithPassengers(e, evt.getTo());
+					canTp = nearby && owned;
 				}
+				if(canTp) HorseLibrary.teleportEntityWithPassengers(e, evt.getTo());
 			}
 		}
+		if(failedLeashedHorseTp) evt.getPlayer().sendMessage(ChatColor.GRAY
+				+"Unable to bring horses since your destination was obstructed");
 	}//on teleport
 }

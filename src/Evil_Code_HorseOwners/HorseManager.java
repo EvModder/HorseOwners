@@ -136,7 +136,7 @@ public final class HorseManager extends EvPlugin{
 		new CommandFreeHorse();
 		new CommandGetHorse();
 		new CommandInspectHorse();
-		new CommandListHorses();
+		new CommandListHorse();
 		if(config.getBoolean("enable-name-locks", false)) new CommandLockHorse();
 		new CommandShadowfax();
 		new CommandSpawnHorse();

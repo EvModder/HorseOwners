@@ -25,7 +25,7 @@ public class CommandHorseManager implements TabExecutor{//Cannot extend HorseCom
 		executorLookup = new HashMap<String, PluginCommand>();
 		for(String cmdName : plugin.getDescription().getCommands().keySet()){
 			PluginCommand cmd = plugin.getCommand(cmdName);
-			shortNames.add(getShortName(cmdName));
+			if(!cmd.equals("horsemanager")) shortNames.add(getShortName(cmdName));
 			executorLookup.put(cmdName, cmd);
 			executorLookup.put(getShortName(cmdName), cmd);
 			for(String cmdAlias : cmd.getAliases()){
@@ -79,12 +79,18 @@ public class CommandHorseManager implements TabExecutor{//Cannot extend HorseCom
 		if(args.length == 1){
 			args[0] = args[0].toLowerCase();
 			List<String> completions = new ArrayList<String>();
-			for(String cmdName : shortNames) if(cmdName.startsWith(args[0])) completions.add(cmdName);
+			for(String cmdName : shortNames){
+				if(cmdName.startsWith(args[0]) && sender.hasPermission(executorLookup.get(cmdName).getPermission())){
+					completions.add(cmdName);
+				}
+			}
 			return completions;
 		}
 		else if(args.length > 1){
 			PluginCommand cmd = executorLookup.get(args[0]);
-			if(cmd != null) return cmd.tabComplete(sender, alias, Arrays.copyOfRange(args, 1, args.length));
+			if(cmd != null && sender.hasPermission(cmd.getPermission())){
+				return cmd.tabComplete(sender, alias, Arrays.copyOfRange(args, 1, args.length));
+			}
 		}
 		return null;
 	}

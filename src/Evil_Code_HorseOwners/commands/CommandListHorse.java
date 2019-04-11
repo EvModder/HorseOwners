@@ -8,7 +8,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class CommandListHorses extends HorseCommand{
+public class CommandListHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a){return null;}
 
 	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){

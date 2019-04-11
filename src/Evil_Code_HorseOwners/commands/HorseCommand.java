@@ -15,6 +15,7 @@ abstract class HorseCommand implements TabExecutor{
 		plugin = HorseManager.getPlugin();
 		String commandName = getClass().getSimpleName().substring(7).toLowerCase();
 		plugin.getCommand(commandName).setExecutor(this);
+		plugin.getCommand(commandName).setTabCompleter(this);
 		price = plugin.getConfig().getDouble(commandName);
 	}
 

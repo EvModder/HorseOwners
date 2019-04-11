@@ -37,7 +37,7 @@ public class CommandTopHorse extends HorseCommand{
 		StringBuilder builder = new StringBuilder();
 
 		if(topSpeed){
-			builder.append("\n§a§m}{§e§m------§7 [§aFastest Speed§7] §e§m------§a§m}{");
+			builder.append("\n§a§m}{§e§m      §7 [§aFastest Speed§7] §e§m      §a§m}{");
 			for(String horseName : plugin.getTopSpeed()){
 				builder.append("\n§7Speed: §f").append(String.format("%.2f", plugin.getHorseSpeed(horseName)))
 					.append("    §7Horse: §f").append(plugin.getHorseName(horseName));
@@ -48,7 +48,7 @@ public class CommandTopHorse extends HorseCommand{
 			}
 		}
 		if(topJump){
-			builder.append("\n§a§m}{§e§m------§7 [§aHighest Jump§7] §e§m------§a§m}{");
+			builder.append("\n§a§m}{§e§m      §7 [§aHighest Jump§7] §e§m      §a§m}{");
 			for(String horseName : plugin.getTopJump()){
 				builder.append("\n§7Jump: §f").append(String.format("%.2f", plugin.getHorseJump(horseName)))
 					.append("    §7Horse: §f").append(plugin.getHorseName(horseName));
@@ -59,7 +59,7 @@ public class CommandTopHorse extends HorseCommand{
 			}
 		}
 		if(topHealth){
-			builder.append("\n§a§m}{§e§m------§7 [§aMost Health§7] §e§m------§a§m}{");
+			builder.append("\n§a§m}{§e§m      §7 [§aMost Health§7] §e§m      §a§m}{");
 			for(String horseName : plugin.getTopHealth()){
 				builder.append("\n§7Health: §f").append(plugin.getHorseHealth(horseName))
 					.append("    §7Horse: §f").append(plugin.getHorseName(horseName));

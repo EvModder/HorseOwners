@@ -28,7 +28,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		flags.put("speed:", null);
 		flags.put("jump:", null);
 		flags.put("health:", null);
-		flags.put("color", Arrays.stream(Color.values()).map(c -> c.toString()).collect(Collectors.toList()));
+		flags.put("color:", Arrays.stream(Color.values()).map(c -> c.toString()).collect(Collectors.toList()));
 		flags.put("variant:", Arrays.stream(Variant.values()).map(v -> v.toString()).collect(Collectors.toList()));
 		flags.put("style:", Arrays.stream(Style.values()).map(s -> s.toString()).collect(Collectors.toList()));
 		flags.put("tamed:", Arrays.asList("true", "false"));
@@ -37,7 +37,7 @@ public class CommandSpawnHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length > 0){
 			HashSet<String> setFlags = new HashSet<String>();
-			String lastArg = args[args.length];
+			String lastArg = args[args.length-1];
 			for(String arg : args){
 				int fi = arg.indexOf(':');
 				if(fi != -1 && fi != arg.length()-1) setFlags.add(arg.substring(0, fi+1).toLowerCase());
@@ -56,8 +56,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		return null;
 	}
 
-	@Override
-	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
+	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	usage: /hm spawn [n:name] [s:speed] [j:jump] [h:health] [c:color] [v:variant] [t:style] [tamed]
 		//hm spawn n:fat c:white t:white s:50 j:20 h:60
 		if(sender instanceof Player == false){
@@ -74,59 +73,61 @@ public class CommandSpawnHorse extends HorseCommand{
 
 		for(String input : args){
 			String arg = input.toUpperCase();
-			if(!arg.contains(":")){
+			int sep = arg.indexOf(':');
+			if(sep == -1){
 				if(!(tamed = arg.replace("-", "").toLowerCase().equals("tamed"))){
 					sender.sendMessage(ChatColor.RED+"Invalid arguments (perhaps missing ':'?)");
 					return false;
 				}
 			}
-			if(arg.startsWith("N")) name = input.split(":")[1];
+			String postSep = arg.substring(sep+1);
+			if(arg.startsWith("N")) name = postSep;
 			else if(arg.startsWith("V") || arg.startsWith("TYPE:")){
-				try{variant = EntityType.valueOf(arg.split(":")[1]);}
+				try{variant = EntityType.valueOf(postSep);}
 				catch(IllegalArgumentException ex){
-					sender.sendMessage(ChatColor.RED+"Invalid variant '"+ChatColor.GRAY+arg.split(":")[1]
-						+ChatColor.RED+"'\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Variant.values()));
+					sender.sendMessage(ChatColor.RED+"Invalid variant \""+ChatColor.GRAY+postSep
+						+ChatColor.RED+"\"\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Variant.values()));
 					return true;
 				}
 			}
 			else if(arg.startsWith("C")){
-				try{color = Color.valueOf(arg.split(":")[1]);}
+				try{color = Color.valueOf(postSep);}
 				catch(IllegalArgumentException ex){
-					sender.sendMessage(ChatColor.RED+"Invalid color '"+ChatColor.GRAY+arg.split(":")[1]
-							+ChatColor.RED+"'\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Color.values()));
+					sender.sendMessage(ChatColor.RED+"Invalid color \""+ChatColor.GRAY+postSep
+							+ChatColor.RED+"\"\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Color.values()));
 					return true;
 				}
 			}
 			else if(arg.startsWith("T:") || arg.startsWith("STYLE:")){
-				try{style = Style.valueOf(arg.split(":")[1]);}
+				try{style = Style.valueOf(postSep);}
 				catch(IllegalArgumentException ex){
-					sender.sendMessage(ChatColor.RED+"Invalid style '"+ChatColor.GRAY+arg.split(":")[1]
-							+ChatColor.RED+"'\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Style.values()));
+					sender.sendMessage(ChatColor.RED+"Invalid style \""+ChatColor.GRAY+postSep
+							+ChatColor.RED+"\"\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Style.values()));
 					return true;
 				}
 			}
 			else if(arg.startsWith("J")){
-				try{jump = Double.parseDouble(arg.split(":")[1]);}
+				try{jump = Double.parseDouble(postSep);}
 				catch(NumberFormatException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid jump, only accepts number values");
 					return true;
 				}
 			}
 			else if(arg.startsWith("S")){
-				try{speed = Double.parseDouble(arg.split(":")[1]);}
+				try{speed = Double.parseDouble(postSep);}
 				catch(NumberFormatException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid speed, only accepts number values");
 					return true;
 				}
 			}
 			else if(arg.startsWith("H")){
-				try{health = Double.parseDouble(arg.split(":")[1]);}
+				try{health = Double.parseDouble(postSep);}
 				catch(NumberFormatException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid health, only accepts number values");
 					return true;
 				}
 			}
-			else if(arg.startsWith("TAME")) tamed = arg.split(":")[1].equals("TRUE");
+			else if(arg.startsWith("TAME")) tamed = postSep.equals("TRUE") || postSep.equals("YES");
 		}
 
 		Player p = (Player) sender;

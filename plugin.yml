@@ -56,10 +56,10 @@ commands:
       permission: evp.horseowners.inspect
       permission-message: You do not have permission to do this.
 
-   listhorses:
+   listhorse:
       description: Veiw a list of horses (& their owners)
       usage: /hm list [@a]
-      aliases: [horselist,listh,hlist,horses,lhorse]
+      aliases: [listhorses,horselist,listh,hlist,horses,lhorse]
       permission: evp.horseowners.list
       permission-message: You do not have permission to do this.
 
