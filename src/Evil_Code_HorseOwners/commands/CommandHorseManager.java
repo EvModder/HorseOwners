@@ -25,9 +25,13 @@ public class CommandHorseManager implements TabExecutor{//Cannot extend HorseCom
 		executorLookup = new HashMap<String, PluginCommand>();
 		for(String cmdName : plugin.getDescription().getCommands().keySet()){
 			PluginCommand cmd = plugin.getCommand(cmdName);
-			shortNames.add(cmdName);
+			shortNames.add(getShortName(cmdName));
 			executorLookup.put(cmdName, cmd);
-			for(String cmdAlias : cmd.getAliases()) executorLookup.put(cmdAlias, cmd);
+			executorLookup.put(getShortName(cmdName), cmd);
+			for(String cmdAlias : cmd.getAliases()){
+				executorLookup.put(cmdAlias, cmd);
+				executorLookup.put(getShortName(cmdAlias), cmd);
+			}
 		}
 
 		plugin.getCommand("horsemanager").setExecutor(this);

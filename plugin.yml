@@ -1,7 +1,7 @@
 name: HorseOwners
 main: Evil_Code_HorseOwners.HorseManager
 Author: EvModder
-version: 2.1.4
+version: 2.1.5 #5=tab completions
 api-version: 1.13
 
 commands:
