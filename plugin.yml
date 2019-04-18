@@ -1,7 +1,7 @@
 name: HorseOwners
 main: Evil_Code_HorseOwners.HorseManager
 Author: EvModder
-version: 2.1.5 #5=tab completions
+version: 2.1.6 #6=switch to IndexTreeMultiMap
 api-version: 1.13
 
 commands:
@@ -19,7 +19,6 @@ commands:
       permission: evp.horseowners.allowride
       permission-message: You do not have permission to do this.
 
-      
    claimhorse:
       description: Claim your steed
       usage: /hm claim [name]
@@ -229,7 +228,7 @@ permissions:
          evp.horseowners.tpansworld.anywhere: true
          evp.horseowners.tpansworld.samegamemode: true
          evp.horseowners.inspect: true
-         evp.horseowners.inpect.others: true
+         evp.horseowners.inspect.others: true
          evp.horseowners.spawn: true
          evp.horseowners.list: true
          evp.horseowners.list.all: true

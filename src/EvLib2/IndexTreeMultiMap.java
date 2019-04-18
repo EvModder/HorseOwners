@@ -651,7 +651,7 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 */
 	public final int getKeyIndex(Object key){
 		// Offload comparator-based version for sake of performance
-		if(comparator != null) return getLowerIndexUsingComparator(key);
+		if(comparator != null) return getKeyIndexUsingComparator(key);
 		if(key == null) throw new NullPointerException();
 		@SuppressWarnings("unchecked")
 		Comparable<? super K> k = (Comparable<? super K>)key;
@@ -717,9 +717,9 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public final int getLowerIndex(Object key){
+	public final int getFloorIndex(Object key){
 		// Offload comparator-based version for sake of performance
-		if(comparator != null) return getLowerIndexUsingComparator(key);
+		if(comparator != null) return getFloorIndexUsingComparator(key);
 		if(key == null) throw new NullPointerException();
 		@SuppressWarnings("unchecked")
 		Comparable<? super K> k = (Comparable<? super K>)key;
@@ -742,12 +742,12 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	}
 
 	/**
-	 * Version of getLowerIndex using comparator. Split off from getLowerIndex
+	 * Version of getFloorIndex using comparator. Split off from getLowerIndex
 	 * for performance. (This is not worth doing for most methods,
 	 * that are less dependent on comparator performance, but is
 	 * worthwhile here.)
 	 */
-	public final int getLowerIndexUsingComparator(Object key){
+	public final int getFloorIndexUsingComparator(Object key){
 		@SuppressWarnings("unchecked")
 		K k = (K)key;
 		Comparator<? super K> cpr = comparator;
@@ -772,11 +772,11 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	}
 
 	/**
-	 * Returns this map's entry index for the given key, or {@code size} if the map
-	 * does not contain an entry for the key.
+	 * Returns one past this map's entry index for the given key, or {@code size}
+	 * if the map does not contain an entry for the key.
 	 *
-	 * @return this map's entry index for the given key, or {@code size} if the map
-	 *         does not contain an entry for the key
+	 * @return one past this map's entry index for the given key, or {@code size}
+	 *         if the map does not contain an entry for the key
 	 * @throws ClassCastException
 	 *             if the specified key cannot be compared
 	 *             with the keys currently in the map
@@ -785,9 +785,9 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	 *             and this map uses natural ordering, or its comparator
 	 *             does not permit null keys
 	 */
-	public final int getUpperIndex(Object key){
+	public final int getCeilingIndex(Object key){
 		// Offload comparator-based version for sake of performance
-		if(comparator != null) return getUpperIndexUsingComparator(key);
+		if(comparator != null) return getCeilingIndexUsingComparator(key);
 		if(key == null) throw new NullPointerException();
 		@SuppressWarnings("unchecked")
 		Comparable<? super K> k = (Comparable<? super K>)key;
@@ -810,12 +810,12 @@ implements NavigableMap<K, Collection<X>>, Cloneable, java.io.Serializable
 	}
 
 	/**
-	 * Version of getUpperIndex using comparator. Split off from getUpperIndex
+	 * Version of getCeilingIndex using comparator. Split off from getUpperIndex
 	 * for performance. (This is not worth doing for most methods,
 	 * that are less dependent on comparator performance, but is
 	 * worthwhile here.)
 	 */
-	public final int getUpperIndexUsingComparator(Object key){
+	public final int getCeilingIndexUsingComparator(Object key){
 		@SuppressWarnings("unchecked")
 		K k = (K)key;
 		Comparator<? super K> cpr = comparator;
