@@ -1,7 +1,7 @@
 name: HorseOwners
-main: Evil_Code_HorseOwners.HorseManager
+main: evmodder.HorseOwners.HorseManager
 Author: EvModder
-version: 2.1.6 #6=switch to IndexTreeMultiMap
+version: 2.1.6 #7=built /hm top [stat] [page]
 api-version: 1.13
 
 commands:
