@@ -64,6 +64,7 @@ public class ClickListener implements Listener{
 				evt.setCancelled(true);
 			}
 			else{
+				if(evt.getPlayer().getGameMode() == GameMode.CREATIVE) return;//TODO
 				String newName = clickItem.getItemMeta().getDisplayName();
 				Location loc = p.getLocation();
 				horse.addPassenger(p);

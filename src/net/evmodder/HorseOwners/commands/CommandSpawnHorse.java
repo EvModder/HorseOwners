@@ -74,18 +74,19 @@ public class CommandSpawnHorse extends HorseCommand{
 		Boolean baby = null;
 
 		for(String input : args){
-			String arg = input.toUpperCase();
+			String arg = input;
 			int sep = arg.indexOf(':');
 			if(sep == -1){
-				if(!(tamed = arg.replace("-", "").toLowerCase().equals("tamed"))){
+				if(!(tamed = arg.replace("-", "").equalsIgnoreCase("tamed"))){
 					sender.sendMessage(ChatColor.RED+"Invalid arguments (perhaps missing ':'?)");
 					return false;
 				}
 			}
 			String postSep = arg.substring(sep+1);
+			arg = arg.toUpperCase();
 			if(arg.startsWith("N")) name = postSep;
 			else if(arg.startsWith("V") || arg.startsWith("TYPE:")){
-				try{variant = EntityType.valueOf(postSep);}
+				try{variant = EntityType.valueOf(postSep.toUpperCase());}
 				catch(IllegalArgumentException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid variant \""+ChatColor.GRAY+postSep
 						+ChatColor.RED+"\"\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Variant.values()));
@@ -93,7 +94,7 @@ public class CommandSpawnHorse extends HorseCommand{
 				}
 			}
 			else if(arg.startsWith("C")){
-				try{color = Color.valueOf(postSep);}
+				try{color = Color.valueOf(postSep.toUpperCase());}
 				catch(IllegalArgumentException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid color \""+ChatColor.GRAY+postSep
 							+ChatColor.RED+"\"\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Color.values()));
@@ -101,7 +102,7 @@ public class CommandSpawnHorse extends HorseCommand{
 				}
 			}
 			else if(arg.startsWith("STYLE:")){
-				try{style = Style.valueOf(postSep);}
+				try{style = Style.valueOf(postSep.toUpperCase());}
 				catch(IllegalArgumentException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid style \""+ChatColor.GRAY+postSep
 							+ChatColor.RED+"\"\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Style.values()));
