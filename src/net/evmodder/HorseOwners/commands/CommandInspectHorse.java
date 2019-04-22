@@ -17,7 +17,8 @@ public class CommandInspectHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender.hasPermission("evp.horseowners.inspect.others")
-					? plugin.getAllHorses()
+					? (sender.hasPermission("evp.horseowners.inspect.unowned")
+							? plugin.getAllHorses() : plugin.getAllClaimedHorses())
 					: plugin.getHorseOwners().get(((Player)sender).getUniqueId())){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);

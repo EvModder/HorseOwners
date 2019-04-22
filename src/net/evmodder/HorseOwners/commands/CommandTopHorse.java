@@ -57,8 +57,11 @@ public class CommandTopHorse extends HorseCommand{
 		if(topSpeed) showTop(sender, "Speed", "Fastest Speed", (IndexTreeMultiMap)plugin.getTopSpeed(), page);
 		if(topJump) showTop(sender, "Jump", "Highest Jump", (IndexTreeMultiMap)plugin.getTopJump(), page);
 		if(topHealth) showTop(sender, "Hearts", "Most Health", (IndexTreeMultiMap)plugin.getTopHealth(), page);
-		if(page*RESULTS_PER_PAGE >= plugin.getDatabaseSize())
+		int lastPage = (plugin.getDatabaseSize()-1)/RESULTS_PER_PAGE;
+		if(page > lastPage){
 			sender.sendMessage("§cError: page §6#"+(page+1)+"§c doesn't exist");
+			if(lastPage > 0) sender.sendMessage("§7Valid page range: §61§7-§6"+(lastPage+1));
+		}
 
 		return true;
 	}

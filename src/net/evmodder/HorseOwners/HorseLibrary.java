@@ -15,7 +15,6 @@ import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import com.onarandombox.MultiverseCore.MultiverseCore;
 
@@ -24,19 +23,30 @@ public class HorseLibrary {
 	private static String defaultWorld = org.bukkit.Bukkit.getServer().getWorlds().get(0).getName();//[0] is the default world
 	private static GameMode defaultGameMode = org.bukkit.Bukkit.getServer().getDefaultGameMode();
 	//--------------- Library functions -----------------------------------------------------
-	public static boolean isHorseFood(ItemStack item){
-		Material mat = item.getType();
-		if(mat == Material.SUGAR || mat == Material.WHEAT || 
-		   mat == Material.GOLDEN_APPLE || mat == Material.GOLDEN_CARROT || 
-		   mat == Material.BREAD || mat == Material.APPLE ||
-		   mat == Material.HAY_BLOCK) return true;
-		else return false;
+	public static boolean isHorseFood(Material mat){
+		switch(mat){
+			case WHEAT:
+			case HAY_BLOCK:
+			case SUGAR:
+			case APPLE:
+			case GOLDEN_APPLE:
+			case ENCHANTED_GOLDEN_APPLE:
+			case GOLDEN_CARROT:
+				return true;
+			default:
+				return false;
+		}
 	}
 
-	public static boolean isBreedingFood(ItemStack item){
-		Material mat = item.getType();
-		if(mat == Material.GOLDEN_APPLE || mat == Material.GOLDEN_CARROT) return true;
-		else return false;
+	public static boolean isBreedingFood(Material mat){
+		switch(mat){
+			case GOLDEN_APPLE:
+			case ENCHANTED_GOLDEN_APPLE:
+			case GOLDEN_CARROT:
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	public static String cleanName(String horseName){
@@ -191,6 +201,9 @@ public class HorseLibrary {
 	}
 	public static int getNormalHealth(LivingEntity horse){
 		return (int)Math.rint(horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+	}
+	public static int getNormalCurrentHealth(LivingEntity horse){
+		return (int)horse.getHealth();
 	}
 	public static double normalizeSpeed(double speed){
 		return Math.rint(speed*1000) / 25;

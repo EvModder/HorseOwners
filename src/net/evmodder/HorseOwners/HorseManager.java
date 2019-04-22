@@ -145,11 +145,14 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	//--------------- Member functions ------------------------------------------------------
-	//TODO: Move this into a native library
-	public Set<String> getAllHorses(){
+	//TODO: Move into a library
+	public Set<String> getAllClaimedHorses(){
 		Set<String> horseList = new HashSet<String>();
 		for(Set<String> horses : horseOwnersMap.values()) horseList.addAll(horses);
 		return horseList;
+	}
+	public Set<String> getAllHorses(){
+		return horses.getKeys(false);
 	}
 	public Map<UUID, Set<String>> getHorseOwners(){return horseOwnersMap;}
 	public int getDatabaseSize(){return horses.getKeys(false).size();}
@@ -159,6 +162,7 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	public boolean canAccess(Player p, String horseName){
+		if(horseName == null) return true;
 		horseName = HorseLibrary.cleanName(horseName);
 		boolean isOwner = horseOwnersMap.containsKey(p.getUniqueId())
 						&& HorseLibrary.containsIgnoreCaseAndColor(horseOwnersMap.get(p.getUniqueId()), horseName);
@@ -172,6 +176,7 @@ public final class HorseManager extends EvPlugin{
 		else return false;
 	}
 	public boolean canAccess(UUID playerUUID, String horseName){
+		if(horseName == null) return true;
 		horseName = HorseLibrary.cleanName(horseName);
 		boolean isOwner = horseOwnersMap.containsKey(playerUUID)
 				&& HorseLibrary.containsIgnoreCaseAndColor(horseOwnersMap.get(playerUUID), horseName);

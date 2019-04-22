@@ -1,7 +1,7 @@
 name: HorseOwners
-main: evmodder.HorseOwners.HorseManager
+main: net.evmodder.HorseOwners.HorseManager
 Author: EvModder
-version: 2.1.6 #7=built /hm top [stat] [page]
+version: 2.7.1 #7=/hm top [stat] [page], x.1= fixes & cleanup
 api-version: 1.13
 
 commands:
@@ -132,7 +132,11 @@ permissions:
       default: true
 
    evp.horseowners.list.all:
-      description: The ability to view a list of anyones horses
+      description: The ability to print a list of anyone's horses
+      default: op
+
+   evp.horseowners.list.unclaimed:
+      description: The ability to see a list of even the unclaimed horses
       default: op
 
    evp.horseowners.lock:
@@ -214,6 +218,10 @@ permissions:
       description: The ability to view another player's horses' stats
       default: op
 
+   evp.horseowners.inspect.unowned:
+      description: The ability to look up stats for unowned horses by name
+      default: op
+
    evp.horseowners.admin:
       description: Full access to others' horses as well as one's own.
       children:
@@ -229,6 +237,7 @@ permissions:
          evp.horseowners.tpansworld.samegamemode: true
          evp.horseowners.inspect: true
          evp.horseowners.inspect.others: true
+         evp.horseowners.inspect.unowned: true
          evp.horseowners.spawn: true
          evp.horseowners.list: true
          evp.horseowners.list.all: true

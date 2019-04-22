@@ -3,11 +3,13 @@ package net.evmodder.HorseOwners.commands;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import net.evmodder.EvLib.TabText;
 
 public class CommandListHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -30,22 +32,24 @@ public class CommandListHorse extends HorseCommand{
 		//cmd:	/hm list
 		boolean listAllPerm = sender.hasPermission("evp.horseowners.list.all");
 		String target = (sender instanceof Player == false || (listAllPerm && args.length == 1))
-				? args[0] : sender.getName();
+				? args[0].toLowerCase() : sender.getName();
 
 		if(target.contains("all") || target.equals("@a")){
-			int numHorses = 0;
+			Set<String> horseList = sender.hasPermission("evp.horseowners.list.unclaimed") ?
+					plugin.getAllHorses() : plugin.getAllClaimedHorses();
 			sender.sendMessage("§a§m}{§e§m       §7 [§aAll Horses§7] §e§m       §a§m}{");
-			for(UUID uuid : plugin.getHorseOwners().keySet()){
-				String ownerName = "None";
-				OfflinePlayer owner = plugin.getServer().getOfflinePlayer(uuid);
-				if(owner != null) ownerName = owner.getName();
-				
-				for(String horseName : plugin.getHorseOwners().get(uuid)){
-					sender.sendMessage("§7Horse: §f"+plugin.getHorseName(horseName)+"    §7Owner: §f"+ownerName);
-					++numHorses;
-				}
+			StringBuilder builder = new StringBuilder();
+			for(String horse : horseList){
+				String owner = plugin.getHorseOwnerName(horse);
+				if(owner == null) owner = "N/A";
+				builder.append("§7Horse: §f").append(plugin.getHorseName(horse))
+				.append("`§7Owner: §f").append(owner).append('\n');
 			}
-			sender.sendMessage("§7Total: §f" + numHorses);
+			builder.append("§7Total: §f").append(horseList.size());
+			if(sender instanceof Player)
+				sender.sendMessage(TabText.parse(builder.toString(), false, false, new int[]{157,0}));
+			else
+				sender.sendMessage(TabText.parse(builder.toString(), true, false, new int[]{25,0}));
 		}
 		else if(target.equals(sender.getName())){
 			UUID uuid = ((Player)sender).getUniqueId();

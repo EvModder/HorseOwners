@@ -14,6 +14,7 @@ import net.evmodder.EvLib.Text;
 
 public class CommandClaimHorse extends HorseCommand{
 	final boolean renameNametag, alphanumeric;
+	public static boolean lastCmdSuccess;
 	final int minNameLength, maxNameLength;
 
 	public CommandClaimHorse(){
@@ -32,6 +33,7 @@ public class CommandClaimHorse extends HorseCommand{
 	@Override
 	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm claim [name]
+		lastCmdSuccess = false;
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players");
 			return true;
@@ -101,7 +103,7 @@ public class CommandClaimHorse extends HorseCommand{
 				p.sendMessage(ChatColor.RED+"Too long of a name!");
 				return false;
 			}
-			else if(plugin.isClaimedHorse(newName)){
+			else if(plugin.horseExists(newName)){
 				p.sendMessage(ChatColor.RED+"That name has already been taken!");
 				return false;
 			}
@@ -143,6 +145,7 @@ public class CommandClaimHorse extends HorseCommand{
 		plugin.addHorse(p.getUniqueId(), h);
 		sender.sendMessage(ChatColor.GREEN+"Successfully claimed " + ChatColor.GRAY + ChatColor.ITALIC
 					+ h.getCustomName() + ChatColor.GREEN + " as your horse!");
+		lastCmdSuccess = true;
 		return true;
 	}
 }

@@ -31,7 +31,8 @@ public class CommandSpawnHorse extends HorseCommand{
 		flags.put("color:", Arrays.stream(Color.values()).map(c -> "color:"+c).collect(Collectors.toList()));
 		flags.put("variant:", Arrays.stream(Variant.values()).map(v -> "variant:"+v).collect(Collectors.toList()));
 		flags.put("style:", Arrays.stream(Style.values()).map(s -> "style:"+s).collect(Collectors.toList()));
-		flags.put("tamed:", Arrays.asList("true", "false"));
+		flags.put("tamed:", Arrays.asList("tamed:true", "tamed:false"));
+		flags.put("baby:", Arrays.asList("baby:true", "baby:false"));
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -70,6 +71,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		Style style = null;
 		double jump=0, speed=0, health=0;
 		boolean tamed = false;
+		Boolean baby = null;
 
 		for(String input : args){
 			String arg = input.toUpperCase();
@@ -98,7 +100,7 @@ public class CommandSpawnHorse extends HorseCommand{
 					return true;
 				}
 			}
-			else if(arg.startsWith("T:") || arg.startsWith("STYLE:")){
+			else if(arg.startsWith("STYLE:")){
 				try{style = Style.valueOf(postSep);}
 				catch(IllegalArgumentException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid style \""+ChatColor.GRAY+postSep
@@ -127,6 +129,7 @@ public class CommandSpawnHorse extends HorseCommand{
 					return true;
 				}
 			}
+			else if(arg.startsWith("B")) baby = Boolean.parseBoolean(postSep);
 			else if(arg.startsWith("TAME")) tamed = postSep.equals("TRUE") || postSep.equals("YES");
 		}
 
@@ -142,6 +145,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		if(speed != 0) HorseLibrary.speedCalc.setHorseSpeed(horse, HorseLibrary.denormalizeSpeed(speed));
 		if(health != 0) HorseLibrary.setMaxHealth(horse, health);
 		if(tamed) horse.setTamed(true);
+		if(baby != null){if(baby) horse.setBaby(); else horse.setAdult();}
 
 		sender.sendMessage(ChatColor.GREEN+"Successfully spawned your horse!");
 		return true;

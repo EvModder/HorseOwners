@@ -20,8 +20,7 @@ public class CommandUnleashHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender instanceof Player ?
-					plugin.getHorseOwners().get(((Player)sender).getUniqueId())
-					: plugin.getAllHorses()){
+					plugin.getHorseOwners().get(((Player)sender).getUniqueId()) : plugin.getAllHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
