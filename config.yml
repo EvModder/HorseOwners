@@ -2,6 +2,9 @@
 #                        HorseOwners config                        #
 #------------------------------------------------------------------#
 
+# Enable automatic plugin updates
+update-plugin: true
+
 # Should the server keep track of horses' ranking?
 # WARNING: Setting to false will clear existing rank data
 rank-claimed-horses: true

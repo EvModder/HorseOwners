@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
@@ -143,7 +144,8 @@ public class CommandSpawnHorse extends HorseCommand{
 			if(style != null) ((Horse)horse).setStyle(style);
 		}
 		if(jump != 0) horse.setJumpStrength(HorseLibrary.denormalizeJump(jump));
-		if(speed != 0) HorseLibrary.speedCalc.setHorseSpeed(horse, HorseLibrary.denormalizeSpeed(speed));
+		if(speed != 0) horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)
+							.setBaseValue(HorseLibrary.denormalizeSpeed(speed));
 		if(health != 0) HorseLibrary.setMaxHealth(horse, health);
 		if(tamed) horse.setTamed(true);
 		if(baby != null){if(baby) horse.setBaby(); else horse.setAdult();}

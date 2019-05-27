@@ -79,7 +79,8 @@ public class CommandCopyHorse extends HorseCommand {
 			((Horse)newHorse).setStyle(((Horse)horse).getStyle());
 		}
 		newHorse.setJumpStrength(horse.getJumpStrength());
-		HorseLibrary.speedCalc.setHorseSpeed(newHorse, HorseLibrary.speedCalc.getHorseSpeed(horse));
+		newHorse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(
+				horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue());
 		newHorse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(
 				horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
 		newHorse.setTamed(horse.isTamed());

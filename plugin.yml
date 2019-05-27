@@ -119,11 +119,11 @@ permissions:
       description: Ability to summon a horse via /fetch-horse [name]
       default: true
 
-   evp.horseowners.tpansworld.samegamemode:
+   evp.horseowners.crossworld.samegamemode:
       description: Permission to teleport horses between worlds that share the same Gamemode
       default: true
 
-   evp.horseowners.tpansworld.*:
+   evp.horseowners.crossworld.*:
       description: Permission to bring horses from any world to any other world via. teleporting.
       default: op
 
@@ -233,8 +233,8 @@ permissions:
          evp.horseowners.unleash: true
          evp.horseowners.lock: true
          evp.horseowners.tpcommand: true
-         evp.horseowners.tpansworld.anywhere: true
-         evp.horseowners.tpansworld.samegamemode: true
+         evp.horseowners.crossworld.anywhere: true
+         evp.horseowners.crossworld.samegamemode: true
          evp.horseowners.inspect: true
          evp.horseowners.inspect.others: true
          evp.horseowners.inspect.unowned: true

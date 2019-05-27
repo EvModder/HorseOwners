@@ -6,12 +6,14 @@ import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import net.evmodder.EvLib.hooks.MultiverseHook;
 import net.evmodder.HorseOwners.HorseLibrary;
 
 public class CommandGetHorse extends HorseCommand{
@@ -71,7 +73,8 @@ public class CommandGetHorse extends HorseCommand{
 				else if(p.hasPermission("evp.horseowners.tpansworld.samegamemode")){
 					List<World> worldsList = new ArrayList<World>();
 					for(World w : plugin.getServer().getWorlds()){
-						if(p.getGameMode().equals(HorseLibrary.getWorldGameMode(w))) worldsList.add(w);
+						GameMode gm = MultiverseHook.getWorldGameMode(w);
+						if(gm == null || p.getGameMode() == gm) worldsList.add(w);
 					}
 					worlds = worldsList.toArray(worlds);
 				}
@@ -105,9 +108,10 @@ public class CommandGetHorse extends HorseCommand{
 				return true;
 			}
 			if(horse.getWorld().getUID().equals(p.getWorld().getUID()) == false){
-				if(!allowTransworld || (!p.hasPermission("evp.horseowners.tpansworld.*") &&
-						(!p.hasPermission("evp.horseowners.tpansworld.samegamemode") ||
-								!p.getGameMode().equals(HorseLibrary.getWorldGameMode(horse.getWorld())))))
+				GameMode gm = MultiverseHook.getWorldGameMode(horse.getWorld());
+				if(!allowTransworld || (!p.hasPermission("evp.horseowners.crossworld.anywhere") &&
+						(!p.hasPermission("evp.horseowners.crossworld.samegamemode") ||
+								(gm != null && p.getGameMode() != gm))))
 				{
 					p.sendMessage(ChatColor.RED+"Unable to teleport the horse, "
 								+ChatColor.GRAY+horse.getCustomName()+ChatColor.RED+"--");

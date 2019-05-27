@@ -50,7 +50,7 @@ public class CommandInspectHorse extends HorseCommand{
 						+ChatColor.GRAY+'\n'+command.getUsage());
 				return true;
 			}
-			else if(p != null && !plugin.canAccess(p, horseName) && !p.hasPermission("evp.horseowners.inspect.others")){
+			else if(p != null && !p.hasPermission("evp.horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
 				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
 				return true;
 			}

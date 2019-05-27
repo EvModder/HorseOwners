@@ -24,8 +24,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.IndexTreeMultiMap;
-import net.evmodder.EvLib.VaultHook;
+import net.evmodder.EvLib.util.IndexTreeMultiMap;
 import net.evmodder.HorseOwners.commands.*;
 import net.evmodder.HorseOwners.listeners.*;
 
@@ -42,8 +41,10 @@ public final class HorseManager extends EvPlugin{
 	private IndexTreeMultiMap<Integer, String> topHealth;
 
 	@Override public void onEvEnable(){
+		if(config.getBoolean("update-plugin", true)){
+			//new Updater(this, 888777, getFile(), Updater.UpdateType.DEFAULT, false);
+		}
 		plugin = this;
-		new VaultHook(this);
 		horseOwnersMap = new HashMap<UUID, Set<String>>();
 		oneTimeAccess = new HashSet<String>();
 		saveCoords = config.getBoolean("save-horse-coordinates", true);
@@ -151,9 +152,7 @@ public final class HorseManager extends EvPlugin{
 		for(Set<String> horses : horseOwnersMap.values()) horseList.addAll(horses);
 		return horseList;
 	}
-	public Set<String> getAllHorses(){
-		return horses.getKeys(false);
-	}
+	public Set<String> getAllHorses(){return horses.getKeys(false);}
 	public Map<UUID, Set<String>> getHorseOwners(){return horseOwnersMap;}
 	public int getDatabaseSize(){return horses.getKeys(false).size();}
 
@@ -436,6 +435,7 @@ public final class HorseManager extends EvPlugin{
 	public UUID getHorseOwner(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 		String uuid = horses.getString(horseName+".owner");
+		plugin.getLogger().info(horseName+"~ owner uuid: "+uuid);
 		return uuid == null ? null : UUID.fromString(uuid);
 		/*
 		for(UUID uuid : horseOwnersMap.keySet()){

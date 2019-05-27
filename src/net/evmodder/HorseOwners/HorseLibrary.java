@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -16,12 +15,9 @@ import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.metadata.FixedMetadataValue;
-import com.onarandombox.MultiverseCore.MultiverseCore;
 
 public class HorseLibrary {
-	public static SpeedCalculator speedCalc = new SpeedCalculator(/*org.bukkit.Bukkit.getBukkitVersion()*/);
-	private static String defaultWorld = org.bukkit.Bukkit.getServer().getWorlds().get(0).getName();//[0] is the default world
-	private static GameMode defaultGameMode = org.bukkit.Bukkit.getServer().getDefaultGameMode();
+//	public static SpeedCalculator speedCalc = new SpeedCalculator(/*org.bukkit.Bukkit.getBukkitVersion()*/);
 	//--------------- Library functions -----------------------------------------------------
 	public static boolean isHorseFood(Material mat){
 		switch(mat){
@@ -156,13 +152,6 @@ public class HorseLibrary {
 		return false;
 	}
 
-	public static GameMode getWorldGameMode(World world){
-		MultiverseCore mv = (MultiverseCore) org.bukkit.Bukkit.getPluginManager().getPlugin("Multiverse-Core");
-		if(mv != null && mv.isEnabled()) return mv.getMVWorldManager().getMVWorld(world).getGameMode();
-		else if(world.getName().contains(defaultWorld)) return defaultGameMode;//contains => NAME, NAME_nether, & NAME_the_end
-		else return null;
-	}
-
 /*	public static boolean isSuffocating(Block b){
 	Material mat = b.getType();
 	if(mat != Material.AIR && mat != Material.TORCH && mat != Material.CARPET && mat != Material.BED &&
@@ -193,13 +182,13 @@ public class HorseLibrary {
 		return horse.hasMetadata("father") ? horse.getMetadata("father").get(0).asString() : null;
 	}
 
-	public static double getNormalSpeed(Entity horse){
-		return normalizeSpeed(speedCalc.getHorseSpeed(horse));
+	public static double getNormalSpeed(Attributable horse){
+		return normalizeSpeed(horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue());
 	}
 	public static double getNormalJump(AbstractHorse horse){
 		return normalizeJump(horse.getJumpStrength());
 	}
-	public static int getNormalHealth(LivingEntity horse){
+	public static int getNormalHealth(Attributable horse){
 		return (int)Math.rint(horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
 	}
 	public static int getNormalCurrentHealth(LivingEntity horse){

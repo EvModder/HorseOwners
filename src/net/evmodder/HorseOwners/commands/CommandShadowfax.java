@@ -13,7 +13,6 @@ import org.bukkit.entity.Horse.Style;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class CommandShadowfax implements CommandExecutor{
@@ -35,7 +34,7 @@ public class CommandShadowfax implements CommandExecutor{
 			h.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(34.0);
 			h.setHealth(34.0);
 			h.setJumpStrength(1.15);
-			HorseLibrary.speedCalc.setHorseSpeed(h, .302);
+			h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(.302);
 
 			//h.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100000, 1));
 			h.addPassenger(p);

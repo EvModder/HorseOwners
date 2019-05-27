@@ -10,7 +10,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.inventory.ItemStack;
-import net.evmodder.EvLib.Text;
+import net.evmodder.EvLib.extras.TextUtils;
 
 public class CommandClaimHorse extends HorseCommand{
 	final boolean renameNametag, alphanumeric;
@@ -72,13 +72,13 @@ public class CommandClaimHorse extends HorseCommand{
 				for(int i=1; i<args.length; ++i) builder.append(' ').append(args[i]);
 				newName = builder.toString();
 			}
-			if(alphanumeric) newName = newName.replaceAll("[:(),"+Text.colorSymbol+"<>{}\\-\\[\\]\\.]'\"", "");
+			if(alphanumeric) newName = newName.replaceAll("[:(),"+TextUtils.colorSymbol+"<>{}\\-\\[\\]\\.]'\"", "");
 
 			if(p.hasPermission("evp.horseowners.coloredname")){
 				if(p.hasPermission("evp.horseowners.fullformats") == false){
 					newName = newName.replace("&k", "").replace("&m", "").replace("&n", "");
 				}
-				newName = Text.translateAlternateColorCodes('&', newName);
+				newName = TextUtils.translateAlternateColorCodes('&', newName);
 			}
 			newName.replaceAll("\\s{2,}", " ").trim();//remove leftover spaces
 

@@ -3,13 +3,14 @@ package net.evmodder.HorseOwners.listeners;
 import org.bukkit.entity.Entity;
 import java.util.UUID;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import com.onarandombox.MultiverseCore.MultiverseCore;
+import net.evmodder.EvLib.hooks.MultiverseHook;
 import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
 
@@ -33,13 +34,9 @@ public class TeleportListener implements Listener{
 		if(evt.getFrom().getWorld().getName().equals(evt.getTo().getWorld().getName()) == false &&
 				evt.getPlayer().hasPermission("evp.horseowners.tpansworld.*") == false){
 			if(evt.getPlayer().hasPermission("evp.horseowners.tpansworld.samegamemode")){
-				MultiverseCore mv = (MultiverseCore) plugin.getServer().getPluginManager().getPlugin("Multiverse-Core");
-				if(mv == null || mv.isEnabled() == false ||
-					mv.getMVWorldManager().getMVWorld(evt.getFrom().getWorld()).getGameMode() != 
-					mv.getMVWorldManager().getMVWorld(evt.getTo().getWorld()).getGameMode())
-				{
-					return;//Unable to teleport to a world with a different gamemode
-				}
+				GameMode fromGM = MultiverseHook.getWorldGameMode(evt.getFrom().getWorld());
+				GameMode toGM = MultiverseHook.getWorldGameMode(evt.getTo().getWorld());
+				if(fromGM != toGM) return;//Unable to teleport to a world with a different gamemode
 			}
 			else{
 				return;//Unable to teleport to a different world

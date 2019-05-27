@@ -32,7 +32,6 @@ public class ChunkUnloadListener implements Listener{
 					if(uuid != null){
 						OfflinePlayer owner = plugin.getServer().getOfflinePlayer(uuid);
 						if(owner != null && owner.isOnline()){
-							evt.setCancelled(true);
 							evt.getChunk().load();
 	//						plugin.getLogger().info("Kept chunk loaded");
 						}

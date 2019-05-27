@@ -52,10 +52,10 @@ public class BreedListener implements Listener{
 			if(h.getJumpStrength() > MAX_JUMP) h.setJumpStrength(MAX_JUMP);
 
 			//speed
-			double speed = HorseLibrary.speedCalc.getHorseSpeed(h);
+			double speed = h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 			speed *= ((rand.nextInt(81)+50)/100.0);//removes up to 50% of the speed and adds up to 30% of the speed
 			if(speed > MAX_SPEED) speed = MAX_SPEED;
-			HorseLibrary.speedCalc.setHorseSpeed(h, speed);
+			h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
 
 			//health
 			double health = h.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();

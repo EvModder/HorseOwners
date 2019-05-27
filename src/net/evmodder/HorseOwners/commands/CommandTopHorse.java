@@ -9,8 +9,8 @@ import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import net.evmodder.EvLib.IndexTreeMultiMap;
-import net.evmodder.EvLib.TabText;
+import net.evmodder.EvLib.extras.TabText;
+import net.evmodder.EvLib.util.IndexTreeMultiMap;
 
 public class CommandTopHorse extends HorseCommand{
 	final List<String> rankLists = Arrays.asList("speed", "jump", "health");
