@@ -42,16 +42,19 @@ public class CommandInspectHorse extends HorseCommand{
 		else{
 			if(args.length == 0){
 				sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+"\n"+command.getUsage());
+				COMMAND_SUCCESS = false;
 				return false;
 			}
 			horseName = HorseLibrary.cleanName(StringUtils.join(args, ' '));
 			if(!plugin.horseExists(horseName)){
 				sender.sendMessage(ChatColor.RED+"Unknown horse (check name spelling)"
 						+ChatColor.GRAY+'\n'+command.getUsage());
+				COMMAND_SUCCESS = false;
 				return true;
 			}
 			else if(p != null && !p.hasPermission("evp.horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
 				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
+				COMMAND_SUCCESS = false;
 				return true;
 			}
 			/*Entity entity = plugin.findClaimedHorse(horseName, null);
@@ -142,6 +145,7 @@ public class CommandInspectHorse extends HorseCommand{
 		}
 
 		sender.sendMessage(builder.toString());
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }

@@ -47,6 +47,7 @@ public class CommandAllowRide extends HorseCommand{
 
 		if(args.length == 0){
 			sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+'\n'+command.getUsage());
+			COMMAND_SUCCESS = false;
 			return false;
 		}
 
@@ -54,6 +55,7 @@ public class CommandAllowRide extends HorseCommand{
 		if(recipient == null || recipient.hasPlayedBefore() == false){
 			sender.sendMessage(ChatColor.RED+"Player \""+ChatColor.GOLD+args[0]
 					+ChatColor.RED+"\" not found!"+ChatColor.GRAY+'\n'+command.getUsage());
+			COMMAND_SUCCESS = false;
 			return false;
 		}
 
@@ -63,22 +65,26 @@ public class CommandAllowRide extends HorseCommand{
 		else if(p != null && p.isInsideVehicle() && p.getVehicle() instanceof Horse){
 			if((horseName=p.getVehicle().getCustomName()) == null || plugin.isClaimedHorse(horseName) == false){
 				sender.sendMessage(ChatColor.GRAY+"This horse is ownerless, anyone can ride it!");
-				return false;
+				COMMAND_SUCCESS = false;
+				return true;
 			}
 		}
 		else{
 			sender.sendMessage(ChatColor.RED+"Please specify both a horse and a player"
 						+ChatColor.GRAY+'\n'+command.getUsage());
+			COMMAND_SUCCESS = false;
 			return false;
 		}
 
 		if(plugin.isClaimedHorse(horseName) == false){
 			sender.sendMessage(ChatColor.RED+"This horse is ownerless, anyone can ride it!");
-			return false;
+			COMMAND_SUCCESS = false;
+			return true;
 		}
 		else if(p != null && plugin.canAccess(p, horseName) == false){
 			sender.sendMessage(ChatColor.RED+"You do not own this horse");
-			return false;
+			COMMAND_SUCCESS = false;
+			return true;
 		}
 
 		//Yay got to here! Now give them a boost up!
@@ -94,6 +100,7 @@ public class CommandAllowRide extends HorseCommand{
 				.sendMessage(ChatColor.GRAY+sender.getName()+ChatColor.GREEN
 				+" has granted you permission for a single ride on their horse, "
 				+ChatColor.GRAY+horseName+ChatColor.GREEN+'.');
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }

@@ -10,6 +10,7 @@ import net.evmodder.HorseOwners.HorseManager;
 abstract class HorseCommand implements TabExecutor{
 	HorseManager plugin;
 	double price;
+	public static boolean COMMAND_SUCCESS;
 
 	HorseCommand(){
 		plugin = HorseManager.getPlugin();
@@ -26,7 +27,8 @@ abstract class HorseCommand implements TabExecutor{
 				sender.sendMessage("§4You do not have sufficient funds (§c$"+price+"§4)");
 				return true;
 			}
-			else if(onHorseCommand(sender, command, label, args)){
+			boolean return_val = onHorseCommand(sender, command, label, args);
+			if(COMMAND_SUCCESS){
 				if(plugin.getServer().getPluginManager().isPluginEnabled("Eventials")){
 					plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), 
 							"serverbal charge "+sender.getName()+" "+price);
@@ -35,11 +37,12 @@ abstract class HorseCommand implements TabExecutor{
 					EssEcoHook.chargeFee((Player)sender, price);
 				}
 				sender.sendMessage("§7You were charged §c$"+price+"§7 for using this command.");
-				return true;
 			}
-			else return false;
+			return return_val;
 		}
-		else return onHorseCommand(sender, command, label, args);
+		else{
+			return onHorseCommand(sender, command, label, args);
+		}
 	}
 	public abstract boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]);
 }

@@ -42,6 +42,7 @@ public class CommandCopyHorse extends HorseCommand {
 		//cmd:	usage: /hm copy [horse]
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players");
+			COMMAND_SUCCESS = false;
 			return true;
 		}
 
@@ -52,23 +53,27 @@ public class CommandCopyHorse extends HorseCommand {
 		if(safeTeleports && !HorseLibrary.safeForHorses(p.getLocation())){
 			p.sendMessage(ChatColor.RED+
 				"Unable to spawn horse - Please move to a more open area to prevent risk of horse suffocation");
+			COMMAND_SUCCESS = false;
 			return true;
 		}
 
 		if(!plugin.isClaimedHorse(target)){
 			sender.sendMessage(ChatColor.RED+"Unknown horse '"+ChatColor.GRAY+target+ChatColor.RED+"'");
 //			sender.sendMessage(ChatColor.RED+"Unclaimed horses cannot be copied via command, you must first use /claimhorse");
+			COMMAND_SUCCESS = false;
 			return false;
 		}
 		else if(!plugin.canAccess(p, target)){
 			p.sendMessage(ChatColor.RED+"You cannot copy horses which you do not own");
-			return false;
+			COMMAND_SUCCESS = false;
+			return true;
 		}
 		Entity e = plugin.findClaimedHorse(target, null);
 		horse = (e != null && e instanceof AbstractHorse) ? (AbstractHorse)e : null;
 //		horse = HorseLibrary.findAnyHorse(target);
 		if(horse == null){
 			p.sendMessage(ChatColor.RED+"Unable to find your horse! Perhaps its location was unloaded?");
+			COMMAND_SUCCESS = false;
 			return true;
 		}
 
@@ -91,6 +96,7 @@ public class CommandCopyHorse extends HorseCommand {
 		newHorse.setSilent(horse.isSilent());
 
 		sender.sendMessage(ChatColor.GREEN+"Successfully spawned your horse!");
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }

@@ -63,6 +63,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		//hm spawn n:fat c:white t:white s:50 j:20 h:60
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players");
+			COMMAND_SUCCESS = false;
 			return true;
 		}
 
@@ -80,6 +81,7 @@ public class CommandSpawnHorse extends HorseCommand{
 			if(sep == -1){
 				if(!(tamed = arg.replace("-", "").equalsIgnoreCase("tamed"))){
 					sender.sendMessage(ChatColor.RED+"Invalid arguments (perhaps missing ':'?)");
+					COMMAND_SUCCESS = false;
 					return false;
 				}
 			}
@@ -91,6 +93,7 @@ public class CommandSpawnHorse extends HorseCommand{
 				catch(IllegalArgumentException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid variant \""+ChatColor.GRAY+postSep
 						+ChatColor.RED+"\"\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Variant.values()));
+					COMMAND_SUCCESS = false;
 					return true;
 				}
 			}
@@ -99,6 +102,7 @@ public class CommandSpawnHorse extends HorseCommand{
 				catch(IllegalArgumentException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid color \""+ChatColor.GRAY+postSep
 							+ChatColor.RED+"\"\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Color.values()));
+					COMMAND_SUCCESS = false;
 					return true;
 				}
 			}
@@ -107,6 +111,7 @@ public class CommandSpawnHorse extends HorseCommand{
 				catch(IllegalArgumentException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid style \""+ChatColor.GRAY+postSep
 							+ChatColor.RED+"\"\n"+ChatColor.GRAY+"Possible values: "+Arrays.asList(Style.values()));
+					COMMAND_SUCCESS = false;
 					return true;
 				}
 			}
@@ -114,6 +119,7 @@ public class CommandSpawnHorse extends HorseCommand{
 				try{jump = Double.parseDouble(postSep);}
 				catch(NumberFormatException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid jump, only accepts number values");
+					COMMAND_SUCCESS = false;
 					return true;
 				}
 			}
@@ -121,6 +127,7 @@ public class CommandSpawnHorse extends HorseCommand{
 				try{speed = Double.parseDouble(postSep);}
 				catch(NumberFormatException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid speed, only accepts number values");
+					COMMAND_SUCCESS = false;
 					return true;
 				}
 			}
@@ -128,6 +135,7 @@ public class CommandSpawnHorse extends HorseCommand{
 				try{health = Double.parseDouble(postSep);}
 				catch(NumberFormatException ex){
 					sender.sendMessage(ChatColor.RED+"Invalid health, only accepts number values");
+					COMMAND_SUCCESS = false;
 					return true;
 				}
 			}
@@ -151,6 +159,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		if(baby != null){if(baby) horse.setBaby(); else horse.setAdult();}
 
 		sender.sendMessage(ChatColor.GREEN+"Successfully spawned your horse!");
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }

@@ -47,11 +47,13 @@ public class CommandGetHorse extends HorseCommand{
 		//cmd:	/hm get [horse]
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players");
-			return false;
+			COMMAND_SUCCESS = false;
+			return true;
 		}
 		if(args.length < 1){
 			sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+'\n'+command.getUsage());
-			return true;
+			COMMAND_SUCCESS = false;
+			return false;
 		}
 		Player p = (Player) sender;
 		String target = StringUtils.join(args, ' ');
@@ -61,6 +63,7 @@ public class CommandGetHorse extends HorseCommand{
 		if(safeTeleports && HorseLibrary.safeForHorses(p.getLocation()) == false){
 			p.sendMessage(ChatColor.RED
 					+"Unable to teleport horse - Please move to a more open area to prevent risk of horse suffocation");
+			COMMAND_SUCCESS = false;
 			return true;
 		}
 
@@ -87,24 +90,30 @@ public class CommandGetHorse extends HorseCommand{
 				else ++lost;
 			}
 			//Sometimes some of the horses won't make it
-			if(lost > 0) p.sendMessage(ChatColor.YELLOW+"Unable to teleport "
+			if(lost > 0) p.sendMessage(ChatColor.YELLOW+"Unable to locate "
 						+ChatColor.GRAY+lost+ChatColor.YELLOW+" of your horses");
-			if(horses.size() == 0) return false;
+			if(horses.size() == 0){
+				COMMAND_SUCCESS = false;
+				return true;
+			}
 		}
 		else{
 			if(plugin.isClaimedHorse(target) == false){
 				sender.sendMessage(ChatColor.RED+"Unknown horse '"+ChatColor.GRAY+target+ChatColor.RED+'\'');
 //				sender.sendMessage("�cUnclaimed horses cannot be teleported via command, you must first use /claimhorse");
-				return true;
+				COMMAND_SUCCESS = false;
+				return false;
 			}
 			else if(plugin.canAccess(p, target) == false){
 				p.sendMessage(ChatColor.RED+"You may not teleport horses which you do not own");
+				COMMAND_SUCCESS = false;
 				return true;
 			}
 			horse = plugin.findClaimedHorse(target, null);
 //			horse = HorseLibrary.findAnyHorse(target);
 			if(horse == null){
-				p.sendMessage(ChatColor.RED+"Unable to find your horse! Perhaps its location was unloaded?");
+				p.sendMessage(ChatColor.RED+"Unable to find your horse! Perhaps the chunk it was in is unloaded?");
+				COMMAND_SUCCESS = false;
 				return true;
 			}
 			if(horse.getWorld().getUID().equals(p.getWorld().getUID()) == false){
@@ -116,6 +125,7 @@ public class CommandGetHorse extends HorseCommand{
 					p.sendMessage(ChatColor.RED+"Unable to teleport the horse, "
 								+ChatColor.GRAY+horse.getCustomName()+ChatColor.RED+"--");
 					p.sendMessage(ChatColor.RED+"You do not have permission to use trans-world horse teleportation");
+					COMMAND_SUCCESS = false;
 					return true;
 				}
 				else p.sendMessage(ChatColor.GRAY+"Attempting to fetch horse from world: "
@@ -130,6 +140,7 @@ public class CommandGetHorse extends HorseCommand{
 			if(saveCoords && h instanceof AbstractHorse) plugin.updateData((AbstractHorse)h);
 		}
 		p.sendMessage(ChatColor.GREEN+"Fetched your horse"+(horses.size() > 1 ? "s!" : "!"));
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }

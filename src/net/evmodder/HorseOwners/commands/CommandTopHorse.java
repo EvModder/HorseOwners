@@ -62,7 +62,7 @@ public class CommandTopHorse extends HorseCommand{
 			sender.sendMessage("§cError: page §6#"+(page+1)+"§c doesn't exist");
 			if(lastPage > 0) sender.sendMessage("§7Valid page range: §61§7-§6"+(lastPage+1));
 		}
-
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 

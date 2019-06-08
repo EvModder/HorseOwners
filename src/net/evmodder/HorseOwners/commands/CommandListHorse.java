@@ -74,6 +74,7 @@ public class CommandListHorse extends HorseCommand{
 			else sender.sendMessage("§c"+target+" does not own any horses!");
 			if(listAllPerm) sender.sendMessage("§7Use §2/hm list @a§7 to view all horses");
 		}
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }

@@ -35,7 +35,8 @@ public class CommandLockHorse extends HorseCommand{
 		if(p != null && p.isInsideVehicle() && plugin.isClaimableHorseType(p.getVehicle())){
 			if(p.getVehicle().getCustomName() == null){
 				p.sendMessage("§cThis horse is ownerless!\nTry claiming it first with /namehorse");
-				return false;
+				COMMAND_SUCCESS = false;
+				return true;
 			}
 			else{
 				horseName = p.getVehicle().getCustomName();
@@ -43,19 +44,22 @@ public class CommandLockHorse extends HorseCommand{
 		}
 		else if(args.length == 0){
 			sender.sendMessage("§cPlease specify the horse you want to lock!§7\n"+command.getUsage());
+			COMMAND_SUCCESS = false;
 			return false;
 		}
 		else horseName = StringUtils.join(args, ' ');
 
 		//by this point, a name has been determined
 		if(plugin.isLockedHorse(horseName)){
-			sender.sendMessage("§7This horse's has already been locked");
-			return false;
+			sender.sendMessage("§7This horse's name has already been locked");
+			COMMAND_SUCCESS = false;
+			return true;
 		}
 		if(plugin.isClaimedHorse(horseName)){
 			if(p != null && plugin.canAccess(p, horseName) == false){
 				sender.sendMessage("§cYou cannot lock horses which you do not own");
-				return false;
+				COMMAND_SUCCESS = false;
+				return true;
 			}
 		}
 /*		//Check to confirm the horse's existence, even though we don't need the entity
@@ -67,6 +71,7 @@ public class CommandLockHorse extends HorseCommand{
 		//Yay got to here! Now make it forever!
 		sender.sendMessage("§7Your horse's name been locked! Nobody can change it now.");
 		plugin.lockHorse(horseName);
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }

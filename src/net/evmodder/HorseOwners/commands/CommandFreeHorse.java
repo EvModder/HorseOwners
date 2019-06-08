@@ -35,6 +35,7 @@ public class CommandFreeHorse extends HorseCommand{
 		else if(p != null && p.isInsideVehicle() && plugin.isClaimableHorseType(p.getVehicle())){
 			if(p.getVehicle().getCustomName() == null || plugin.isClaimedHorse(p.getVehicle().getCustomName()) == false){
 				sender.sendMessage(ChatColor.GRAY+"This horse is already ownerless!");
+				COMMAND_SUCCESS = false;
 				return false;
 			}
 			else horseName = p.getVehicle().getCustomName();
@@ -42,16 +43,19 @@ public class CommandFreeHorse extends HorseCommand{
 		else{
 			sender.sendMessage(ChatColor.RED+"Please specify the horse you want to set free"
 						+ChatColor.GRAY+'\n'+command.getUsage());
+			COMMAND_SUCCESS = false;
 			return false;
 		}
 
 		if(plugin.isClaimedHorse(horseName) == false){
 			sender.sendMessage(ChatColor.RED+"Unknown horse (check name spelling)"+ChatColor.GRAY+'\n'+command.getUsage());
+			COMMAND_SUCCESS = false;
 			return false;
 		}
 		if(p != null && plugin.canAccess(p, horseName) == false){
 			sender.sendMessage(ChatColor.RED+"You cannot manage horses which you do not own");
-			return false;
+			COMMAND_SUCCESS = false;
+			return true;
 		}
 
 		//Yay! now set it freeeee!
@@ -65,6 +69,7 @@ public class CommandFreeHorse extends HorseCommand{
 			sender.sendMessage(ChatColor.GREEN+"You have freed the horse: "
 					+ChatColor.GRAY+horseName+ChatColor.GREEN+'.');
 		}
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }

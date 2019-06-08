@@ -14,7 +14,6 @@ import net.evmodder.EvLib.extras.TextUtils;
 
 public class CommandClaimHorse extends HorseCommand{
 	final boolean renameNametag, alphanumeric;
-	public static boolean lastCmdSuccess;
 	final int minNameLength, maxNameLength;
 
 	public CommandClaimHorse(){
@@ -33,26 +32,29 @@ public class CommandClaimHorse extends HorseCommand{
 	@Override
 	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm claim [name]
-		lastCmdSuccess = false;
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players");
+			COMMAND_SUCCESS = false;
 			return true;
 		}
 
 		Player p = (Player)sender;
 		if(!p.isInsideVehicle() || !plugin.isClaimableHorseType(p.getVehicle())){
 			p.sendMessage(ChatColor.RED+"You must be riding on a horse to use this command");
-			return false;
+			COMMAND_SUCCESS = false;
+			return true;
 		}
 		Entity h = p.getVehicle();
 
 		if(args.length == 0 && h.getCustomName() == null){
 			sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+" (Please supply a name)");
+			COMMAND_SUCCESS = false;
 			return false;
 		}
 
 		if(h instanceof Tameable && ((Tameable)h).isTamed() == false){
 			p.sendMessage(ChatColor.RED+"You must first tame this horse before you can claim it");
+			COMMAND_SUCCESS = false;
 			return true;
 		}
 
@@ -61,7 +63,8 @@ public class CommandClaimHorse extends HorseCommand{
 		
 		if(oldName != null && plugin.isClaimedHorse(oldName) && isOwner == false){
 			p.sendMessage(ChatColor.RED+"This horse already belongs to someone!");
-			return false;
+			COMMAND_SUCCESS = false;
+			return true;
 		}
 
 		if(args.length > 0){
@@ -86,33 +89,39 @@ public class CommandClaimHorse extends HorseCommand{
 				if(newName.equals(oldName)){
 					if(isOwner){
 						p.sendMessage(ChatColor.RED+"This horse already has that name!");
+						COMMAND_SUCCESS = false;
 						return true;
 					}
 				}
 				else if(plugin.isLockedHorse(oldName)){
 					sender.sendMessage(ChatColor.RED+"You cannot rename "
 								+ChatColor.GRAY+ChatColor.ITALIC+oldName+ChatColor.RED+'.');
+					COMMAND_SUCCESS = false;
 					return false;
 				}
 			}
 			if(newName.length() < minNameLength){
 				p.sendMessage(ChatColor.RED+"Too short of a name!");
-				return false;
+				COMMAND_SUCCESS = false;
+				return true;
 			}
 			else if(newName.length() > maxNameLength){
 				p.sendMessage(ChatColor.RED+"Too long of a name!");
-				return false;
+				COMMAND_SUCCESS = false;
+				return true;
 			}
 			else if(plugin.horseExists(newName)){
 				p.sendMessage(ChatColor.RED+"That name has already been taken!");
-				return false;
+				COMMAND_SUCCESS = false;
+				return true;
 			}
 			if((oldName == null || oldName.equals(newName) == false)
 					&& renameNametag && p.getGameMode() != GameMode.CREATIVE){
 				if(p.getInventory().contains(Material.NAME_TAG) == false){
 					p.sendMessage(ChatColor.RED+"You need a nametag in order to "
 						+(oldName == null ? "name/claim" : "rename")+" a horse!");
-					return false;
+					COMMAND_SUCCESS = false;
+					return true;
 				}
 				//charge 1 nametag
 				ItemStack firstNametag = p.getInventory().getItem(p.getInventory().first(Material.NAME_TAG));
@@ -129,23 +138,26 @@ public class CommandClaimHorse extends HorseCommand{
 				//if owner of the horse, update the name (but keep the stats)
 				if(isOwner) plugin.renameHorse(oldName, newName);
 				else plugin.addHorse(p.getUniqueId(), h);
+				COMMAND_SUCCESS = true;
 				return true;
 			}
 		}
 		else if(oldName == null){
 			p.sendMessage(ChatColor.RED+"Please supply a name for this horse\n"+ChatColor.GRAY+command.getUsage());
+			COMMAND_SUCCESS = false;
 			return false;
 		}
 		else if(isOwner){
 			p.sendMessage(ChatColor.GRAY+"You already own this horse");
-			return false;
+			COMMAND_SUCCESS = false;
+			return true;
 		}
 
 		//My horsie!
 		plugin.addHorse(p.getUniqueId(), h);
 		sender.sendMessage(ChatColor.GREEN+"Successfully claimed " + ChatColor.GRAY + ChatColor.ITALIC
 					+ h.getCustomName() + ChatColor.GREEN + " as your horse!");
-		lastCmdSuccess = true;
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }

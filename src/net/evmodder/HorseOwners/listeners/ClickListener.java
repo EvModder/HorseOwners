@@ -71,7 +71,7 @@ public class ClickListener implements Listener{
 				plugin.getCommand("claimhorse").execute(p, "claimhorse", new String[]{newName});
 				horse.removePassenger(p);
 				p.teleport(loc);
-				if(CommandClaimHorse.lastCmdSuccess == false) evt.setCancelled(true);
+				if(CommandClaimHorse.COMMAND_SUCCESS == false) evt.setCancelled(true);
 			}
 			return;
 		}

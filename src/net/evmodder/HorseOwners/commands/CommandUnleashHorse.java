@@ -42,6 +42,7 @@ public class CommandUnleashHorse extends HorseCommand{
 		else{
 			if(args.length == 0){
 				sender.sendMessage("§cToo few arguments!");
+				COMMAND_SUCCESS = false;
 				return false;
 			}
 			String horseName = StringUtils.join(args, ' ');
@@ -49,15 +50,18 @@ public class CommandUnleashHorse extends HorseCommand{
 			if(plugin.isClaimedHorse(horseName) == false){
 				sender.sendMessage("§cUnknown horse (check name spelling)");
 	//			sender.sendMessage("§cUnclaimed horses cannot be teleported via command, you must first use /claimhorse");
+				COMMAND_SUCCESS = false;
 				return false;
 			}
 			if(p != null && plugin.canAccess(p, horseName) == false){
 				sender.sendMessage("§cYou cannot unleash horses which you do not own");
+				COMMAND_SUCCESS = false;
 				return true;
 			}
 			Entity e = plugin.findClaimedHorse(horseName, null);
 			if(e == null || !(e instanceof AbstractHorse)){
-				sender.sendMessage("§cUnable to find specified horse! Perhaps the chunk it is in was unloaded?");
+				sender.sendMessage("§cUnable to find specified horse! Perhaps the chunk it was in is unloaded?");
+				COMMAND_SUCCESS = false;
 				return true;
 			}
 			h = (AbstractHorse) e;
@@ -83,6 +87,7 @@ public class CommandUnleashHorse extends HorseCommand{
 			h.getWorld().dropItem(h.getLocation(), new ItemStack(Material.LEAD));
 			p.sendMessage("§aHorse unleashed!");
 		}
+		COMMAND_SUCCESS = true;
 		return true;
 	}
 }
