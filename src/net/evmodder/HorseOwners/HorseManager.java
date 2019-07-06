@@ -60,7 +60,8 @@ public final class HorseManager extends EvPlugin{
 				catch(IllegalArgumentException ex){ex.printStackTrace();}
 		else
 			claimableTypes.addAll(Arrays.asList(new EntityType[]{
-					EntityType.HORSE, EntityType.DONKEY, EntityType.MULE, EntityType.LLAMA}));
+					EntityType.HORSE, EntityType.DONKEY, EntityType.MULE,
+					EntityType.LLAMA, EntityType.TRADER_LLAMA}));
 		loadHorses();
 		registerListeners();
 		registerCommands();

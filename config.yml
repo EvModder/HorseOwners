@@ -33,6 +33,7 @@ valid-horses:
   - DONKEY
   - MULE
   - LLAMA
+  - TRADER_LLAMA
 
 # Enable/Disable ALL entity/horse teleportation done by this plugin
 enable-teleporting: true
