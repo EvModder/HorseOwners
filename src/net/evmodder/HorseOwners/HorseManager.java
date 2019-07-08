@@ -54,7 +54,7 @@ public final class HorseManager extends EvPlugin{
 		safeEditing = config.getBoolean("config-update-checking", true);
 		saveLeashes = config.getBoolean("prevent-glitch-lead-breaking", true);
 		claimableTypes = new HashSet<EntityType>();
-		if(config.isConfigurationSection("valid-horses"))
+		if(config.contains("valid-horses"))
 			for(String type : config.getStringList("valid-horses"))
 				try{claimableTypes.add(EntityType.valueOf(type.toUpperCase()));}
 				catch(IllegalArgumentException ex){ex.printStackTrace();}

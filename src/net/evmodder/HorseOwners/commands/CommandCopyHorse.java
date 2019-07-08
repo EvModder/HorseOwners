@@ -92,7 +92,7 @@ public class CommandCopyHorse extends HorseCommand {
 
 		// Other Entity Attributes
 		if(horse.isAdult()) newHorse.setAdult();
-//		newHorse.setOwner(horse.getOwner());
+		//newHorse.setOwner(horse.getOwner());//Player who tamed
 		newHorse.setSilent(horse.isSilent());
 
 		sender.sendMessage(ChatColor.GREEN+"Successfully spawned your horse!");

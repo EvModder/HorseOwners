@@ -13,6 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.AbstractHorse;
+import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Horse.Color;
 import org.bukkit.entity.Horse.Style;
 import org.bukkit.entity.Horse.Variant;
@@ -29,6 +30,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		flags.put("speed:", null);
 		flags.put("jump:", null);
 		flags.put("health:", null);
+		flags.put("owner:", null);
 		flags.put("color:", Arrays.stream(Color.values()).map(c -> "color:"+c).collect(Collectors.toList()));
 		flags.put("variant:", Arrays.stream(Variant.values()).map(v -> "variant:"+v).collect(Collectors.toList()));
 		flags.put("style:", Arrays.stream(Style.values()).map(s -> "style:"+s).collect(Collectors.toList()));
@@ -59,7 +61,7 @@ public class CommandSpawnHorse extends HorseCommand{
 	}
 
 	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
-		//cmd:	usage: /hm spawn [n:name] [s:speed] [j:jump] [h:health] [c:color] [v:variant] [t:style] [tamed]
+		//cmd:	usage: /hm spawn [n:name] [s:speed] [j:jump] [h:health] [c:color] [v:variant] [t:style] [o:owner] [tamed]
 		//hm spawn n:fat c:white t:white s:50 j:20 h:60
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players");
@@ -68,6 +70,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		}
 
 		String name = null;
+		AnimalTamer owner = null;
 		EntityType variant = EntityType.HORSE;
 		Color color = null;
 		Style style = null;
@@ -139,6 +142,14 @@ public class CommandSpawnHorse extends HorseCommand{
 					return true;
 				}
 			}
+			else if(arg.startsWith("O") || arg.startsWith("TAMER")){
+				owner = plugin.getServer().getOfflinePlayer(postSep);
+				if(owner == null){
+					sender.sendMessage(ChatColor.RED+"Unknown player '"+owner+"' in tamer/owner parameter");
+					COMMAND_SUCCESS = false;
+					return true;
+				}
+			}
 			else if(arg.startsWith("B")) baby = Boolean.parseBoolean(postSep);
 			else if(arg.startsWith("TAME")) tamed = postSep.equals("TRUE") || postSep.equals("YES");
 		}
@@ -147,6 +158,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		AbstractHorse horse = (AbstractHorse) p.getWorld().spawnEntity(p.getLocation(), variant);
 
 		if(name != null) horse.setCustomName(name);
+		if(owner != null) horse.setOwner(owner);
 		if(variant == EntityType.HORSE){
 			if(color != null) ((Horse)horse).setColor(color);
 			if(style != null) ((Horse)horse).setStyle(style);
