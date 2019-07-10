@@ -12,6 +12,7 @@ import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import com.google.common.collect.Sets;
 
 public class CommandUnleashHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -19,8 +20,9 @@ public class CommandUnleashHorse extends HorseCommand{
 			String arg = String.join(" ", args).toLowerCase();
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
-			for(String horseName : sender instanceof Player ?
-					plugin.getHorseOwners().get(((Player)sender).getUniqueId()) : plugin.getAllHorses()){
+			for(String horseName : sender instanceof Player
+					? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())
+					: plugin.getAllHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;

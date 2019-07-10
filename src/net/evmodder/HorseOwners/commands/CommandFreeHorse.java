@@ -7,6 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import com.google.common.collect.Sets;
 
 public class CommandFreeHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -14,8 +15,9 @@ public class CommandFreeHorse extends HorseCommand{
 			String arg = String.join(" ", args).toLowerCase();
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
-			for(String horseName : sender instanceof Player ?
-					plugin.getHorseOwners().get(((Player)sender).getUniqueId()) : plugin.getAllClaimedHorses()){
+			for(String horseName : sender instanceof Player
+					? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())
+					: plugin.getAllClaimedHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;

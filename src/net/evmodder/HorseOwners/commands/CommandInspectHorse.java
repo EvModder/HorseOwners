@@ -8,6 +8,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Player;
+import com.google.common.collect.Sets;
 import net.evmodder.HorseOwners.HorseLibrary;
 
 public class CommandInspectHorse extends HorseCommand{
@@ -18,8 +19,8 @@ public class CommandInspectHorse extends HorseCommand{
 			byte shown = 0;
 			for(String horseName : sender.hasPermission("evp.horseowners.inspect.others")
 					? (sender.hasPermission("evp.horseowners.inspect.unowned")
-							? plugin.getAllHorses() : plugin.getAllClaimedHorses())
-					: plugin.getHorseOwners().get(((Player)sender).getUniqueId())){
+					? plugin.getAllHorses() : plugin.getAllClaimedHorses())
+					: plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
