@@ -188,23 +188,30 @@ public class HorseLibrary {
 	public static double getNormalJump(AbstractHorse horse){
 		return normalizeJump(horse.getJumpStrength());
 	}
-	public static int getNormalHealth(Attributable horse){
+	public static int getNormalMaxHealth(Attributable horse){
 		return (int)Math.rint(horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
 	}
 	public static int getNormalCurrentHealth(LivingEntity horse){
 		return (int)horse.getHealth();
 	}
 	public static double normalizeSpeed(double speed){
-		return Math.rint(speed*1000) / 25;
+		return Math.rint(speed/0.0002325581395348837209302325581)/100;
 	}
 	public static double normalizeJump(double jump){
-		return Math.rint(jump*500) / 100;
+		if(0.432084373616155 <= jump && jump <= 0.966967527085333){
+			jump = -0.343930367 + 2.128599134*jump + 3.689713992*jump*jump - 0.1817584952*jump*jump*jump;
+			return Math.rint(jump*100)/100;
+		}
+		else return Math.rint(jump*500)/100;
 	}
 	public static double denormalizeSpeed(double speed){
-		return 0.025*speed;
+		return 0.02325581395348837209302325581*speed;
 	}
 	public static double denormalizeJump(double jump){
-		return 0.2*jump;
+		if(1.25 <= jump && jump <= 5)
+			return 0.1675804 + 0.237535*jump - 0.0223934*jump*jump + 0.00137289*jump*jump*jump;
+		else
+			return 0.2*jump;
 	}
 	public static <E extends Attributable & Damageable> void setMaxHealth(E target, double health){
 		target.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
