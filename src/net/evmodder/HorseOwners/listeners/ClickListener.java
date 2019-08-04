@@ -107,7 +107,7 @@ public class ClickListener implements Listener{
 				delayedEject(horse, p.getUniqueId());
 			}
 			else if(feedPrivateHorse && HorseLibrary.isHorseFood(clickItem.getType())
-					&& horse.getHealth() < HorseLibrary.getNormalHealth(horse))
+					&& horse.getHealth() < HorseLibrary.getNormalMaxHealth(horse))
 			{
 				//don't cancel, but make sure a new rider isn't put on the horse
 				//if(horse.getPassengers() == null || horse.getPassengers().isEmpty())

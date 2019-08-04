@@ -75,7 +75,8 @@ public class CommandClaimHorse extends HorseCommand{
 				for(int i=1; i<args.length; ++i) builder.append(' ').append(args[i]);
 				newName = builder.toString();
 			}
-			if(alphanumeric) newName = newName.replaceAll("[:(),"+TextUtils.colorSymbol+"<>{}\\-\\[\\]\\.'\"]", "");
+			if(alphanumeric) newName = newName.replaceAll("[:(),"
+					+ChatColor.COLOR_CHAR+"<>{}\\-\\[\\]\\.'\"]", "");
 
 			if(p.hasPermission("evp.horseowners.coloredname")){
 				if(p.hasPermission("evp.horseowners.fullformats") == false){
