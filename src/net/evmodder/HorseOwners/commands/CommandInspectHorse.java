@@ -94,7 +94,7 @@ public class CommandInspectHorse extends HorseCommand{
 			speed = plugin.getHorseSpeed(horseName);
 			jump = plugin.getHorseJump(horseName);
 			health = plugin.getHorseHealth(horseName);
-			parents = plugin.getHorseLineage(horseName);
+			parents = plugin.getHorseParents(horseName);
 			if(p.hasPermission("evp.horseowners.inspect.rankings")) rank = plugin.getRankings(horseName);
 		}
 		else{
@@ -103,8 +103,8 @@ public class CommandInspectHorse extends HorseCommand{
 			tamerName = horse.isTamed() ? (horse.getOwner() == null ? "§cUnknown" : horse.getOwner().getName()) : "§cN/A";
 			speed = HorseLibrary.getNormalSpeed(horse);
 			jump = HorseLibrary.getNormalJump(horse);
-			health = HorseLibrary.getNormalHealth(horse);
-			parents = plugin.getHorseLineage(horse);
+			health = HorseLibrary.getNormalMaxHealth(horse);
+			parents = plugin.getHorseParents(horse);
 		}
 
 		//Build info message

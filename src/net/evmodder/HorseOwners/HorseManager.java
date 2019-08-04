@@ -85,7 +85,7 @@ public final class HorseManager extends EvPlugin{
 				else horseOwnersMap.put(uuid, new HashSet<String>(Arrays.asList(horseName)));
 			}
 			if(saveRankings && data.contains("speed") && data.contains("jump") && data.contains("health"))
-				updateTopTen(horseName, data.getDouble("speed"), data.getDouble("jump"), data.getInt("health"));
+				updateRanklists(horseName, data.getDouble("speed"), data.getDouble("jump"), data.getInt("health"));
 		}
 	}
 
@@ -352,7 +352,7 @@ public final class HorseManager extends EvPlugin{
 		return HorseLibrary.findAnyHorse(horseName, worlds);
 	}
 
-	private void updateTopTen(String horseName, double speed, double jump, int health){
+	private void updateRanklists(String horseName, double speed, double jump, int health){
 		topSpeed.put(speed, horseName);
 		topJump.put(jump, horseName);
 		topHealth.put(health, horseName);
@@ -373,17 +373,18 @@ public final class HorseManager extends EvPlugin{
 		ConfigurationSection data = horses.getConfigurationSection(horseName);
 		if(data == null) data = horses.createSection(horseName);
 
-		data.set("name", displayName); // Full name (including spaces and/or special chars)
+		data.set("name", displayName);// Full name (including spaces and/or special chars)
+		data.set("uuid", h.getUniqueId());//TODO: Preparing for the eventuality of names not being unique
 		if(h.getOwner() != null) data.set("tamer", h.getOwner().getUniqueId().toString());
 
 		if(saveRankings && (rankUnclaimed || data.contains("owner"))){
 			double speed = HorseLibrary.getNormalSpeed(h);
 			double jump = HorseLibrary.getNormalJump(h);
-			int health = HorseLibrary.getNormalHealth(h);
+			int health = HorseLibrary.getNormalMaxHealth(h);
 			data.set("speed", speed);
 			data.set("jump", jump);
 			data.set("health", health);
-			updateTopTen(horseName, speed, jump, health);
+			updateRanklists(horseName, speed, jump, health);
 		}
 		if(saveCoords){
 			data.set("chunk-x", h.getLocation().getChunk().getX());
@@ -485,16 +486,29 @@ public final class HorseManager extends EvPlugin{
 				horses.getDouble(horseName+".leash-z"));
 		else return null;
 	}
-	public List<String> getHorseLineage(String horseName){
+	public List<String> getHorseParents(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 //		return horses.getStringList(horseName+".parents");
 		if(horses.contains(horseName+".mother"))
-			return Arrays.asList(horses.getString(horseName+".mother", null), horses.getString(horseName+".father", null));
+			return Arrays.asList(
+					horses.getString(horseName+".mother", null),
+					horses.getString(horseName+".father", null));
 		else return null;
 	}
-	public List<String> getHorseLineage(Entity h){
+	public List<String> getHorseParents(Entity h){
 		if(h.hasMetadata("mother"))
-			return Arrays.asList(h.getMetadata("mother").get(0).asString(), h.getMetadata("father").get(0).asString());
-		else return null;
+			return Arrays.asList(
+					h.getMetadata("mother").get(0).asString(),
+					h.getMetadata("father").get(0).asString());
+		else if(h.getCustomName() != null){
+			String horseName = HorseLibrary.cleanName(h.getCustomName());
+			if(horses.contains(horseName+".mother")){
+				if(h instanceof AbstractHorse) updateData((AbstractHorse)h);
+				return Arrays.asList(
+						horses.getString(horseName+".mother", null),
+						horses.getString(horseName+".father", null));
+			}
+		}
+		return null;
 	}
 }

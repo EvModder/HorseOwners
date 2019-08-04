@@ -70,25 +70,38 @@ claim-on-tame: true
 # Enable configuration of max jump, speed, and health
 modified-breeding: true
 
-# These are currently set to the default Minecraft values
-max-jump: 5.5
-max-speed: 13.5
+# Limit the upper limits on naturally spawned/bred horse stats
+# Default(vanilla) values: jump=5.29, speed=14.5125, health=30
+max-jump: 5.29
+max-speed: 14.5125
 max-health: 30
 
 # Assign a random name to a new foal at birth.
 # Requires modified-breeding: true
 name-at-birth: false
+tame-at-birth: false
 
 # Automatically claim newly born foals.
 # Requires name-at-birth and modified-breeding are true
 claim-at-birth: true
+
+# Adds a slight random offset to the speed, jump, and health of the foal.
+extra-random-factor-at-birth: true
+
+# Increases the random effect when breeding closely related horses.
+# Effectively, makes it harder to improve physical stats through inbreeding.
+inbred-mutations: true
+
+# How closely related two horses must be for mutations to occur.
+# Smaller numbers means more closely related (1 = siblings, 2 = cousins...)
+inbred-mutation-distance: 2
 
 # If a foal's parents are owned by different players, who does it belong to?
 # Possible values: MOTHER, FATHER, and RANDOM. Requires claim-at-birth: true
 owner-at-birth-is-owner-of: RANDOM
 
 # Prevent chunks with claimed horses from being unloaded
-# while the horses' owner is online
+# while the horses' owner is online (warning: unreliable)
 keep-horse-chunks-in-memory: false
 
 # Reduce fall damage that occurs when riding a good jumper horse
