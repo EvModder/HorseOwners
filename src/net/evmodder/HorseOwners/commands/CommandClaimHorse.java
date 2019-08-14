@@ -78,8 +78,8 @@ public class CommandClaimHorse extends HorseCommand{
 			if(alphanumeric) newName = newName.replaceAll("[:(),"
 					+ChatColor.COLOR_CHAR+"<>{}\\-\\[\\]\\.'\"]", "");
 
-			if(p.hasPermission("evp.horseowners.coloredname")){
-				if(p.hasPermission("evp.horseowners.fullformats") == false){
+			if(p.hasPermission("horseowners.coloredname")){
+				if(p.hasPermission("horseowners.fullformats") == false){
 					newName = newName.replace("&k", "").replace("&m", "").replace("&n", "");
 				}
 				newName = TextUtils.translateAlternateColorCodes('&', newName);

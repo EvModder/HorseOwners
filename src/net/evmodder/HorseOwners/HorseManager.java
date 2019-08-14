@@ -169,7 +169,7 @@ public final class HorseManager extends EvPlugin{
 		
 		if(isOwner) return true;
 		else if(isClaimedHorse(horseName) == false) return true;
-		else if(p.hasPermission("evp.horseowners.override")){
+		else if(p.hasPermission("horseowners.override")){
 			p.sendMessage(ChatColor.GRAY+"Owner override");
 			return true;
 		}
@@ -185,7 +185,7 @@ public final class HorseManager extends EvPlugin{
 		else if(isClaimedHorse(horseName) == false) return true;
 		else{
 			Player p = getServer().getPlayer(playerUUID);
-			if(p != null && p.hasPermission("evp.horseowners.override")){
+			if(p != null && p.hasPermission("horseowners.override")){
 				p.sendMessage(ChatColor.GRAY+"Owner override");
 				return true;
 			}
@@ -326,7 +326,7 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	public Entity findClaimedHorse(String horseName, World... worlds){
-		getLogger().info("called!");
+		getLogger().info("called findClaimedHorse!");
 		getLogger().info("savecoords: "+saveCoords);
 		getLogger().info("havecoords: "+horses.contains((horseName = HorseLibrary.cleanName(horseName))+".chunk-x"));
 		if(saveCoords && horses.contains((horseName = HorseLibrary.cleanName(horseName))+".chunk-x")){
@@ -374,7 +374,7 @@ public final class HorseManager extends EvPlugin{
 		if(data == null) data = horses.createSection(horseName);
 
 		data.set("name", displayName);// Full name (including spaces and/or special chars)
-		data.set("uuid", h.getUniqueId());//TODO: Preparing for the eventuality of names not being unique
+		data.set("uuid", h.getUniqueId().toString());//TODO: Preparing for the eventuality of names not being unique
 		if(h.getOwner() != null) data.set("tamer", h.getOwner().getUniqueId().toString());
 
 		if(saveRankings && (rankUnclaimed || data.contains("owner"))){
@@ -437,7 +437,7 @@ public final class HorseManager extends EvPlugin{
 	public UUID getHorseOwner(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 		String uuid = horses.getString(horseName+".owner");
-		plugin.getLogger().info(horseName+"~ owner uuid: "+uuid);
+		plugin.getLogger().info("name: '"+horseName+"', owner: '"+uuid+"'");
 		return uuid == null ? null : UUID.fromString(uuid);
 		/*
 		for(UUID uuid : horseOwnersMap.keySet()){

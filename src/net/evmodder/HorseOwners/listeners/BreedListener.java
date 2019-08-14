@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.UUID;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
 import org.bukkit.event.EventHandler;
@@ -103,8 +104,9 @@ public class BreedListener implements Listener{
 
 	@EventHandler(priority = EventPriority.MONITOR)// In case event is cancelled
 	public void onBreed(EntityBreedEvent evt){
-		if(evt.getEntity() instanceof Horse/* && ((Horse)evt.getEntity()).getVariant() == Variant.HORSE*/){
-			Horse h = (Horse)evt.getEntity();
+		if(plugin.isClaimableHorseType(evt.getEntity())){
+			AbstractHorse h = (Horse)evt.getEntity();
+			plugin.getLogger().info("Breed event");
 
 			//jump
 			if(h.getJumpStrength() > MAX_JUMP) h.setJumpStrength(MAX_JUMP);
@@ -162,6 +164,7 @@ public class BreedListener implements Listener{
 				if(health > MAX_HEALTH) health = MAX_HEALTH;
 				HorseLibrary.setMaxHealth(h, health);
 			}
+			plugin.getLogger().info("Final jump, speed, health: "+h.getJumpStrength()+", "+speed+", "+health);
 		}
 	}
 }

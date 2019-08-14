@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import com.google.common.collect.Sets;
+import net.md_5.bungee.api.ChatColor;
 
 public class CommandLockHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -36,7 +37,7 @@ public class CommandLockHorse extends HorseCommand{
 
 		if(p != null && p.isInsideVehicle() && plugin.isClaimableHorseType(p.getVehicle())){
 			if(p.getVehicle().getCustomName() == null){
-				p.sendMessage("§cThis horse is ownerless!\nTry claiming it first with /namehorse");
+				p.sendMessage(ChatColor.RED+"This horse is ownerless!\nTry claiming it first with /namehorse");
 				COMMAND_SUCCESS = false;
 				return true;
 			}

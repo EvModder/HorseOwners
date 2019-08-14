@@ -25,7 +25,7 @@ public class CommandCopyHorse extends HorseCommand {
 			String arg = String.join(" ", args).toLowerCase();
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
-			for(String horseName : sender.hasPermission("evp.horseowners.override")
+			for(String horseName : sender.hasPermission("horseowners.override")
 					? plugin.getAllHorses()
 					: plugin.getHorseOwners().get(((Player)sender).getUniqueId())){
 				if(horseName.startsWith(arg)){

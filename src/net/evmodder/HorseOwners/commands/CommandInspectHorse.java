@@ -10,15 +10,23 @@ import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Player;
 import com.google.common.collect.Sets;
 import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseManager;
 
 public class CommandInspectHorse extends HorseCommand{
+	final boolean INSPECT_UNTAMED, INSPECT_UNCLAIMED;
+	public CommandInspectHorse(){
+		HorseManager pl = HorseManager.getPlugin();
+		INSPECT_UNTAMED = pl.getConfig().getBoolean("inspect-untamed", true);
+		INSPECT_UNCLAIMED = pl.getConfig().getBoolean("inspect-unclaimed", true);
+	}
+
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length > 0){
 			String arg = String.join(" ", args).toLowerCase();
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
-			for(String horseName : sender.hasPermission("evp.horseowners.inspect.others")
-					? (sender.hasPermission("evp.horseowners.inspect.unowned")
+			for(String horseName : sender.hasPermission("horseowners.inspect.others")
+					? (sender.hasPermission("horseowners.inspect.unowned")
 					? plugin.getAllHorses() : plugin.getAllClaimedHorses())
 					: plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())){
 				if(horseName.startsWith(arg)){
@@ -39,12 +47,17 @@ public class CommandInspectHorse extends HorseCommand{
 		String horseName = null;
 		if(p != null && p.isInsideVehicle() && p.getVehicle() instanceof AbstractHorse){
 			horse = (AbstractHorse) p.getVehicle();
+			if(!INSPECT_UNTAMED && !horse.isTamed() && !sender.hasPermission("horseowners.inspect.untamed")){
+				sender.sendMessage(ChatColor.RED+"You must tame this steed before you can use that command");
+				COMMAND_SUCCESS = false;
+				return true;
+			}
 		}
 		else{
 			if(args.length == 0){
 				sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+"\n"+command.getUsage());
 				COMMAND_SUCCESS = false;
-				return false;
+				return true;
 			}
 			horseName = HorseLibrary.cleanName(StringUtils.join(args, ' '));
 			if(!plugin.horseExists(horseName)){
@@ -53,8 +66,14 @@ public class CommandInspectHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			else if(p != null && !p.hasPermission("evp.horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
+			else if(p != null && !p.hasPermission("horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
 				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
+				COMMAND_SUCCESS = false;
+				return true;
+			}
+			else if(!INSPECT_UNTAMED && plugin.getHorseTamer(horseName) == null
+					&& !sender.hasPermission("horseowners.inspect.untamed")){
+				sender.sendMessage(ChatColor.RED+"You cannot use this command on untamed horses");
 				COMMAND_SUCCESS = false;
 				return true;
 			}
@@ -78,6 +97,15 @@ public class CommandInspectHorse extends HorseCommand{
 		if(horse != null && horse.getCustomName() != null/* && plugin.horseExists(horse.getCustomName())*/)
 			horseName = horse.getCustomName();
 
+		if((horseName == null || plugin.getHorseOwner(horseName) == null)
+				&& !sender.hasPermission("horseowners.inspect.unowned")){
+			sender.sendMessage(ChatColor.RED+"You cannot use this command on unclaimed horses");
+			sender.sendMessage(ChatColor.GRAY+"To claim this horse, use "
+							+ChatColor.GREEN+"/hm claim"+(horseName == null ? " <name>" : ""));
+			COMMAND_SUCCESS = false;
+			return true;
+		}
+
 		String displayName, ownerName, tamerName;
 		double speed, jump;
 		int health;
@@ -95,12 +123,13 @@ public class CommandInspectHorse extends HorseCommand{
 			jump = plugin.getHorseJump(horseName);
 			health = plugin.getHorseHealth(horseName);
 			parents = plugin.getHorseParents(horseName);
-			if(p.hasPermission("evp.horseowners.inspect.rankings")) rank = plugin.getRankings(horseName);
+			if(sender.hasPermission("horseowners.inspect.rankings")) rank = plugin.getRankings(horseName);
 		}
 		else{
 			displayName = horse.getCustomName() == null ? "§cN/A" : horse.getCustomName();
 			ownerName = "§cN/A";
-			tamerName = horse.isTamed() ? (horse.getOwner() == null ? "§cUnknown" : horse.getOwner().getName()) : "§cN/A";
+			tamerName = horse.isTamed() ?
+					(horse.getOwner() == null ? "§cUnknown" : horse.getOwner().getName()) : "§cN/A";
 			speed = HorseLibrary.getNormalSpeed(horse);
 			jump = HorseLibrary.getNormalJump(horse);
 			health = HorseLibrary.getNormalMaxHealth(horse);
@@ -109,9 +138,9 @@ public class CommandInspectHorse extends HorseCommand{
 
 		//Build info message
 		StringBuilder builder = new StringBuilder();
-		if(p.hasPermission("evp.horseowners.inspect.name")) builder.append("§7Name: §f").append(displayName);
+		if(sender.hasPermission("horseowners.inspect.name")) builder.append("§7Name: §f").append(displayName);
 
-		if(p.hasPermission("evp.horseowners.inspect.speed")){
+		if(sender.hasPermission("horseowners.inspect.speed")){
 			builder.append("\n§7Speed: §f").append(speed).append("§cm/s");
 			if(rank != null){
 				builder.append("§7 [§6#").append(rank[0]);
@@ -119,7 +148,7 @@ public class CommandInspectHorse extends HorseCommand{
 				builder.append("§7]");
 			}
 		}
-		if(p.hasPermission("evp.horseowners.inspect.jump")){
+		if(sender.hasPermission("horseowners.inspect.jump")){
 			builder.append("\n§7Jump: §f").append(jump).append("§cm");
 			if(rank != null){
 				builder.append("§7 [§6#").append(rank[2]);
@@ -127,7 +156,7 @@ public class CommandInspectHorse extends HorseCommand{
 				builder.append("§7]");
 			}
 		}
-		if(p.hasPermission("evp.horseowners.inspect.health")){
+		if(sender.hasPermission("horseowners.inspect.health")){
 			builder.append("\n§7Health: §f").append(health).append("§ch");
 			if(rank != null){
 				builder.append("§7 [§6#").append(rank[4]);
@@ -135,13 +164,13 @@ public class CommandInspectHorse extends HorseCommand{
 				builder.append("§7]");
 			}
 		}
-		if(p.hasPermission("evp.horseowners.inspect.tamer")){
+		if(sender.hasPermission("horseowners.inspect.tamer")){
 			builder.append("\n§7Tamer: §f").append(tamerName);
 		}
-		if(p.hasPermission("evp.horseowners.inspect.owner")){
+		if(sender.hasPermission("horseowners.inspect.owner")){
 			builder.append("\n§7Owner: §f").append(ownerName);
 		}
-		if(p.hasPermission("evp.horseowners.inspect.lineage") && parents != null && !parents.isEmpty()){
+		if(sender.hasPermission("horseowners.inspect.lineage") && parents != null && !parents.isEmpty()){
 			builder.append("\n§7Parents: §f").append(String.join("§7, §f", parents));
 		}
 

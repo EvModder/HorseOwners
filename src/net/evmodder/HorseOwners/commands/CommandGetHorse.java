@@ -72,8 +72,8 @@ public class CommandGetHorse extends HorseCommand{
 			World[] worlds = new World[]{p.getWorld()};//restrict to just this world
 
 			if(allowTransworld){
-				if(p.hasPermission("evp.horseowners.tpansworld.*"))/* worlds = null*/;//already null
-				else if(p.hasPermission("evp.horseowners.tpansworld.samegamemode")){
+				if(p.hasPermission("horseowners.tpansworld.*"))/* worlds = null*/;//already null
+				else if(p.hasPermission("horseowners.tpansworld.samegamemode")){
 					List<World> worldsList = new ArrayList<World>();
 					for(World w : plugin.getServer().getWorlds()){
 						GameMode gm = MultiverseHook.getWorldGameMode(w);
@@ -118,8 +118,8 @@ public class CommandGetHorse extends HorseCommand{
 			}
 			if(horse.getWorld().getUID().equals(p.getWorld().getUID()) == false){
 				GameMode gm = MultiverseHook.getWorldGameMode(horse.getWorld());
-				if(!allowTransworld || (!p.hasPermission("evp.horseowners.crossworld.anywhere") &&
-						(!p.hasPermission("evp.horseowners.crossworld.samegamemode") ||
+				if(!allowTransworld || (!p.hasPermission("horseowners.crossworld.anywhere") &&
+						(!p.hasPermission("horseowners.crossworld.samegamemode") ||
 								(gm != null && p.getGameMode() != gm))))
 				{
 					p.sendMessage(ChatColor.RED+"Unable to teleport the horse, "

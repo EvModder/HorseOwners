@@ -30,12 +30,12 @@ public class CommandListHorse extends HorseCommand{
 
 	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm list
-		boolean listAllPerm = sender.hasPermission("evp.horseowners.list.all");
+		boolean listAllPerm = sender.hasPermission("horseowners.list.all");
 		String target = (sender instanceof Player == false || (listAllPerm && args.length == 1))
 				? args[0].toLowerCase() : sender.getName();
 
 		if(target.contains("all") || target.equals("@a")){
-			Set<String> horseList = sender.hasPermission("evp.horseowners.list.unclaimed") ?
+			Set<String> horseList = sender.hasPermission("horseowners.list.unclaimed") ?
 					plugin.getAllHorses() : plugin.getAllClaimedHorses();
 			sender.sendMessage("§a§m}{§e§m       §7 [§aAll Horses§7] §e§m       §a§m}{");
 			StringBuilder builder = new StringBuilder();

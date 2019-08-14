@@ -22,7 +22,7 @@ abstract class HorseCommand implements TabExecutor{
 
 	@SuppressWarnings("deprecation") @Override
 	final public boolean onCommand(CommandSender sender, Command command, String label, String args[]){
-		if(price > 0 && sender instanceof Player && !sender.hasPermission("evp.horseowners.commands.free")){
+		if(price > 0 && sender instanceof Player && !sender.hasPermission("horseowners.commands.free")){
 			if(EssEcoHook.hasAtLeast((Player)sender, price) == false){
 				sender.sendMessage("§4You do not have sufficient funds (§c$"+price+"§4)");
 				return true;

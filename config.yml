@@ -34,6 +34,8 @@ valid-horses:
   - MULE
   - LLAMA
   - TRADER_LLAMA
+  - SKELETON_HORSE
+  - ZOMBIE_HORSE
 
 # Enable/Disable ALL entity/horse teleportation done by this plugin
 enable-teleporting: true
@@ -138,6 +140,12 @@ attack-private-horse: true
 
 # Should players be able to see chests on someone else's (claimed) horse?
 snoop-private-horse: false
+
+# Should players need tame a horse before they can inspect it
+inspect-untamed: true
+
+# Should players need tame a horse before they can inspect it
+inspect-unclaimed: true
 
 # Enable this if you plan on frequently editing the horses.yml file
 # while the server is running. It ensure your by-hand edits are not
