@@ -66,7 +66,8 @@ public class CommandInspectHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			else if(p != null && !p.hasPermission("horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
+			else if(p != null && !p.hasPermission("horseowners.inspect.others")
+					&& !plugin.canAccess(p, horseName)){
 				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
 				COMMAND_SUCCESS = false;
 				return true;
@@ -111,8 +112,17 @@ public class CommandInspectHorse extends HorseCommand{
 		int health;
 		int[] rank = null;
 		List<String> parents;
+		int locX, locZ;
 		if(horseName != null){
-			if(horse != null) plugin.updateData(horse);
+			if(horse != null){
+				plugin.updateData(horse);
+				locX = horse.getLocation().getBlockX();
+				locZ = horse.getLocation().getBlockZ();
+			}
+			else{
+				locX = plugin.getHorseBlockX(horseName);
+				locZ = plugin.getHorseBlockZ(horseName);
+			}
 			displayName = plugin.getHorseName(horseName);
 			if(displayName == null) displayName = horseName;
 			ownerName = plugin.getHorseOwnerName(horseName);
@@ -134,6 +144,8 @@ public class CommandInspectHorse extends HorseCommand{
 			jump = HorseLibrary.getNormalJump(horse);
 			health = HorseLibrary.getNormalMaxHealth(horse);
 			parents = plugin.getHorseParents(horse);
+			locX = horse.getLocation().getBlockX();
+			locZ = horse.getLocation().getBlockZ();
 		}
 
 		//Build info message
@@ -172,6 +184,9 @@ public class CommandInspectHorse extends HorseCommand{
 		}
 		if(sender.hasPermission("horseowners.inspect.lineage") && parents != null && !parents.isEmpty()){
 			builder.append("\n§7Parents: §f").append(String.join("§7, §f", parents));
+		}
+		if(sender.hasPermission("horseowners.inspect.coords")){
+			builder.append("\n§7Location: §f").append(locX).append("§cx§7, §f").append(locZ).append("§cz");
 		}
 
 		sender.sendMessage(builder.toString());

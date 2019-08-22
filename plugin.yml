@@ -173,12 +173,12 @@ permissions:
       description: Permission to access other people's horses
       default: false
 
-   horseowners.inspect.rankings:
-      description: Ability to view a horse's rankings
-      default: op
-
    horseowners.inspect.name:
       description: Ability to view a horse's name
+      default: op
+
+   horseowners.inspect.rankings:
+      description: Ability to view a horse's rankings
       default: op
 
    horseowners.inspect.owner:
@@ -197,8 +197,12 @@ permissions:
       description: Ability to view a horse's speed
       default: op
 
-   horseowners.inspect.health:
-      description: Ability to view a horse's health
+   horseowners.inspect.lineage:
+      description: Ability to view a horse's lineage
+      default: op
+
+   horseowners.inspect.coords:
+      description: Ability to look up a horse's location
       default: op
 
    horseowners.inspect:

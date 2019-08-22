@@ -61,6 +61,7 @@ public final class HorseManager extends EvPlugin{
 		else
 			claimableTypes.addAll(Arrays.asList(new EntityType[]{
 					EntityType.HORSE, EntityType.DONKEY, EntityType.MULE,
+					EntityType.SKELETON_HORSE, EntityType.ZOMBIE_HORSE,
 					EntityType.LLAMA, EntityType.TRADER_LLAMA}));
 		loadHorses();
 		registerListeners();
@@ -165,7 +166,7 @@ public final class HorseManager extends EvPlugin{
 		if(horseName == null) return true;
 		horseName = HorseLibrary.cleanName(horseName);
 		boolean isOwner = horseOwnersMap.containsKey(p.getUniqueId())
-						&& HorseLibrary.containsIgnoreCaseAndColor(horseOwnersMap.get(p.getUniqueId()), horseName);
+					&& HorseLibrary.containsIgnoreCaseAndColor(horseOwnersMap.get(p.getUniqueId()), horseName);
 		
 		if(isOwner) return true;
 		else if(isClaimedHorse(horseName) == false) return true;
@@ -510,5 +511,15 @@ public final class HorseManager extends EvPlugin{
 			}
 		}
 		return null;
+	}
+	public int getHorseBlockX(String horseName){
+		horseName = HorseLibrary.cleanName(horseName);
+		if(!saveCoords || !horses.contains(horseName)) return -1;
+		return horses.getConfigurationSection(horseName).getInt("chunk-x", -1)*16;
+	}
+	public int getHorseBlockZ(String horseName){
+		horseName = HorseLibrary.cleanName(horseName);
+		if(!saveCoords || !horses.contains(horseName)) return -1;
+		return horses.getConfigurationSection(horseName).getInt("chunk-z", -1)*16;
 	}
 }
