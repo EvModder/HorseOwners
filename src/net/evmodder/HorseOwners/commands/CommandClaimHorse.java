@@ -94,7 +94,7 @@ public class CommandClaimHorse extends HorseCommand{
 						return true;
 					}
 				}
-				else if(plugin.isLockedHorse(oldName)){
+				if(plugin.isLockedHorse(oldName)){
 					sender.sendMessage(ChatColor.RED+"You cannot rename "
 								+ChatColor.GRAY+ChatColor.ITALIC+oldName+ChatColor.RED+'.');
 					COMMAND_SUCCESS = false;
@@ -106,12 +106,12 @@ public class CommandClaimHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			else if(newName.length() > maxNameLength){
+			if(newName.length() > maxNameLength){
 				p.sendMessage(ChatColor.RED+"Too long of a name!");
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			else if(plugin.horseExists(newName)){
+			if(plugin.horseExists(newName)){
 				p.sendMessage(ChatColor.RED+"That name has already been taken!");
 				COMMAND_SUCCESS = false;
 				return true;

@@ -222,14 +222,14 @@ permissions:
       description: The ability to view another player's horses' stats
       default: true
 
-   horseowners.inspect.unowned:
-      description: The ability to look up stats for unowned horses
+   horseowners.inspect.unclaimed:
+      description: The ability to look up stats for unclaimed horses
       default: op
 
    horseowners.inspect.untamed:
       description: The ability to look up stats for untamed horses
       children:
-         horseowners.inspect.unowned: true
+         horseowners.inspect.unclaimed: true
       default: op
 
    horseowners.admin:

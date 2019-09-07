@@ -81,7 +81,7 @@ public class CommandAllowRide extends HorseCommand{
 			COMMAND_SUCCESS = false;
 			return true;
 		}
-		else if(p != null && plugin.canAccess(p, horseName) == false){
+		if(p != null && plugin.canAccess(p, horseName) == false){
 			sender.sendMessage(ChatColor.RED+"You do not own this horse");
 			COMMAND_SUCCESS = false;
 			return true;

@@ -26,7 +26,7 @@ public class CommandInspectHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender.hasPermission("horseowners.inspect.others")
-					? (sender.hasPermission("horseowners.inspect.unowned")
+					? (sender.hasPermission("horseowners.inspect.unclaimed")
 					? plugin.getAllHorses() : plugin.getAllClaimedHorses())
 					: plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())){
 				if(horseName.startsWith(arg)){
@@ -44,69 +44,50 @@ public class CommandInspectHorse extends HorseCommand{
 		//cmd:	/hm inspect [horse]
 		Player p = (sender instanceof Player) ? (Player)sender : null;
 		AbstractHorse horse = null;
-		String horseName = null;
-		if(p != null && p.isInsideVehicle() && p.getVehicle() instanceof AbstractHorse){
+		String horseName = HorseLibrary.cleanName(StringUtils.join(args, ' '));
+		if(plugin.horseExists(horseName)){
+			if(p != null && !p.hasPermission("horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
+				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
+				COMMAND_SUCCESS = false;
+				return true;
+			}
+			if(!INSPECT_UNTAMED && plugin.getHorseTamer(horseName) == null
+					&& !sender.hasPermission("horseowners.inspect.untamed")){
+				sender.sendMessage(ChatColor.RED+"You cannot use this command on untamed horses");
+				COMMAND_SUCCESS = false;
+				return true;
+			}
+			if(!INSPECT_UNCLAIMED && plugin.getHorseOwner(horseName) == null
+					&& !sender.hasPermission("horseowners.inspect.unclaimed")){
+				sender.sendMessage(ChatColor.RED+"You cannot use this command on unclaimed horses");
+				COMMAND_SUCCESS = false;
+				return true;
+			}
+		}
+		else if(p != null && p.isInsideVehicle() && p.getVehicle() instanceof AbstractHorse){
 			horse = (AbstractHorse) p.getVehicle();
 			if(!INSPECT_UNTAMED && !horse.isTamed() && !sender.hasPermission("horseowners.inspect.untamed")){
 				sender.sendMessage(ChatColor.RED+"You must tame this steed before you can use that command");
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-		}
-		else{
-			if(args.length == 0){
-				sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+"\n"+command.getUsage());
-				COMMAND_SUCCESS = false;
-				return true;
-			}
-			horseName = HorseLibrary.cleanName(StringUtils.join(args, ' '));
-			if(!plugin.horseExists(horseName)){
-				sender.sendMessage(ChatColor.RED+"Unknown horse (check name spelling)"
-						+ChatColor.GRAY+'\n'+command.getUsage());
-				COMMAND_SUCCESS = false;
-				return true;
-			}
-			else if(p != null && !p.hasPermission("horseowners.inspect.others")
-					&& !plugin.canAccess(p, horseName)){
-				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
-				COMMAND_SUCCESS = false;
-				return true;
-			}
-			else if(!INSPECT_UNTAMED && plugin.getHorseTamer(horseName) == null
-					&& !sender.hasPermission("horseowners.inspect.untamed")){
-				sender.sendMessage(ChatColor.RED+"You cannot use this command on untamed horses");
-				COMMAND_SUCCESS = false;
-				return true;
-			}
-			/*Entity entity = plugin.findClaimedHorse(horseName, null);
-			if(entity == null) entity = HorseLibrary.findAnyHorse(horseName);
-			if(entity == null || !(entity instanceof AbstractHorse)){
-				if(plugin.isClaimedHorse(horseName)){
-					sender.sendMessage(ChatColor.RED
-							+"Unable to find your horse! Perhaps the chunk it is in was unloaded?");
-				}
-				else{
-					sender.sendMessage(ChatColor.RED+"Unknown horse (check name spelling)"
-							+ChatColor.GRAY+'\n'+command.getUsage());
-				}
-				return true;
-			}
-			h = (AbstractHorse)entity;*/
-		}
-
-		//Yay got to here! Now what's it worth?
-		if(horse != null && horse.getCustomName() != null/* && plugin.horseExists(horse.getCustomName())*/)
 			horseName = horse.getCustomName();
-
-		if((horseName == null || plugin.getHorseOwner(horseName) == null)
-				&& !sender.hasPermission("horseowners.inspect.unowned")){
-			sender.sendMessage(ChatColor.RED+"You cannot use this command on unclaimed horses");
-			sender.sendMessage(ChatColor.GRAY+"To claim this horse, use "
-							+ChatColor.GREEN+"/hm claim"+(horseName == null ? " <name>" : ""));
+			if(!INSPECT_UNCLAIMED && (horseName == null || plugin.getHorseOwner(horseName) == null)
+					&& !sender.hasPermission("horseowners.inspect.unclaimed")){
+				sender.sendMessage(ChatColor.RED+"You cannot use this command on unclaimed horses");
+				sender.sendMessage(ChatColor.GRAY+"To claim this horse, use "
+								+ChatColor.DARK_GREEN+"/hm claim"+(horseName == null ? " <name>" : ""));
+				COMMAND_SUCCESS = false;
+				return true;
+			}
+		}
+		else if(args.length == 0){
+			sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+"\n"+command.getUsage());
 			COMMAND_SUCCESS = false;
 			return true;
 		}
 
+		//Yay got to here! Now what's it worth?
 		String displayName, ownerName, tamerName;
 		double speed, jump;
 		int health;

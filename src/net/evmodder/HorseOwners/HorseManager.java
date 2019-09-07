@@ -67,7 +67,7 @@ public final class HorseManager extends EvPlugin{
 		registerListeners();
 		registerCommands();
 	}
-	@Override public void onEvDisable(){}
+	@Override public void onEvDisable(){getLogger().info("disabling...");}
 
 	public void loadHorses(){
 		horses = FileIO.loadYaml("horses.yml", "#The great horse-data file\n");

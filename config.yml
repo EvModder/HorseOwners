@@ -142,10 +142,10 @@ attack-private-horse: true
 snoop-private-horse: false
 
 # Should players need tame a horse before they can inspect it
-inspect-untamed: true
+inspect-untamed: false
 
 # Should players need tame a horse before they can inspect it
-inspect-unclaimed: true
+inspect-unclaimed: false
 
 # Enable this if you plan on frequently editing the horses.yml file
 # while the server is running. It ensure your by-hand edits are not
