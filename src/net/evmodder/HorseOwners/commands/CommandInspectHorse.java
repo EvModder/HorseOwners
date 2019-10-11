@@ -44,8 +44,8 @@ public class CommandInspectHorse extends HorseCommand{
 		//cmd:	/hm inspect [horse]
 		Player p = (sender instanceof Player) ? (Player)sender : null;
 		AbstractHorse horse = null;
-		String horseName = HorseLibrary.cleanName(StringUtils.join(args, ' '));
-		if(plugin.horseExists(horseName)){
+		String horseName = null;
+		if(args.length > 0 && plugin.horseExists(horseName = HorseLibrary.cleanName(StringUtils.join(args, ' ')))){
 			if(p != null && !p.hasPermission("horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
 				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
 				COMMAND_SUCCESS = false;

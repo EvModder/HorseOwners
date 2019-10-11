@@ -23,7 +23,7 @@ public class LeadFenceBreakListener implements Listener{
 		if(HorseLibrary.isLeashableBlock(evt.getBlock().getType())){
 			for(Entity leash : evt.getBlock().getChunk().getEntities()){
 				if(leash.getType() == EntityType.LEASH_HITCH
-						&& leash.getLocation().getBlock().equals(evt.getBlock().getLocation())){
+						&& leash.getLocation().equals(evt.getBlock().getLocation())){
 
 					for(Entity e : leash.getNearbyEntities(15, 15, 15)){
 						if(e instanceof AbstractHorse && e.getCustomName() != null){

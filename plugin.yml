@@ -8,7 +8,7 @@ commands:
    horsemanager:
       description: HorseManager commands & info
       usage: /hm ?
-      aliases: [horse-manager,hmanager,horsem,hm]
+      aliases: [horsemang,hm]
       permission: horseowners.commands
       permission-message: You do not have permission to do this.
 
