@@ -13,6 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import com.google.common.collect.Sets;
 import net.evmodder.EvLib.hooks.MultiverseHook;
 import net.evmodder.HorseOwners.HorseLibrary;
 
@@ -29,9 +30,9 @@ public class CommandGetHorse extends HorseCommand{
 		if(args.length > 0 && sender instanceof Player){
 			String arg = String.join(" ", args).toLowerCase();
 			final List<String> tabCompletes = new ArrayList<String>();
-			//TODO: possible (but laggy): only list horses in same world if player lacks cross-world permission
+			//TODO: possible (but maybe laggy?): only list horses in same world if player lacks cross-world permission
 			byte shown = 0;
-			for(String horseName : plugin.getHorseOwners().get(((Player)sender).getUniqueId())){
+			for(String horseName : plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
