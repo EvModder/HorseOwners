@@ -116,6 +116,13 @@ public final class HorseManager extends EvPlugin{
 		if(saveLeashes){
 			getServer().getPluginManager().registerEvents(new LeadBreakGlitchListener(), this);
 		}
+		if(saveCoords){
+			try{
+				Class.forName("org.spigotmc.event.entity.EntityDismountEvent");
+				getServer().getPluginManager().registerEvents(new DismountListener(), this);
+			}
+			catch(ClassNotFoundException e){}
+		}
 		if(config.getBoolean("enable-teleporting", true)){
 			getServer().getPluginManager().registerEvents(new TeleportListener(), this);
 		}
