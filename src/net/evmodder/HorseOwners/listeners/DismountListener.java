@@ -10,10 +10,9 @@ public class DismountListener implements Listener{
 	//Clear stats on death
 	@EventHandler
 	public void onHorseDismount(EntityDismountEvent evt){
-		HorseManager.getPlugin().getLogger().info(evt.getEntity().getType()+" dsm "+evt.getDismounted().getType());
-		if(evt.getEntity() instanceof AbstractHorse && evt.getEntity().getCustomName() != null
-				&& HorseManager.getPlugin().isClaimableHorseType(evt.getEntity())){
-			HorseManager.getPlugin().updateData((AbstractHorse)evt.getEntity());
+		if(evt.getDismounted() instanceof AbstractHorse && evt.getDismounted().getCustomName() != null
+				&& HorseManager.getPlugin().isClaimableHorseType(evt.getDismounted())){
+			HorseManager.getPlugin().updateData((AbstractHorse)evt.getDismounted());
 		}
 	}
 }
