@@ -71,9 +71,11 @@ public final class HorseManager extends EvPlugin{
 
 	public void loadHorses(){
 		horses = FileIO.loadYaml("horses.yml", "#The great horse-data file\n");
-		topSpeed = new IndexTreeMultiMap<Double, String>();
-		topJump = new IndexTreeMultiMap<Double, String>();
-		topHealth = new IndexTreeMultiMap<Integer, String>();
+		if(saveRankings){
+			topSpeed = new IndexTreeMultiMap<Double, String>();
+			topJump = new IndexTreeMultiMap<Double, String>();
+			topHealth = new IndexTreeMultiMap<Integer, String>();
+		}
 		for(String horseName : horses.getKeys(false)){
 			ConfigurationSection data = horses.getConfigurationSection(horseName);
 			if(data == null){
@@ -256,25 +258,34 @@ public final class HorseManager extends EvPlugin{
 		return false;
 	}
 
-	public void renameHorse(String oldName, String newName){
+	public void renameHorse(String oldName, String newNameRaw){
 		oldName = HorseLibrary.cleanName(oldName);
-		newName = HorseLibrary.cleanName(newName);
+		String newName = HorseLibrary.cleanName(newNameRaw);
+		if(oldName.equals(newName)){
+			horses.set(oldName+".name", newNameRaw);
+			return;
+		}
 
 		ConfigurationSection thisHorse = horses.getConfigurationSection(oldName);
+		thisHorse.set("name", newNameRaw);
 		horses.set(oldName, null);
 		horses.set(newName, thisHorse);
 
-		if(saveLineage)
-		for(String h : horses.getKeys(false)){
-			List<String> parents = horses.getStringList(h+".parents");
-
-			if(parents.remove(oldName)){
-				parents.add(newName);
-				horses.set(h+".parents", parents);
-			}
+		if(saveLineage) for(String h : horses.getKeys(false)){
+			if(horses.getString(h+".mother", "").equals(oldName)) horses.set(h+".mother", newName);
+			if(horses.getString(h+".father", "").equals(oldName)) horses.set(h+".father", newName);
 		}
 
 		for(Set<String> horses : horseOwnersMap.values()) if(horses.remove(oldName)) horses.add(newName);
+
+		if(saveRankings && (rankUnclaimed || thisHorse.contains("owner"))){
+			double speed = thisHorse.getDouble("speed", -1);
+			double jump = thisHorse.getDouble("jump", -1);
+			int health = thisHorse.getInt("health", -1);
+			if(speed != -1){topSpeed.remove(speed, oldName); topSpeed.put(speed, newName);}
+			if(jump != -1){topJump.remove(jump, oldName); topJump.put(jump, newName);}
+			if(health != -1){topHealth.remove(health, oldName); topHealth.put(health, newName);}
+		}
 	}
 
 	public boolean removeHorse(UUID playerUUID, String horseName, boolean removeCompletely){

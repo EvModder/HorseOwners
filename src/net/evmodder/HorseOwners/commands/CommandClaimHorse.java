@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.inventory.ItemStack;
 import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.HorseOwners.HorseLibrary;
 
 public class CommandClaimHorse extends HorseCommand{
 	final boolean renameNametag, alphanumeric;
@@ -111,7 +112,7 @@ public class CommandClaimHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			if(plugin.horseExists(newName)){
+			if(plugin.horseExists(newName) && !HorseLibrary.cleanName(oldName).equals(HorseLibrary.cleanName(newName))){
 				p.sendMessage(ChatColor.RED+"That name has already been taken!");
 				COMMAND_SUCCESS = false;
 				return true;
@@ -135,10 +136,7 @@ public class CommandClaimHorse extends HorseCommand{
 			if(oldName != null && oldName.equals(newName) == false){//if had a name previously
 				p.sendMessage(ChatColor.GREEN+"Successfully renamed " + ChatColor.GRAY + ChatColor.ITALIC + oldName
 						+ ChatColor.GREEN + " to " + ChatColor.GRAY + ChatColor.ITALIC + newName + ChatColor.GREEN + "!");
-				
-				//if owner of the horse, update the name (but keep the stats)
-				if(isOwner) plugin.renameHorse(oldName, newName);
-				else plugin.addHorse(p.getUniqueId(), h);
+				plugin.renameHorse(oldName, newName);
 				COMMAND_SUCCESS = true;
 				return true;
 			}
