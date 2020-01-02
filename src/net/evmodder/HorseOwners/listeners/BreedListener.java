@@ -127,7 +127,7 @@ public class BreedListener implements Listener{
 			UUID owner = getOwnerFromParents(evt.getMother(), evt.getFather(), ownerAtBirth);
 			if(nameAtBirth){
 				h.setCustomName(getRandomName());
-				if(claimAtBirth && owner != null) plugin.addHorse(owner, h);
+				if(claimAtBirth && owner != null) plugin.addClaimedHorse(owner, h);
 			}
 			if(tameAtBirth){
 				h.setTamed(true);

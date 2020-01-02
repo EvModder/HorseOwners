@@ -13,7 +13,7 @@ public class TameListener implements Listener{
 		if(evt.getEntity().getCustomName() != null && HorseManager.getPlugin().isClaimableHorseType(evt.getEntity()))
 		{
 			Player p = evt.getEntity().getServer().getPlayer(evt.getOwner().getUniqueId());
-			if(p != null) HorseManager.getPlugin().addHorse(p.getUniqueId(), evt.getEntity());
+			if(p != null) HorseManager.getPlugin().addClaimedHorse(p.getUniqueId(), evt.getEntity());
 		}
 	}
 }

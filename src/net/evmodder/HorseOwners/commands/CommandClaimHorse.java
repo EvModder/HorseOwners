@@ -112,6 +112,8 @@ public class CommandClaimHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return true;
 			}
+			plugin.getLogger().info(("old name cleaned: "+HorseLibrary.cleanName(oldName)));
+			plugin.getLogger().info(("new name cleaned: "+HorseLibrary.cleanName(newName)));
 			if(plugin.horseExists(newName) && !HorseLibrary.cleanName(oldName).equals(HorseLibrary.cleanName(newName))){
 				p.sendMessage(ChatColor.RED+"That name has already been taken!");
 				COMMAND_SUCCESS = false;
@@ -131,15 +133,20 @@ public class CommandClaimHorse extends HorseCommand{
 				p.getInventory().setItem(p.getInventory().first(Material.NAME_TAG),
 										((firstNametag.getAmount() > 0) ? firstNametag : new ItemStack(Material.AIR)));
 			}
-			h.setCustomName(newName);//Update name
 
 			if(oldName != null && oldName.equals(newName) == false){//if had a name previously
+				if(plugin.renameHorse(oldName, newName) == false){
+					p.sendMessage(ChatColor.RED+"HorseRenameEvent cancelled by a plugin");
+					COMMAND_SUCCESS = false;
+					return false;
+				}
 				p.sendMessage(ChatColor.GREEN+"Successfully renamed " + ChatColor.GRAY + ChatColor.ITALIC + oldName
 						+ ChatColor.GREEN + " to " + ChatColor.GRAY + ChatColor.ITALIC + newName + ChatColor.GREEN + "!");
 				plugin.renameHorse(oldName, newName);
 				COMMAND_SUCCESS = true;
 				return true;
 			}
+			h.setCustomName(newName);//Set name
 		}
 		else if(oldName == null){
 			p.sendMessage(ChatColor.RED+"Please supply a name for this horse\n"+ChatColor.GRAY+command.getUsage());
@@ -153,7 +160,11 @@ public class CommandClaimHorse extends HorseCommand{
 		}
 
 		//My horsie!
-		plugin.addHorse(p.getUniqueId(), h);
+		if(plugin.addClaimedHorse(p.getUniqueId(), h) == false){
+			p.sendMessage(ChatColor.RED+"HorseClaimEvent cancelled by a plugin");
+			COMMAND_SUCCESS = false;
+			return true;
+		}
 		sender.sendMessage(ChatColor.GREEN+"Successfully claimed " + ChatColor.GRAY + ChatColor.ITALIC
 					+ h.getCustomName() + ChatColor.GREEN + " as your horse!");
 		COMMAND_SUCCESS = true;

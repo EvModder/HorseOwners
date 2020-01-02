@@ -25,9 +25,12 @@ import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.EvLib.util.IndexTreeMultiMap;
+import net.evmodder.HorseOwners.api.events.HorseClaimEvent;
+import net.evmodder.HorseOwners.api.events.HorseRenameEvent;
 import net.evmodder.HorseOwners.commands.*;
 import net.evmodder.HorseOwners.listeners.*;
 
+//TODO: Make inbred mutation relative to % DNA shared (look online for calculation)
 public final class HorseManager extends EvPlugin{
 	private static HorseManager plugin; public static HorseManager getPlugin(){return plugin;}
 
@@ -227,19 +230,25 @@ public final class HorseManager extends EvPlugin{
 		return horses.isConfigurationSection(HorseLibrary.cleanName(horseName));
 	}
 
-	public boolean addHorse(UUID playerUUID, Entity horse){
+	public boolean addClaimedHorse(UUID playerUUID, Entity horse){
 		if(horse.getCustomName() == null) return false;
+
+		HorseClaimEvent horseClaimEvent = new HorseClaimEvent(horse, playerUUID, horse.getCustomName());
+		getServer().getPluginManager().callEvent(horseClaimEvent);
+		if(horseClaimEvent.isCancelled()) return false;
+
 		String cleanName = HorseLibrary.cleanName(horse.getCustomName());
 
 		if(safeEditing) loadHorses();
 
-		if(horseOwnersMap.containsKey(playerUUID)) horseOwnersMap.get(playerUUID).add(cleanName);
+		boolean newlyClaimed = true;
+		if(horseOwnersMap.containsKey(playerUUID)) newlyClaimed = horseOwnersMap.get(playerUUID).add(cleanName);
 		else horseOwnersMap.put(playerUUID, new HashSet<String>(Arrays.asList(cleanName)));
 
 		horses.set(cleanName+".owner", playerUUID.toString());
 		if(horses.contains(cleanName) && horse instanceof AbstractHorse) updateData((AbstractHorse)horse);
 		saveHorses();
-		return true;
+		return newlyClaimed;
 	}
 
 	public boolean addUnownedHorse(AbstractHorse h){
@@ -258,12 +267,18 @@ public final class HorseManager extends EvPlugin{
 		return false;
 	}
 
-	public void renameHorse(String oldName, String newNameRaw){
+	public boolean renameHorse(String oldName, String newNameRaw){
 		oldName = HorseLibrary.cleanName(oldName);
 		String newName = HorseLibrary.cleanName(newNameRaw);
+
+		String oldNameRaw = horses.getString(oldName+".name", null);
+		HorseRenameEvent horseRenameEvent = new HorseRenameEvent(oldName, newName, oldNameRaw, newNameRaw);
+		getServer().getPluginManager().callEvent(horseRenameEvent);
+		if(horseRenameEvent.isCancelled()) return false;
+
 		if(oldName.equals(newName)){
 			horses.set(oldName+".name", newNameRaw);
-			return;
+			return true;
 		}
 
 		ConfigurationSection thisHorse = horses.getConfigurationSection(oldName);
@@ -286,6 +301,7 @@ public final class HorseManager extends EvPlugin{
 			if(jump != -1){topJump.remove(jump, oldName); topJump.put(jump, newName);}
 			if(health != -1){topHealth.remove(health, oldName); topHealth.put(health, newName);}
 		}
+		return true;
 	}
 
 	public boolean removeHorse(UUID playerUUID, String horseName, boolean removeCompletely){

@@ -1,7 +1,7 @@
 name: HorseOwners
 main: net.evmodder.HorseOwners.HorseManager
 Author: EvModder
-version: 2.7.1 #7=/hm top [stat] [page], x.1= fixes & cleanup
+version: 2.7.2 #7=/hm top [stat] [page], x.2= API draft 1.0
 api-version: 1.13
 
 commands:

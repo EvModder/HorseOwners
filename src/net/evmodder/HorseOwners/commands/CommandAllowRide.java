@@ -11,7 +11,7 @@ import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
 
 public class CommandAllowRide extends HorseCommand{
-	@Override @SuppressWarnings("deprecation")
+	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length == 1){
 			final List<String> tabCompletes = new ArrayList<String>();
