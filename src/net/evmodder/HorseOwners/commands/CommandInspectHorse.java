@@ -9,6 +9,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import com.google.common.collect.Sets;
@@ -116,7 +117,8 @@ public class CommandInspectHorse extends HorseCommand{
 			tamerName = plugin.getHorseTamerName(horseName);
 			if(tamerName == null && horse != null && horse instanceof Tameable)
 				tamerName = ((Tameable)horse).isTamed() ? "§cUnknown" : "§cN/A";
-			typeName = EvUtils.capitalizeAndSpacify(plugin.getHorseType(horseName).name(), '_');
+			EntityType type = plugin.getHorseType(horseName);
+			typeName = type == null ? null : EvUtils.capitalizeAndSpacify(type.name(), '_');
 			speed = plugin.getHorseSpeed(horseName);
 			jump = plugin.getHorseJump(horseName);
 			health = plugin.getHorseHealth(horseName);
@@ -143,7 +145,7 @@ public class CommandInspectHorse extends HorseCommand{
 		StringBuilder builder = new StringBuilder();
 		if(sender.hasPermission("horseowners.inspect.name")) builder.append("§7Name: §f").append(displayName);
 		//TODO: hide if there is only 1 claimable type
-		if(sender.hasPermission("horseowners.inspect.type")) builder.append("§7Species: §6").append(typeName);
+		if(typeName != null && sender.hasPermission("horseowners.inspect.type")) builder.append("§7Species: §6").append(typeName);
 
 		if(speed > 0 && sender.hasPermission("horseowners.inspect.speed")){
 			builder.append("\n§7Speed: §f").append(speed).append("§cm/s");
