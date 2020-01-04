@@ -112,8 +112,8 @@ public class CommandClaimHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			plugin.getLogger().info(("old name cleaned: "+HorseLibrary.cleanName(oldName)));
-			plugin.getLogger().info(("new name cleaned: "+HorseLibrary.cleanName(newName)));
+			plugin.getLogger().info(("old name: "+oldName));
+			plugin.getLogger().info(("new name: "+newName));
 			if(plugin.horseExists(newName) && !HorseLibrary.cleanName(oldName).equals(HorseLibrary.cleanName(newName))){
 				p.sendMessage(ChatColor.RED+"That name has already been taken!");
 				COMMAND_SUCCESS = false;

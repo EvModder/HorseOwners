@@ -20,7 +20,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
 import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.FileIO;
@@ -31,6 +33,7 @@ import net.evmodder.HorseOwners.commands.*;
 import net.evmodder.HorseOwners.listeners.*;
 
 //TODO: Make inbred mutation relative to % DNA shared (look online for calculation)
+//TODO: add /hm rename <a> <b> with perm for renaming without riding
 public final class HorseManager extends EvPlugin{
 	private static HorseManager plugin; public static HorseManager getPlugin(){return plugin;}
 
@@ -38,7 +41,7 @@ public final class HorseManager extends EvPlugin{
 	private Set<EntityType> claimableTypes;
 	private YamlConfiguration horses;
 	private Map<UUID, Set<String>> horseOwnersMap;
-	private boolean saveCoords, saveRankings, saveLineage, saveLeashes, rankUnclaimed, safeEditing;
+	private boolean saveCoords, saveStats, saveLineage, saveLeashes, rankUnclaimed, safeEditing;
 	private IndexTreeMultiMap<Double, String> topSpeed;
 	private IndexTreeMultiMap<Double, String> topJump;
 	private IndexTreeMultiMap<Integer, String> topHealth;
@@ -51,7 +54,7 @@ public final class HorseManager extends EvPlugin{
 		horseOwnersMap = new HashMap<UUID, Set<String>>();
 		oneTimeAccess = new HashSet<String>();
 		saveCoords = config.getBoolean("save-horse-coordinates", true);
-		saveRankings = config.getBoolean("rank-claimed-horses", true);
+		saveStats = config.getBoolean("rank-claimed-horses", true);
 		saveLineage = config.getBoolean("save-horse-lineage", true);
 		rankUnclaimed = config.getBoolean("rank-unclaimed-horses", true);
 		safeEditing = config.getBoolean("config-update-checking", true);
@@ -74,7 +77,7 @@ public final class HorseManager extends EvPlugin{
 
 	public void loadHorses(){
 		horses = FileIO.loadYaml("horses.yml", "#The great horse-data file\n");
-		if(saveRankings){
+		if(saveStats){
 			topSpeed = new IndexTreeMultiMap<Double, String>();
 			topJump = new IndexTreeMultiMap<Double, String>();
 			topHealth = new IndexTreeMultiMap<Integer, String>();
@@ -90,7 +93,7 @@ public final class HorseManager extends EvPlugin{
 				if(horseOwnersMap.containsKey(uuid)) horseOwnersMap.get(uuid).add(horseName);
 				else horseOwnersMap.put(uuid, new HashSet<String>(Arrays.asList(horseName)));
 			}
-			if(saveRankings && data.contains("speed") && data.contains("jump") && data.contains("health"))
+			if(saveStats && data.contains("speed") && data.contains("jump") && data.contains("health"))
 				updateRanklists(horseName, data.getDouble("speed"), data.getDouble("jump"), data.getInt("health"));
 		}
 	}
@@ -239,14 +242,13 @@ public final class HorseManager extends EvPlugin{
 
 		String cleanName = HorseLibrary.cleanName(horse.getCustomName());
 
-		if(safeEditing) loadHorses();
-
 		boolean newlyClaimed = true;
 		if(horseOwnersMap.containsKey(playerUUID)) newlyClaimed = horseOwnersMap.get(playerUUID).add(cleanName);
 		else horseOwnersMap.put(playerUUID, new HashSet<String>(Arrays.asList(cleanName)));
 
+		if(safeEditing) loadHorses();
+		updateData(horse);
 		horses.set(cleanName+".owner", playerUUID.toString());
-		if(horses.contains(cleanName) && horse instanceof AbstractHorse) updateData((AbstractHorse)horse);
 		saveHorses();
 		return newlyClaimed;
 	}
@@ -255,23 +257,21 @@ public final class HorseManager extends EvPlugin{
 		if(h.getCustomName() == null) return false;
 		String cleanName = HorseLibrary.cleanName(h.getCustomName());
 
-		boolean wild = true;
-		for(Set<String> horses : horseOwnersMap.values()) if(horses.contains(cleanName)) wild = false;
-		if(wild){
+		boolean wasUnclaimed = true;
+		for(Set<String> horses : horseOwnersMap.values()) if(horses.contains(cleanName)) wasUnclaimed = false;
+		if(wasUnclaimed){
 			if(safeEditing) loadHorses();
-			if(!horses.contains(cleanName)) horses.createSection(cleanName);
 			updateData(h);
 			saveHorses();
-			return true;
 		}
-		return false;
+		return wasUnclaimed;
 	}
 
 	public boolean renameHorse(String oldName, String newNameRaw){
 		oldName = HorseLibrary.cleanName(oldName);
 		String newName = HorseLibrary.cleanName(newNameRaw);
 
-		String oldNameRaw = horses.getString(oldName+".name", null);
+		String oldNameRaw = horses.getString(oldName+".name", oldName);
 		HorseRenameEvent horseRenameEvent = new HorseRenameEvent(oldName, newName, oldNameRaw, newNameRaw);
 		getServer().getPluginManager().callEvent(horseRenameEvent);
 		if(horseRenameEvent.isCancelled()) return false;
@@ -282,6 +282,7 @@ public final class HorseManager extends EvPlugin{
 		}
 
 		ConfigurationSection thisHorse = horses.getConfigurationSection(oldName);
+		if(thisHorse == null) thisHorse = horses.createSection(newName);
 		thisHorse.set("name", newNameRaw);
 		horses.set(oldName, null);
 		horses.set(newName, thisHorse);
@@ -293,7 +294,7 @@ public final class HorseManager extends EvPlugin{
 
 		for(Set<String> horses : horseOwnersMap.values()) if(horses.remove(oldName)) horses.add(newName);
 
-		if(saveRankings && (rankUnclaimed || thisHorse.contains("owner"))){
+		if(saveStats && (rankUnclaimed || thisHorse.contains("owner"))){
 			double speed = thisHorse.getDouble("speed", -1);
 			double jump = thisHorse.getDouble("jump", -1);
 			int health = thisHorse.getInt("health", -1);
@@ -398,7 +399,38 @@ public final class HorseManager extends EvPlugin{
 	public final IndexTreeMultiMap<Integer, String> getTopHealth(){return topHealth;}
 	public final ConfigurationSection getData(String horseName){return horses.getConfigurationSection(horseName);}
 
-	public void updateData(AbstractHorse h){
+	private void updateLineage(Entity h, ConfigurationSection data){
+//		List<String> parents = new ArrayList<String>();
+//		for(MetadataValue parent : h.getMetadata("parents")) parents.add(parent.asString());
+//		if(!parents.isEmpty()) data.set("parents", parents);
+		if(data.contains("mother")) h.setMetadata("mother", new FixedMetadataValue(plugin, data.get("mother")));
+		else if(h.hasMetadata("mother")) data.set("mother", h.getMetadata("mother").get(0).asString());
+
+		if(data.contains("father")) h.setMetadata("father", new FixedMetadataValue(plugin, data.get("father")));
+		else if(h.hasMetadata("father")) data.set("father", h.getMetadata("father").get(0).asString());
+	}
+	private void updateTameable(Tameable h, ConfigurationSection data){
+		if(/*saveTamer &&*/h.getOwner() != null) data.set("tamer", h.getOwner().getUniqueId().toString());
+	}
+	private void updateLivingEntity(LivingEntity h, ConfigurationSection data){
+		if(saveLeashes && h.isLeashed() && h.getLeashHolder().getType() == EntityType.LEASH_HITCH){
+			data.set("leash-x", h.getLeashHolder().getLocation().getBlockX());
+			data.set("leash-y", h.getLeashHolder().getLocation().getBlockY());
+			data.set("leash-z", h.getLeashHolder().getLocation().getBlockZ());
+		}
+	}
+	private void updateHorseStats(AbstractHorse h, ConfigurationSection data){
+		if(saveStats && (rankUnclaimed || data.contains("owner"))){
+			double speed = HorseLibrary.getNormalSpeed(h);
+			double jump = HorseLibrary.getNormalJump(h);
+			int health = HorseLibrary.getNormalMaxHealth(h);
+			data.set("speed", speed);
+			data.set("jump", jump);
+			data.set("health", health);
+			updateRanklists(data.getName(), speed, jump, health);
+		}
+	}
+	public void updateData(Entity h){
 		if(h.getCustomName() == null) return;
 		if(rankUnclaimed == false && isClaimedHorse(h.getCustomName()) == false) return;
 
@@ -409,41 +441,20 @@ public final class HorseManager extends EvPlugin{
 		if(data == null) data = horses.createSection(horseName);
 
 		data.set("name", displayName);// Full name (including spaces and/or special chars)
-		data.set("uuid", h.getUniqueId().toString());//TODO: Preparing for the eventuality of names not being unique
-		if(h.getOwner() != null) data.set("tamer", h.getOwner().getUniqueId().toString());
-
-		if(saveRankings && (rankUnclaimed || data.contains("owner"))){
-			double speed = HorseLibrary.getNormalSpeed(h);
-			double jump = HorseLibrary.getNormalJump(h);
-			int health = HorseLibrary.getNormalMaxHealth(h);
-			data.set("speed", speed);
-			data.set("jump", jump);
-			data.set("health", health);
-			updateRanklists(horseName, speed, jump, health);
-		}
+		data.set("uuid", h.getUniqueId().toString());//TODO: Prepare for the eventuality non-unique names
 		if(saveCoords){
 			data.set("chunk-x", h.getLocation().getChunk().getX());
 			data.set("chunk-z", h.getLocation().getChunk().getZ());
 		}
-		if(saveLeashes && h.isLeashed() && h.getLeashHolder().getType() == EntityType.LEASH_HITCH){
-			data.set("leash-x", h.getLeashHolder().getLocation().getBlockX());
-			data.set("leash-y", h.getLeashHolder().getLocation().getBlockY());
-			data.set("leash-z", h.getLeashHolder().getLocation().getBlockZ());
-		}
-		if(saveLineage){
-//			List<String> parents = new ArrayList<String>();
-//			for(MetadataValue parent : h.getMetadata("parents")) parents.add(parent.asString());
-//			if(!parents.isEmpty()) data.set("parents", parents);
-			if(data.contains("mother")) h.setMetadata("mother", new FixedMetadataValue(plugin, data.get("mother")));
-			else if(h.hasMetadata("mother")) data.set("mother", h.getMetadata("mother").get(0).asString());
+		if(saveLineage) updateLineage(h, data);
 
-			if(data.contains("father")) h.setMetadata("father", new FixedMetadataValue(plugin, data.get("father")));
-			else if(h.hasMetadata("father")) data.set("father", h.getMetadata("father").get(0).asString());
-		}
+		if(h instanceof Tameable) updateTameable((Tameable)h, data);
+		if(h instanceof LivingEntity) updateLivingEntity((LivingEntity)h, data);
+		if(h instanceof AbstractHorse) updateHorseStats((AbstractHorse)h, data);
 	}
 
 	public int[] getRankings(String horseName){
-		if(!saveRankings) return new int[]{-1, -1, -1};
+		if(!saveStats) return new int[]{-1, -1, -1};
 		horseName = HorseLibrary.cleanName(horseName);
 
 		if(!horses.contains(horseName)) return null;
@@ -499,17 +510,17 @@ public final class HorseManager extends EvPlugin{
 	}
 	public double getHorseSpeed(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
-		if(!saveRankings || !horses.contains(horseName)) return -1;
+		if(!saveStats || !horses.contains(horseName)) return -1;
 		return horses.getConfigurationSection(horseName).getDouble("speed", -1);
 	}
 	public double getHorseJump(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
-		if(!saveRankings || !horses.contains(horseName)) return -1;
+		if(!saveStats || !horses.contains(horseName)) return -1;
 		return horses.getConfigurationSection(horseName).getDouble("jump", -1);
 	}
 	public int getHorseHealth(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
-		if(!saveRankings || !horses.contains(horseName)) return -1;
+		if(!saveStats || !horses.contains(horseName)) return -1;
 		return horses.getConfigurationSection(horseName).getInt("health", -1);
 	}
 	public Location getHorseHitch(String horseName){
@@ -537,8 +548,8 @@ public final class HorseManager extends EvPlugin{
 					h.getMetadata("father").get(0).asString());
 		else if(h.getCustomName() != null){
 			String horseName = HorseLibrary.cleanName(h.getCustomName());
-			if(horses.contains(horseName+".mother")){
-				if(h instanceof AbstractHorse) updateData((AbstractHorse)h);
+			if(horses.contains(horseName+".mother")/*or father*/){
+				updateLineage(h, horses.getConfigurationSection(horseName));//Set parent metadata on entity
 				return Arrays.asList(
 						horses.getString(horseName+".mother", null),
 						horses.getString(horseName+".father", null));

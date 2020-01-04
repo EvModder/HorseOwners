@@ -45,4 +45,10 @@ public class HorseRenameEvent extends Event implements Cancellable, HorseOwnerEv
 	 * @return a list of handlers for the event
 	 */
 	@Override public HandlerList getHandlers(){return HANDLERS;}
+
+	/**
+	 * Get a list of handlers for the event.
+	 * @return a list of handlers for the event
+	 */
+	public static HandlerList getHandlerList(){return HANDLERS;}
 }

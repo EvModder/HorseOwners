@@ -10,7 +10,6 @@ import org.bukkit.GameMode;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import com.google.common.collect.Sets;
@@ -138,7 +137,7 @@ public class CommandGetHorse extends HorseCommand{
 		//Yay got to here! Hi horsie!
 		for(Entity h : horses){
 			HorseLibrary.teleportEntityWithPassengers(h, p.getLocation());
-			if(saveCoords && h instanceof AbstractHorse) plugin.updateData((AbstractHorse)h);
+			if(saveCoords) plugin.updateData(h);
 		}
 		p.sendMessage(ChatColor.GREEN+"Fetched your horse"+(horses.size() > 1 ? "s!" : "!"));
 		COMMAND_SUCCESS = true;

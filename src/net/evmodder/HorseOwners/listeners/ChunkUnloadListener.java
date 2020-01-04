@@ -37,7 +37,7 @@ public class ChunkUnloadListener implements Listener{
 						}
 					}
 				}
-				else if(entity instanceof AbstractHorse) plugin.updateData((AbstractHorse) entity);
+				plugin.updateData((AbstractHorse) entity);
 			}//if claimed
 		}//for each entity in chunk
 	}

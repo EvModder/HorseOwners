@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
+import org.bukkit.attribute.Attributable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractHorse;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
 import com.google.common.collect.Sets;
 import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
@@ -43,9 +46,9 @@ public class CommandInspectHorse extends HorseCommand{
 	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm inspect [horse]
 		Player p = (sender instanceof Player) ? (Player)sender : null;
-		AbstractHorse horse = null;
+		Entity horse = null;
 		String horseName = null;
-		if(args.length > 0 && plugin.horseExists(horseName = HorseLibrary.cleanName(StringUtils.join(args, ' ')))){
+		if((args.length > 0 && plugin.horseExists(horseName = HorseLibrary.cleanName(StringUtils.join(args, ' '))))){
 			if(p != null && !p.hasPermission("horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
 				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
 				COMMAND_SUCCESS = false;
@@ -64,9 +67,11 @@ public class CommandInspectHorse extends HorseCommand{
 				return true;
 			}
 		}
-		else if(p != null && p.isInsideVehicle() && p.getVehicle() instanceof AbstractHorse){
-			horse = (AbstractHorse) p.getVehicle();
-			if(!INSPECT_UNTAMED && !horse.isTamed() && !sender.hasPermission("horseowners.inspect.untamed")){
+		else if(p != null && p.isInsideVehicle()){
+			horse = p.getVehicle();
+			if(!INSPECT_UNTAMED && 
+					(horse instanceof Tameable == false || !((Tameable)horse).isTamed()) &&
+					!sender.hasPermission("horseowners.inspect.untamed")){
 				sender.sendMessage(ChatColor.RED+"You must tame this steed before you can use that command");
 				COMMAND_SUCCESS = false;
 				return true;
@@ -89,8 +94,7 @@ public class CommandInspectHorse extends HorseCommand{
 
 		//Yay got to here! Now what's it worth?
 		String displayName, ownerName, tamerName;
-		double speed, jump;
-		int health;
+		double speed = -1, jump = -1; int health = -1;
 		int[] rank = null;
 		List<String> parents;
 		int locX, locZ;
@@ -109,7 +113,8 @@ public class CommandInspectHorse extends HorseCommand{
 			ownerName = plugin.getHorseOwnerName(horseName);
 			if(ownerName == null) ownerName = "§cN/A";
 			tamerName = plugin.getHorseTamerName(horseName);
-			if(tamerName == null) tamerName = (horse == null || horse.isTamed()) ? "§cUnknown" : "§cN/A";
+			if(tamerName == null && horse instanceof Tameable)
+				tamerName = (horse == null || ((Tameable)horse).isTamed()) ? "§cUnknown" : "§cN/A";
 			speed = plugin.getHorseSpeed(horseName);
 			jump = plugin.getHorseJump(horseName);
 			health = plugin.getHorseHealth(horseName);
@@ -119,11 +124,13 @@ public class CommandInspectHorse extends HorseCommand{
 		else{
 			displayName = horse.getCustomName() == null ? "§cN/A" : horse.getCustomName();
 			ownerName = "§cN/A";
-			tamerName = horse.isTamed() ?
-					(horse.getOwner() == null ? "§cUnknown" : horse.getOwner().getName()) : "§cN/A";
-			speed = HorseLibrary.getNormalSpeed(horse);
-			jump = HorseLibrary.getNormalJump(horse);
-			health = HorseLibrary.getNormalMaxHealth(horse);
+			tamerName = horse instanceof Tameable && ((Tameable)horse).isTamed() ?
+					(((Tameable)horse).getOwner() == null ? "§cUnknown" : ((Tameable)horse).getOwner().getName()) : "§cN/A";
+			if(horse instanceof Attributable){
+				speed = HorseLibrary.getNormalSpeed((Attributable)horse);
+				health = HorseLibrary.getNormalMaxHealth((Attributable)horse);
+				if(horse instanceof AbstractHorse) jump = HorseLibrary.getNormalJump((AbstractHorse)horse);
+			}
 			parents = plugin.getHorseParents(horse);
 			locX = horse.getLocation().getBlockX();
 			locZ = horse.getLocation().getBlockZ();
@@ -133,7 +140,7 @@ public class CommandInspectHorse extends HorseCommand{
 		StringBuilder builder = new StringBuilder();
 		if(sender.hasPermission("horseowners.inspect.name")) builder.append("§7Name: §f").append(displayName);
 
-		if(sender.hasPermission("horseowners.inspect.speed")){
+		if(speed > 0 && sender.hasPermission("horseowners.inspect.speed")){
 			builder.append("\n§7Speed: §f").append(speed).append("§cm/s");
 			if(rank != null){
 				builder.append("§7 [§6#").append(rank[0]);
@@ -141,7 +148,7 @@ public class CommandInspectHorse extends HorseCommand{
 				builder.append("§7]");
 			}
 		}
-		if(sender.hasPermission("horseowners.inspect.jump")){
+		if(jump > 0 && sender.hasPermission("horseowners.inspect.jump")){
 			builder.append("\n§7Jump: §f").append(jump).append("§cm");
 			if(rank != null){
 				builder.append("§7 [§6#").append(rank[2]);
@@ -149,7 +156,7 @@ public class CommandInspectHorse extends HorseCommand{
 				builder.append("§7]");
 			}
 		}
-		if(sender.hasPermission("horseowners.inspect.health")){
+		if(health > 0 && sender.hasPermission("horseowners.inspect.health")){
 			builder.append("\n§7Health: §f").append(health).append("§ch");
 			if(rank != null){
 				builder.append("§7 [§6#").append(rank[4]);
