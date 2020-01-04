@@ -12,6 +12,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import com.google.common.collect.Sets;
+import net.evmodder.EvLib.EvUtils;
 import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
 
@@ -93,7 +94,7 @@ public class CommandInspectHorse extends HorseCommand{
 		}
 
 		//Yay got to here! Now what's it worth?
-		String displayName, ownerName, tamerName;
+		String displayName, ownerName, tamerName, typeName;
 		double speed = -1, jump = -1; int health = -1;
 		int[] rank = null;
 		List<String> parents;
@@ -113,8 +114,9 @@ public class CommandInspectHorse extends HorseCommand{
 			ownerName = plugin.getHorseOwnerName(horseName);
 			if(ownerName == null) ownerName = "§cN/A";
 			tamerName = plugin.getHorseTamerName(horseName);
-			if(tamerName == null && horse instanceof Tameable)
-				tamerName = (horse == null || ((Tameable)horse).isTamed()) ? "§cUnknown" : "§cN/A";
+			if(tamerName == null && horse != null && horse instanceof Tameable)
+				tamerName = ((Tameable)horse).isTamed() ? "§cUnknown" : "§cN/A";
+			typeName = EvUtils.capitalizeAndSpacify(plugin.getHorseType(horseName).name(), '_');
 			speed = plugin.getHorseSpeed(horseName);
 			jump = plugin.getHorseJump(horseName);
 			health = plugin.getHorseHealth(horseName);
@@ -134,11 +136,14 @@ public class CommandInspectHorse extends HorseCommand{
 			parents = plugin.getHorseParents(horse);
 			locX = horse.getLocation().getBlockX();
 			locZ = horse.getLocation().getBlockZ();
+			typeName = EvUtils.capitalizeAndSpacify(horse.getType().name(), '_');
 		}
 
 		//Build info message
 		StringBuilder builder = new StringBuilder();
 		if(sender.hasPermission("horseowners.inspect.name")) builder.append("§7Name: §f").append(displayName);
+		//TODO: hide if there is only 1 claimable type
+		if(sender.hasPermission("horseowners.inspect.type")) builder.append("§7Species: §6").append(typeName);
 
 		if(speed > 0 && sender.hasPermission("horseowners.inspect.speed")){
 			builder.append("\n§7Speed: §f").append(speed).append("§cm/s");

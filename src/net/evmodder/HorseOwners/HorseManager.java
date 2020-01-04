@@ -442,6 +442,7 @@ public final class HorseManager extends EvPlugin{
 
 		data.set("name", displayName);// Full name (including spaces and/or special chars)
 		data.set("uuid", h.getUniqueId().toString());//TODO: Prepare for the eventuality non-unique names
+		data.set("type", h.getType());
 		if(saveCoords){
 			data.set("chunk-x", h.getLocation().getChunk().getX());
 			data.set("chunk-z", h.getLocation().getChunk().getZ());
@@ -522,6 +523,13 @@ public final class HorseManager extends EvPlugin{
 		horseName = HorseLibrary.cleanName(horseName);
 		if(!saveStats || !horses.contains(horseName)) return -1;
 		return horses.getConfigurationSection(horseName).getInt("health", -1);
+	}
+	public EntityType getHorseType(String horseName){
+		horseName = HorseLibrary.cleanName(horseName);
+		String type = horses.getString(horseName+".type");
+		if(type == null) return null;
+		try{return EntityType.valueOf(type);}
+		catch(IllegalArgumentException ex){return null;}
 	}
 	public Location getHorseHitch(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);

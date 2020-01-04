@@ -177,6 +177,10 @@ permissions:
       description: Ability to view a horse's name
       default: op
 
+   horseowners.inspect.type:
+      description: Ability to view a horse's EntityType
+      default: op
+
    horseowners.inspect.rankings:
       description: Ability to view a horse's rankings
       default: op
