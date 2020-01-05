@@ -142,7 +142,7 @@ public class CommandClaimHorse extends HorseCommand{
 				}
 				p.sendMessage(ChatColor.GREEN+"Successfully renamed " + ChatColor.GRAY + ChatColor.ITALIC + oldName
 						+ ChatColor.GREEN + " to " + ChatColor.GRAY + ChatColor.ITALIC + newName + ChatColor.GREEN + "!");
-				plugin.renameHorse(oldName, newName);
+				h.setCustomName(newName);//Change name
 				COMMAND_SUCCESS = true;
 				return true;
 			}

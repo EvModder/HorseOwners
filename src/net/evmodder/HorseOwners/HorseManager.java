@@ -267,11 +267,12 @@ public final class HorseManager extends EvPlugin{
 		return wasUnclaimed;
 	}
 
-	public boolean renameHorse(String oldName, String newNameRaw){
-		oldName = HorseLibrary.cleanName(oldName);
+	public boolean renameHorse(String oldNameRaw, String newNameRaw){
+		String oldName = HorseLibrary.cleanName(oldNameRaw);
+		oldNameRaw = horses.getString(oldName+".name", oldName); //Don't trust caller to give oldNameRaw
+		if(oldNameRaw.equals(newNameRaw)) return false;
 		String newName = HorseLibrary.cleanName(newNameRaw);
 
-		String oldNameRaw = horses.getString(oldName+".name", oldName);
 		HorseRenameEvent horseRenameEvent = new HorseRenameEvent(oldName, newName, oldNameRaw, newNameRaw);
 		getServer().getPluginManager().callEvent(horseRenameEvent);
 		if(horseRenameEvent.isCancelled()) return false;
@@ -283,9 +284,9 @@ public final class HorseManager extends EvPlugin{
 
 		ConfigurationSection thisHorse = horses.getConfigurationSection(oldName);
 		if(thisHorse == null) thisHorse = horses.createSection(newName);
-		thisHorse.set("name", newNameRaw);
-		horses.set(oldName, null);
+		else horses.set(oldName, null);
 		horses.set(newName, thisHorse);
+		horses.set(newName+".name", newNameRaw);
 
 		if(saveLineage) for(String h : horses.getKeys(false)){
 			if(horses.getString(h+".mother", "").equals(oldName)) horses.set(h+".mother", newName);
@@ -455,12 +456,12 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	public int[] getRankings(String horseName){
-		if(!saveStats) return new int[]{-1, -1, -1};
+		if(!saveStats) return null;
 		horseName = HorseLibrary.cleanName(horseName);
 
-		if(!horses.contains(horseName)) return null;
+		if(!horses.contains(horseName+".speed")) return null;
 		ConfigurationSection data = horses.getConfigurationSection(horseName);
-		double jump = data.getDouble("jump"), speed = data.getDouble("speed");
+		double speed = data.getDouble("speed"), jump = data.getDouble("jump");
 		int health = data.getInt("health");
 
 		int higherSpeedCount = topSpeed.valuesSize() - topSpeed.getCeilingIndex(speed);
