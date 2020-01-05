@@ -568,12 +568,28 @@ public final class HorseManager extends EvPlugin{
 	}
 	public Integer getHorseBlockX(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
-		if(!saveCoords || !horses.contains(horseName+".chunk-z")) return null;
-		return horses.getConfigurationSection(horseName).getInt("chunk-x")*16;
+		if(!saveCoords || !horses.contains(horseName+".chunk-x")) return null;
+		ConfigurationSection data = horses.getConfigurationSection(horseName);
+		int chunkX = data.getInt("chunk-x"), chunkZ = data.getInt("chunk-z", -1);
+		for(World w : getServer().getWorlds()) if(w.isChunkLoaded(chunkX, chunkZ)){
+			for(Entity e : w.getChunkAt(chunkX, chunkZ).getEntities()) if(isClaimableHorseType(e)
+				&& e.getCustomName() != null && HorseLibrary.cleanName(e.getCustomName()).equals(horseName)){
+				return e.getLocation().getBlockX();
+			}
+		}
+		return data.getInt("chunk-x")*16;
 	}
 	public Integer getHorseBlockZ(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 		if(!saveCoords || !horses.contains(horseName+".chunk-z")) return null;
-		return horses.getConfigurationSection(horseName).getInt("chunk-z")*16;
+		ConfigurationSection data = horses.getConfigurationSection(horseName);
+		int chunkX = data.getInt("chunk-x", -1), chunkZ = data.getInt("chunk-z");
+		for(World w : getServer().getWorlds()) if(w.isChunkLoaded(chunkX, chunkZ)){
+			for(Entity e : w.getChunkAt(chunkX, chunkZ).getEntities()) if(isClaimableHorseType(e)
+				&& e.getCustomName() != null && HorseLibrary.cleanName(e.getCustomName()).equals(horseName)){
+				return e.getLocation().getBlockZ();
+			}
+		}
+		return data.getInt("chunk-z")*16;
 	}
 }
