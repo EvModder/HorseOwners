@@ -69,21 +69,21 @@ commands:
       permission-message: You do not have permission to do this.
 
    summonshadowfax:
-      description: Summon the Lord of all Horses.
+      description: Summon the Lord of all Horses
       usage: /hm shadowfax
       permission: horseowners.shadowfax
       permission-message: Unknown command
 
    spawnhorse:
-      description: Spawn a custom horse.
+      description: Spawn a custom horse
       usage: /hm spawn [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [-tamed]
       permission: horseowners.spawn
       permission-message: You do not have permission to do this.
 
-   tophorse:
+   rankhorse:
       description: See the top horses on the server
       usage: /hm ranklist [s/j/h]
-      aliases: [ranklisthorse,hranklist,rankhorse,rankshorse,rhorse,hranks]
+      aliases: [ranklisthorse,hranklist,tophorse,rankshorse,rhorse,hranks]
       permission: horseowners.ranklist
       permission-message: You do not have permission to do this.
 

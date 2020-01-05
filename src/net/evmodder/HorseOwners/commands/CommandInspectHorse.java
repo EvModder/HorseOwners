@@ -99,7 +99,7 @@ public class CommandInspectHorse extends HorseCommand{
 		double speed = -1, jump = -1; int health = -1;
 		int[] rank = null;
 		List<String> parents;
-		int locX, locZ;
+		Integer locX, locZ;
 		if(horseName != null){
 			if(horse != null){
 				plugin.updateData(horse);
@@ -145,7 +145,8 @@ public class CommandInspectHorse extends HorseCommand{
 		StringBuilder builder = new StringBuilder();
 		if(sender.hasPermission("horseowners.inspect.name")) builder.append("§7Name: §f").append(displayName);
 		//TODO: hide if there is only 1 claimable type
-		if(typeName != null && sender.hasPermission("horseowners.inspect.type")) builder.append("§7Species: §6").append(typeName);
+		if(typeName != null && sender.hasPermission("horseowners.inspect.type"))
+			builder.append("\n§7Species: §6").append(typeName);
 
 		if(speed > 0 && sender.hasPermission("horseowners.inspect.speed")){
 			builder.append("\n§7Speed: §f").append(speed).append("§cm/s");
@@ -180,7 +181,7 @@ public class CommandInspectHorse extends HorseCommand{
 		if(sender.hasPermission("horseowners.inspect.lineage") && parents != null && !parents.isEmpty()){
 			builder.append("\n§7Parents: §f").append(String.join("§7, §f", parents));
 		}
-		if(sender.hasPermission("horseowners.inspect.coords")){
+		if(sender.hasPermission("horseowners.inspect.coords") && locX != null){
 			builder.append("\n§7Location: §f").append(locX).append("§cx§7, §f").append(locZ).append("§cz");
 		}
 

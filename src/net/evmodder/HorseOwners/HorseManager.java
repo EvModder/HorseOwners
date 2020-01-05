@@ -158,7 +158,7 @@ public final class HorseManager extends EvPlugin{
 		if(config.getBoolean("enable-name-locks", false)) new CommandLockHorse();
 		new CommandShadowfax();
 		new CommandSpawnHorse();
-		if(config.getBoolean("rank-claimed-horses", false)) new CommandTopHorse();
+		if(config.getBoolean("rank-claimed-horses", false)) new CommandRankHorse();
 		new CommandUnleashHorse();
 	}
 
@@ -442,7 +442,7 @@ public final class HorseManager extends EvPlugin{
 
 		data.set("name", displayName);// Full name (including spaces and/or special chars)
 		data.set("uuid", h.getUniqueId().toString());//TODO: Prepare for the eventuality non-unique names
-		data.set("type", h.getType());
+		data.set("type", h.getType().name());
 		if(saveCoords){
 			data.set("chunk-x", h.getLocation().getChunk().getX());
 			data.set("chunk-z", h.getLocation().getChunk().getZ());
@@ -565,14 +565,14 @@ public final class HorseManager extends EvPlugin{
 		}
 		return null;
 	}
-	public int getHorseBlockX(String horseName){
+	public Integer getHorseBlockX(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
-		if(!saveCoords || !horses.contains(horseName)) return -1;
-		return horses.getConfigurationSection(horseName).getInt("chunk-x", -1)*16;
+		if(!saveCoords || !horses.contains(horseName+".chunk-z")) return null;
+		return horses.getConfigurationSection(horseName).getInt("chunk-x")*16;
 	}
-	public int getHorseBlockZ(String horseName){
+	public Integer getHorseBlockZ(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
-		if(!saveCoords || !horses.contains(horseName)) return -1;
-		return horses.getConfigurationSection(horseName).getInt("chunk-z", -1)*16;
+		if(!saveCoords || !horses.contains(horseName+".chunk-z")) return null;
+		return horses.getConfigurationSection(horseName).getInt("chunk-z")*16;
 	}
 }
