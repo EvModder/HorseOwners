@@ -131,8 +131,12 @@ permissions:
       description: The ability to view a list your claimed horses.
       default: true
 
-   horseowners.list.all:
+   horseowners.list.others:
       description: The ability to print a list of anyone's horses
+      default: op
+
+   horseowners.list.all: #TODO: children: horseowners.list.others? or vise-versa?
+      description: The ability to print a list of all horses
       default: op
 
    horseowners.list.unclaimed:
@@ -199,6 +203,10 @@ permissions:
 
    horseowners.inspect.speed:
       description: Ability to view a horse's speed
+      default: op
+
+   horseowners.inspect.health:
+      description: Ability to view a horse's max health
       default: op
 
    horseowners.inspect.lineage:

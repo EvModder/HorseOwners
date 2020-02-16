@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import net.evmodder.EvLib.extras.TabText;
+import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.EvLib.util.IndexTreeMultiMap;
 
 public class CommandRankHorse extends HorseCommand{
@@ -67,6 +68,7 @@ public class CommandRankHorse extends HorseCommand{
 	}
 
 	void showTop(CommandSender sender, String stat, String topPage, IndexTreeMultiMap<Object, String> values, int page){
+		boolean playerSender = sender instanceof Player;
 		StringBuilder header = new StringBuilder(headerOpen);
 		if(page < 1 || page*RESULTS_PER_PAGE >= values.valuesSize()){page = 0; header.append(topPage);}
 		else header.append(stat).append(" page §6#").append(page+1);
@@ -80,27 +82,38 @@ public class CommandRankHorse extends HorseCommand{
 		int shown = 0;
 		boolean floatingPoint = keyEndIncl instanceof Double || keyEndIncl instanceof Float;
 		StringBuilder builder = new StringBuilder("");
+		int maxNameLen = 0;
 		for(Entry<Object, Collection<String>> group :
 			values.subMap(keyEndIncl, true, keyBeginIncl, true).descendingMap().entrySet()){
 			for(String horseName : group.getValue()){
 				if(skipBegin > 0){--skipBegin; continue;}
+				String rawHorseName = plugin.getHorseName(horseName);
+				maxNameLen = Math.max(maxNameLen, TextUtils.strLen(rawHorseName, !playerSender));
 
-				builder.append("§7").append(stat).append(": §F").append(floatingPoint ?
+				builder.append("§7").append(stat).append(": §f").append(floatingPoint ?
 						String.format("%.2f", group.getKey()) : group.getKey())
-				.append("`§7Horse: §F").append(plugin.getHorseName(horseName));
+				.append("`§7Horse: §f").append(rawHorseName);
 
 				String owner = plugin.getHorseOwnerName(horseName);
-				if(owner != null) builder.append("`§7Owner: §F").append(owner);
+				if(owner != null) builder.append("`§7Owner: §f").append(owner);
 				if(++shown == RESULTS_PER_PAGE) break;
 				builder.append('\n');
 			}
 			if(shown == RESULTS_PER_PAGE) break;
 		}
-		if(sender instanceof Player){
-			header.append(TabText.parse(builder.toString(), false, false, new int[]{62+12, 36+75+13, 36+75}));
+		if(playerSender){
+			header.append(TabText.parse(builder.toString(), false, false, new int[]{
+					62+12, // 'Speed: XX.XX'=6+6+6+6+6+2+4+6+6+2+6+6=62px + 12px(buffer) = 74
+				//	36+75+13, // 'Horse: '=6+6+6+6+6+2+4=36px + '$name'=16*[2,5,7]=[32,80,112]~=75 + 13px(buffer) = 124
+					36+maxNameLen+12,
+					36+75})); // 'Owner: '=6+6+6+6+6+2+4=36px + '$name'=16*[2,6]=[32,96] = 111
+					// Total = 74 + 124 + 111 = 309(of 320)
 		}
 		else{
-			header.append(TabText.parse(builder.toString(), true, false, new int[]{12+3, 7+16+3, 7+16}));
+			header.append(TabText.parse(builder.toString(), true, false, new int[]{
+					12+3, // 'Speed: XX.XX'=12ch + 3ch(buffer)
+					7+16+3, // 'Horse: '=7ch + '$name'=16ch(config) + 3ch(buffer)
+					7+16})); // 'Owner: '=7ch + '$name'=16ch(mojang-max) + 3ch(buffer)
 		}
 		sender.sendMessage(header.toString());
 	}

@@ -58,6 +58,11 @@ public class CommandLockHorse extends HorseCommand{
 			COMMAND_SUCCESS = false;
 			return true;
 		}
+		if(!plugin.horseExists(horseName)){
+			sender.sendMessage("§cUnknown horse! (check spelling)§7\n"+command.getUsage());
+			COMMAND_SUCCESS = false;
+			return true;
+		}
 		if(plugin.isClaimedHorse(horseName)){
 			if(p != null && plugin.canAccess(p, horseName) == false){
 				sender.sendMessage("§cYou cannot lock horses which you do not own");

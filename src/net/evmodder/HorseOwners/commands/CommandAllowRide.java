@@ -76,8 +76,13 @@ public class CommandAllowRide extends HorseCommand{
 			return false;
 		}
 
+		if(!plugin.horseExists(horseName)){
+			sender.sendMessage(ChatColor.RED+"Unknown horse! (check spelling)"+ChatColor.GRAY+'\n'+command.getUsage());
+			COMMAND_SUCCESS = false;
+			return true;
+		}
 		if(plugin.isClaimedHorse(horseName) == false){
-			sender.sendMessage(ChatColor.RED+"This horse is ownerless, anyone can ride it!");
+			sender.sendMessage(ChatColor.GRAY+"This horse is ownerless, anyone can ride it!");
 			COMMAND_SUCCESS = false;
 			return true;
 		}

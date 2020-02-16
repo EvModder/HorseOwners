@@ -89,7 +89,12 @@ public class CommandInspectHorse extends HorseCommand{
 			}
 		}
 		else if(args.length == 0){
-			sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+"\n"+command.getUsage());
+			sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+'\n'+command.getUsage());
+			COMMAND_SUCCESS = false;
+			return true;
+		}
+		else if(!plugin.horseExists(horseName)){
+			sender.sendMessage(ChatColor.RED+"Unknown horse! (check spelling)"+ChatColor.GRAY+'\n'+command.getUsage());
 			COMMAND_SUCCESS = false;
 			return true;
 		}
@@ -142,7 +147,7 @@ public class CommandInspectHorse extends HorseCommand{
 		}
 
 		//Build info message
-		StringBuilder builder = new StringBuilder();
+		StringBuilder builder = new StringBuilder("\n");
 		if(sender.hasPermission("horseowners.inspect.name")) builder.append("§7Name: §f").append(displayName);
 		//TODO: hide if there is only 1 claimable type
 		if(typeName != null && sender.hasPermission("horseowners.inspect.type"))

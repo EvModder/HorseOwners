@@ -18,8 +18,6 @@ public class DeathListener implements Listener{
 
 			HorseDeathEvent horseDeathEvent = new HorseDeathEvent(horse, evt.getDrops(), evt.getDroppedExp());
 			HorseManager.getPlugin().getServer().getPluginManager().callEvent(horseDeathEvent);
-			evt.getDrops().clear();
-			evt.getDrops().addAll(horseDeathEvent.getDrops());
 			evt.setDroppedExp(horseDeathEvent.getDroppedExp());
 			HorseManager.getPlugin().removeHorse(horse.getCustomName(), true);
 		}
