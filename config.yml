@@ -17,10 +17,6 @@ rank-unclaimed-horses: true
 # WARNING: Setting to false will clear existing coordinate data
 save-horse-coordinates: true
 
-# Should the server keep track of horses' parents?
-# WARNING: Setting to false will clear existing lineage data
-save-horse-lineage: true
-
 # Allow players to "lock" a horse's name
 # WARNING: Setting to false will clear existing name-lock data
 enable-name-locks: true
@@ -69,19 +65,20 @@ nametag-required-to-rename: false
 # Already named horses are automatically claimed when tamed
 claim-on-tame: true
 
-# Enable configuration of max jump, speed, and health
-modified-breeding: true
-
-# Limit the upper limits on naturally spawned/bred horse stats
+# Puts an upper limit on the stats of NATURALLY spawned/bred horses.
 # Default(vanilla) values: jump=5.29, speed=14.5125, health=30
-max-jump: 5.29
-max-speed: 14.5125
-max-health: 30
+# Set to -1 disable limiting
+max-jump: -1
+max-speed: -1
+max-health: -1
+
+# Should the server keep track of horses' parents?
+# WARNING: Setting to false will clear existing lineage data
+save-horse-lineage: true
 
 # Assign a random name to a new foal at birth.
 # Requires modified-breeding: true
 name-at-birth: false
-tame-at-birth: false
 
 # Automatically claim newly born foals.
 # Requires name-at-birth and modified-breeding are true
@@ -90,13 +87,9 @@ claim-at-birth: true
 # Adds a slight random offset to the speed, jump, and health of the foal.
 extra-random-factor-at-birth: true
 
-# Increases the random effect when breeding closely related horses.
-# Effectively, makes it harder to improve physical stats through inbreeding.
+# Increases the random mutation effect when breeding closely related horses.
+# This makes it a bit harder to improve physical stats through inbreeding.
 inbred-mutations: true
-
-# How closely related two horses must be for mutations to occur.
-# Smaller numbers means more closely related (1 = siblings, 2 = cousins...)
-inbred-mutation-distance: 2
 
 # If a foal's parents are owned by different players, who does it belong to?
 # Possible values: MOTHER, FATHER, and RANDOM. Requires claim-at-birth: true
@@ -120,7 +113,8 @@ prevent-lead-fence-breaking: false
 # Only applies to claimed horses leashed to a fence post
 # This is provided because Mojang is taking forever to fix:
 # https://bugs.mojang.com/browse/MC-14826
-prevent-glitch-lead-breaking: true
+# UPDATE: Fixed in 1.15!
+#prevent-glitch-lead-breaking: true
 
 # Allows players to leash mobs not normally leashable, such as
 # Zombies, Creepers, Silverfish, and Squids
@@ -144,7 +138,7 @@ snoop-private-horse: false
 # Should players need tame a horse before they can inspect it
 inspect-untamed: false
 
-# Should players need tame a horse before they can inspect it
+# Should players need claim a horse before they can inspect it
 inspect-unclaimed: false
 
 # Enable this if you plan on frequently editing the horses.yml file
