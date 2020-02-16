@@ -11,7 +11,6 @@ import org.bukkit.World;
 import org.bukkit.attribute.Attributable;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.AbstractHorse;
-import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -169,10 +168,10 @@ public class HorseLibrary {
 	}*/
 
 	public static void setMother(Entity horse, String mother){
-		horse.setMetadata("mother", new FixedMetadataValue(HorseManager.getPlugin(), mother));
+		horse.setMetadata("mother", new FixedMetadataValue(HorseManager.getPlugin(), cleanName(mother)));
 	}
 	public static void setFather(Entity horse, String father){
-		horse.setMetadata("father", new FixedMetadataValue(HorseManager.getPlugin(), father));
+		horse.setMetadata("father", new FixedMetadataValue(HorseManager.getPlugin(), cleanName(father)));
 	}
 
 	public static String getMother(Entity horse){
@@ -180,6 +179,19 @@ public class HorseLibrary {
 	}
 	public static String getFather(Entity horse){
 		return horse.hasMetadata("father") ? horse.getMetadata("father").get(0).asString() : null;
+	}
+
+	public static void setTimeBorn(Entity horse, long timestamp){
+		horse.setMetadata("spawn_ts", new FixedMetadataValue(HorseManager.getPlugin(), timestamp));
+	}
+	public static Long getTimeBorn(Entity horse){
+		return horse.hasMetadata("spawn_ts") ? horse.getMetadata("spawn_ts").get(0).asLong() : null;
+	}
+	public static void setTimeClaimed(Entity horse, long timestamp){
+		horse.setMetadata("claim_ts", new FixedMetadataValue(HorseManager.getPlugin(), timestamp));
+	}
+	public static Long getTimeClaimed(Entity horse){
+		return horse.hasMetadata("claim_ts") ? horse.getMetadata("claim_ts").get(0).asLong() : null;
 	}
 
 	public static double getNormalSpeed(Attributable horse){
@@ -213,8 +225,8 @@ public class HorseLibrary {
 		else
 			return 0.2*jump;
 	}
-	public static <E extends Attributable & Damageable> void setMaxHealth(E target, double health){
+	/*public static <E extends Attributable & Damageable> void setMaxHealth(E target, double health){
 		target.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
 		target.setHealth(health);
-	}
+	}*/
 }

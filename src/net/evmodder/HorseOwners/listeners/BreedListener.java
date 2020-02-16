@@ -1,8 +1,5 @@
 package net.evmodder.HorseOwners.listeners;
 
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.UUID;
 import org.bukkit.OfflinePlayer;
@@ -10,11 +7,10 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityBreedEvent;
+import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.util.Pair;
 import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
 
@@ -25,6 +21,7 @@ public class BreedListener implements Listener{
 	final int INBRED_MUT_DIST;
 	ParentType ownerAtBirth;
 	final double MAX_JUMP, MAX_SPEED, MAX_HEALTH;
+	final double MIN_JUMP = 0.4D, MIN_SPEED = 0.1125D, MIN_HEALTH = 15;
 	final String[] horseNameList;
 	final Random rand;
 
@@ -42,9 +39,12 @@ public class BreedListener implements Listener{
 		catch(IllegalArgumentException ex){ownerAtBirth = ParentType.RANDOM;}
 		horseNameList = FileIO.loadResource(plugin, "horse-names.txt").split("\n");
 
-		MAX_JUMP = HorseLibrary.denormalizeJump(plugin.getConfig().getDouble("max-jump", 5.29));
-		MAX_SPEED = HorseLibrary.denormalizeSpeed(plugin.getConfig().getDouble("max-speed", 14.5125));
-		MAX_HEALTH = plugin.getConfig().getDouble("max-health", 30);
+		double normalJump = plugin.getConfig().getDouble("max-jump", 5.29);
+		double normalSpeed = plugin.getConfig().getDouble("max-speed", 14.5125);
+		double normalHealth = plugin.getConfig().getDouble("max-health", 30);
+		MAX_JUMP = normalJump > 0 ? HorseLibrary.denormalizeJump(normalJump) : -1;
+		MAX_SPEED = normalSpeed > 0 ? HorseLibrary.denormalizeSpeed(normalSpeed) : -1;
+		MAX_HEALTH = normalHealth > 0 ? normalHealth : -1;
 		rand = new Random();
 	}
 
@@ -56,7 +56,31 @@ public class BreedListener implements Listener{
 		return UUID.randomUUID().toString();
 	}
 
-	int getBloodlineDistance(Entity horse1, Entity horse2){
+	private String getRandomDNA(){
+		StringBuilder builder = new StringBuilder();
+		for(int i=0; i<100; ++i) builder.append((char)(rand.nextInt(26) + 'a'));
+		return builder.toString();
+	}
+	private String getOffspringDNA(Entity parent1, Entity parent2){
+		if(!parent1.hasMetadata("DNA")) parent1.setMetadata("DNA", new FixedMetadataValue(plugin, getRandomDNA()));
+		if(!parent2.hasMetadata("DNA")) parent2.setMetadata("DNA", new FixedMetadataValue(plugin, getRandomDNA()));
+		char[] dna1 = parent1.getMetadata("DNA").get(0).asString().toCharArray();
+		char[] dna2 = parent2.getMetadata("DNA").get(0).asString().toCharArray();
+		StringBuilder builder = new StringBuilder();
+		for(int i=0; i<100; ++i) builder.append(rand.nextBoolean() ? dna1[i] : dna2[i]);
+		return builder.toString();
+	}
+	int getGeneticOverlap(Entity horse1, Entity horse2){
+		if(!horse1.hasMetadata("DNA")) horse1.setMetadata("DNA", new FixedMetadataValue(plugin, getRandomDNA()));
+		if(!horse2.hasMetadata("DNA")) horse2.setMetadata("DNA", new FixedMetadataValue(plugin, getRandomDNA()));
+		char[] dna1 = horse1.getMetadata("DNA").get(0).asString().toCharArray();
+		char[] dna2 = horse2.getMetadata("DNA").get(0).asString().toCharArray();
+		int overlap = 0;
+		for(int i=0; i<100; ++i) if(dna1[i] == dna2[i]) ++overlap;
+		return overlap;
+	}
+
+	/*int getBloodlineDistance(Entity horse1, Entity horse2){
 		if(horse1.equals(horse2)) return 0;
 		if(plugin.getHorseParents(horse1) == null || plugin.getHorseParents(horse2) == null)
 			return Integer.MAX_VALUE;
@@ -83,7 +107,7 @@ public class BreedListener implements Listener{
 			}
 		}
 		return minDist;
-	}
+	}*/
 
 	UUID getOwnerFromParents(Entity mother, Entity father, ParentType preferredParent){
 		UUID mothersOwner = mother.getCustomName() == null ? null : plugin.getHorseOwner(mother.getCustomName());
@@ -101,28 +125,61 @@ public class BreedListener implements Listener{
 		}
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR)// In case event is cancelled
+	void tweakAndLimitAttributes(AbstractHorse horse){
+		//Natural min, max: jump(0.4,1.0), speed(0.1125,0.3375 | 4.8375,14.5125), health(15,30)
+		//For average 2 parents and 3rd, random horse, have 3rd horse stats be [min-max]%90, [max-min(parents)]%10
+		//Do above, but smooth curve (point1=min, point2=max, point3=parent)
+		//jump
+		double jump = horse.getJumpStrength();
+		if(tweakStatsAtBirth) jump *= ((rand.nextInt(9)+95)/100.0);//remove up to 5% or add up to 3% of the speed
+		if(MAX_JUMP != -1 && jump > MAX_JUMP) jump = MAX_JUMP;
+		horse.setJumpStrength(jump);
+		//speed
+		double speed = horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
+		if(tweakStatsAtBirth) speed *= ((rand.nextInt(9)+95)/100.0);//remove up to 5% or add up to 3% of the speed
+		if(MAX_SPEED != -1 && speed > MAX_SPEED) speed = MAX_SPEED;
+		horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
+		//health
+		double health = horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+		if(tweakStatsAtBirth) health *= ((rand.nextInt(9)+95)/100.0);//remove up to 5% or add up to 3% of the health
+		if(MAX_HEALTH != -1 && health > MAX_HEALTH) health = MAX_HEALTH;
+		horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
+		horse.setHealth(health);
+	}
+
+	void generateAttributesWithinLimit(AbstractHorse horse, AbstractHorse mother, AbstractHorse father){
+		//Natural min, max: jump(0.4,1.0), speed(0.1125,0.3375 | 4.8375,14.5125), health(15,30)
+		double mother_jump = mother.getJumpStrength();
+		double father_jump = father.getJumpStrength();
+		double mother_speed = mother.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
+		double father_speed = father.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
+		double mother_health = mother.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+		double father_health = father.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+		double max_jump = Math.max(MIN_JUMP, Math.min(MAX_JUMP, Math.min(mother_jump, father_jump)));
+		double max_speed = Math.max(MIN_SPEED, Math.min(MAX_SPEED, Math.min(mother_speed, father_speed)));
+		double max_health = Math.max(MIN_HEALTH, Math.min(MAX_HEALTH, Math.min(mother_health, father_health)));
+		//compute random 3rd parent
+		double random_jump = MIN_JUMP + rand.nextDouble()*(max_jump - MIN_JUMP);
+		double random_speed = MIN_SPEED + rand.nextDouble()*(max_speed - MIN_SPEED);
+		double random_health = MIN_HEALTH + rand.nextDouble()*(max_health - MIN_HEALTH);
+		//set jump
+		double jump = (random_jump + mother_jump + father_jump) / 3D;
+		horse.setJumpStrength(jump);
+		//set speed
+		double speed = (random_speed + mother_speed + father_speed) / 3D;
+		horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
+		//set health
+		double health = (random_health + mother_health + father_health) / 3D;
+		horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
+		horse.setHealth(health);
+	}
+
+	@EventHandler
 	public void onBreed(EntityBreedEvent evt){
-		if(plugin.isClaimableHorseType(evt.getEntity()) && evt.getEntity() instanceof AbstractHorse){
+		if(evt.getEntity() instanceof AbstractHorse){
+			plugin.getLogger().info("EntityBreedEvent called");
 			AbstractHorse h = (AbstractHorse)evt.getEntity();
-			plugin.getLogger().info("Breed event");
-
-			//jump
-			if(h.getJumpStrength() > MAX_JUMP) h.setJumpStrength(MAX_JUMP);
-
-			//speed
-			double speed = h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
-			if(tweakStatsAtBirth)//remove up to 50% of the speed or add up to 30% of the speed
-				speed *= ((rand.nextInt(81)+50)/100.0);
-			if(speed > MAX_SPEED) speed = MAX_SPEED;
-			h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
-
-			//health
-			double health = h.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
-			if(tweakStatsAtBirth)//remove up to 50% of the health or add up to 20% of the health
-				health *= ((rand.nextInt(71)+50)/100.0);
-			if(health > MAX_HEALTH) health = MAX_HEALTH;
-			HorseLibrary.setMaxHealth(h, health);
+			generateAttributesWithinLimit(h, (AbstractHorse)evt.getMother(), (AbstractHorse)evt.getFather());
 
 			UUID owner = getOwnerFromParents(evt.getMother(), evt.getFather(), ownerAtBirth);
 			if(nameAtBirth){
@@ -143,27 +200,33 @@ public class BreedListener implements Listener{
 
 				if(mother != null) HorseLibrary.setMother(h, mother);
 				if(father != null) HorseLibrary.setFather(h, father);
-				plugin.updateData(h);
+
+				// TODO: DNA is currently only used for inbreeding mutations
+				String dna = getOffspringDNA(evt.getMother(), evt.getFather());
+				h.setMetadata("DNA", new FixedMetadataValue(plugin, dna));
 			}
-			if(inbredMutation && getBloodlineDistance(evt.getMother(), evt.getFather()) <= INBRED_MUT_DIST){
-				//remove up to 20% of the jump or add up to 5% of the jump
-				double jump = h.getJumpStrength() * ((rand.nextInt(26)+80)/100D);
-				if(jump > MAX_JUMP) jump = MAX_JUMP;
+			if(inbredMutation){
+				int overlapPercent = getGeneticOverlap(evt.getMother(), evt.getFather());
+				plugin.getLogger().info("Genetic overlap of bred horses: "+overlapPercent+"%");
+				//remove up to 40% of the jump or add up to 4% of the jump
+				double percentMod = (((rand.nextInt(45)+60)*overlapPercent)/100D);
+				double jump = h.getJumpStrength() * percentMod;
 				h.setJumpStrength(jump);
 
-				//remove up to 20% of the speed or add up to 5% of the speed
-				speed = h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
-				speed *= ((rand.nextInt(26)+80)/100D);
-				if(speed > MAX_SPEED) speed = MAX_SPEED;
+				//remove up to 40% of the speed or add up to 4% of the speed
+				percentMod = (((rand.nextInt(45)+60)*overlapPercent)/100D);
+				double speed = h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue() * percentMod;
 				h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
 
-				//remove up to 50% of the health or add up to 10% of the health
-				health = h.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
-				health *= ((rand.nextInt(61)+50)/100D);
-				if(health > MAX_HEALTH) health = MAX_HEALTH;
-				HorseLibrary.setMaxHealth(h, health);
+				//remove up to 60% of the health or add up to 6% of the health
+				percentMod = (((rand.nextInt(67)+40)*overlapPercent)/100D);
+				double health = h.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * percentMod;
+				h.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
+				h.setHealth(health);
+				plugin.getLogger().info("Mutated jump,speed,health: "+jump+", "+speed+", "+health);
 			}
-			plugin.getLogger().info("Final jump, speed, health: "+h.getJumpStrength()+", "+speed+", "+health);
+			tweakAndLimitAttributes(h);
+			plugin.updateData(h);
 		}
 	}
 }

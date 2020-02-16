@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -20,7 +19,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -34,6 +32,10 @@ import net.evmodder.HorseOwners.listeners.*;
 
 //TODO: Make inbred mutation relative to % DNA shared (look online for calculation)
 //TODO: add /hm rename <a> <b> with perm for renaming without riding
+//TODO: store age/claim-date (sort /hm list by claim date | show in /hm inspect with perm)
+//TODO: /hm list by type (eg: /hm list type:DONKEY -> list donkeys only)
+//TODO: fix tab-complete for /hm spawn
+//TODO: BreedListener (above natural limits)
 public final class HorseManager extends EvPlugin{
 	private static HorseManager plugin; public static HorseManager getPlugin(){return plugin;}
 
@@ -41,7 +43,7 @@ public final class HorseManager extends EvPlugin{
 	private Set<EntityType> claimableTypes;
 	private YamlConfiguration horses;
 	private Map<UUID, Set<String>> horseOwnersMap;
-	private boolean saveCoords, saveStats, saveLineage, saveLeashes, rankUnclaimed, safeEditing;
+	private boolean saveCoords, saveStats, saveLineage,/* saveLeashes,*/ rankUnclaimed, safeEditing;
 	private IndexTreeMultiMap<Double, String> topSpeed;
 	private IndexTreeMultiMap<Double, String> topJump;
 	private IndexTreeMultiMap<Integer, String> topHealth;
@@ -58,7 +60,7 @@ public final class HorseManager extends EvPlugin{
 		saveLineage = config.getBoolean("save-horse-lineage", true);
 		rankUnclaimed = config.getBoolean("rank-unclaimed-horses", true);
 		safeEditing = config.getBoolean("config-update-checking", true);
-		saveLeashes = config.getBoolean("prevent-glitch-lead-breaking", true);
+		//saveLeashes = config.getBoolean("prevent-glitch-lead-breaking", true);
 		claimableTypes = new HashSet<EntityType>();
 		if(config.contains("valid-horses"))
 			for(String type : config.getStringList("valid-horses"))
@@ -104,15 +106,22 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	private void registerListeners(){
-		if(config.getBoolean("modified-breeding", false)){
+		double MAX_JUMP = config.getDouble("max-jump", -1);
+		double MAX_SPEED = config.getDouble("max-speed", -1);
+		double MAX_HEALTH = config.getDouble("max-health", -1);
+		if(MAX_JUMP != -1 || MAX_SPEED != -1 || MAX_HEALTH != -1
+			|| plugin.getConfig().getBoolean("save-horse-lineage", false)
+			|| config.getBoolean("name-at-birth", false) || config.getBoolean("claim-at-birth", false)
+			|| config.getBoolean("extra-random-factor-at-birth", false) || config.getBoolean("inbred-mutations", false)){
 			getServer().getPluginManager().registerEvents(new BreedListener(), this);
 		}
 		if(config.getBoolean("reduce-fall-damage", true)){
 			getServer().getPluginManager().registerEvents(new DamageListener(), this);
 		}
 		if(config.getBoolean("save-horse-coordinates", true)
-		|| config.getBoolean("keep-horse-chunks-in-memory", false)
-		|| saveLeashes){
+			|| config.getBoolean("keep-horse-chunks-in-memory", false)
+		//	|| saveLeashes
+		){
 			getServer().getPluginManager().registerEvents(new ChunkUnloadListener(), this);
 		}
 		if(config.getBoolean("prevent-lead-breaking", true)){
@@ -121,9 +130,9 @@ public final class HorseManager extends EvPlugin{
 		if(config.getBoolean("prevent-lead-fence-breaking", true)){
 			getServer().getPluginManager().registerEvents(new LeadFenceBreakListener(), this);
 		}
-		if(saveLeashes){
+		/*if(saveLeashes){
 			getServer().getPluginManager().registerEvents(new LeadBreakGlitchListener(), this);
-		}
+		}*/
 		if(saveCoords){
 			try{
 				Class.forName("org.spigotmc.event.entity.EntityDismountEvent");
@@ -137,7 +146,7 @@ public final class HorseManager extends EvPlugin{
 		if(config.getBoolean("claim-on-tame", true)){
 			getServer().getPluginManager().registerEvents(new TameListener(), this);
 		}
-		if(rankUnclaimed){
+		if(rankUnclaimed || MAX_JUMP != -1 || MAX_SPEED != -1 || MAX_HEALTH != -1){
 			getServer().getPluginManager().registerEvents(new SpawnListener(), this);
 		}
 		//the DeathListener is always used.
@@ -176,6 +185,7 @@ public final class HorseManager extends EvPlugin{
 	public boolean isClaimableHorseType(Entity h){
 		return /*h instanceof AbstractHorse && */claimableTypes.contains(h.getType());
 	}
+	public Set<EntityType> getClaimableHorseTypes(){return new HashSet<>(claimableTypes);}
 
 	public boolean canAccess(Player p, String horseName){
 		if(horseName == null) return true;
@@ -245,6 +255,7 @@ public final class HorseManager extends EvPlugin{
 		boolean newlyClaimed = true;
 		if(horseOwnersMap.containsKey(playerUUID)) newlyClaimed = horseOwnersMap.get(playerUUID).add(cleanName);
 		else horseOwnersMap.put(playerUUID, new HashSet<String>(Arrays.asList(cleanName)));
+		if(newlyClaimed) HorseLibrary.setTimeClaimed(horse, System.currentTimeMillis());
 
 		if(safeEditing) loadHorses();
 		updateData(horse);
@@ -272,6 +283,7 @@ public final class HorseManager extends EvPlugin{
 		oldNameRaw = horses.getString(oldName+".name", oldName); //Don't trust caller to give oldNameRaw
 		if(oldNameRaw.equals(newNameRaw)) return false;
 		String newName = HorseLibrary.cleanName(newNameRaw);
+		if(horses.isConfigurationSection(newName)) return false;
 
 		HorseRenameEvent horseRenameEvent = new HorseRenameEvent(oldName, newName, oldNameRaw, newNameRaw);
 		getServer().getPluginManager().callEvent(horseRenameEvent);
@@ -282,11 +294,16 @@ public final class HorseManager extends EvPlugin{
 			return true;
 		}
 
-		ConfigurationSection thisHorse = horses.getConfigurationSection(oldName);
-		if(thisHorse == null) thisHorse = horses.createSection(newName);
-		else horses.set(oldName, null);
-		horses.set(newName, thisHorse);
+		if(safeEditing) loadHorses();
+		ConfigurationSection oldHorse = horses.getConfigurationSection(oldName);
+		ConfigurationSection newHorse = horses.createSection(newName);
+		if(oldHorse != null){
+			for(String key : oldHorse.getKeys(false)) newHorse.set(key, oldHorse.get(key));
+			horses.set(oldName, null);
+		}
 		horses.set(newName+".name", newNameRaw);
+		getLogger().info("horses.yml entry renamed.");
+		saveHorses();
 
 		if(saveLineage) for(String h : horses.getKeys(false)){
 			if(horses.getString(h+".mother", "").equals(oldName)) horses.set(h+".mother", newName);
@@ -295,10 +312,10 @@ public final class HorseManager extends EvPlugin{
 
 		for(Set<String> horses : horseOwnersMap.values()) if(horses.remove(oldName)) horses.add(newName);
 
-		if(saveStats && (rankUnclaimed || thisHorse.contains("owner"))){
-			double speed = thisHorse.getDouble("speed", -1);
-			double jump = thisHorse.getDouble("jump", -1);
-			int health = thisHorse.getInt("health", -1);
+		if(saveStats && (rankUnclaimed || oldHorse.contains("owner"))){
+			double speed = oldHorse.getDouble("speed", -1);
+			double jump = oldHorse.getDouble("jump", -1);
+			int health = oldHorse.getInt("health", -1);
 			if(speed != -1){topSpeed.remove(speed, oldName); topSpeed.put(speed, newName);}
 			if(jump != -1){topJump.remove(jump, oldName); topJump.put(jump, newName);}
 			if(health != -1){topHealth.remove(health, oldName); topHealth.put(health, newName);}
@@ -413,13 +430,13 @@ public final class HorseManager extends EvPlugin{
 	private void updateTameable(Tameable h, ConfigurationSection data){
 		if(/*saveTamer &&*/h.getOwner() != null) data.set("tamer", h.getOwner().getUniqueId().toString());
 	}
-	private void updateLivingEntity(LivingEntity h, ConfigurationSection data){
+	/*private void updateLivingEntity(LivingEntity h, ConfigurationSection data){
 		if(saveLeashes && h.isLeashed() && h.getLeashHolder().getType() == EntityType.LEASH_HITCH){
 			data.set("leash-x", h.getLeashHolder().getLocation().getBlockX());
 			data.set("leash-y", h.getLeashHolder().getLocation().getBlockY());
 			data.set("leash-z", h.getLeashHolder().getLocation().getBlockZ());
 		}
-	}
+	}*/
 	private void updateHorseStats(AbstractHorse h, ConfigurationSection data){
 		if(saveStats && (rankUnclaimed || data.contains("owner"))){
 			double speed = HorseLibrary.getNormalSpeed(h);
@@ -451,7 +468,7 @@ public final class HorseManager extends EvPlugin{
 		if(saveLineage) updateLineage(h, data);
 
 		if(h instanceof Tameable) updateTameable((Tameable)h, data);
-		if(h instanceof LivingEntity) updateLivingEntity((LivingEntity)h, data);
+		//if(h instanceof LivingEntity) updateLivingEntity((LivingEntity)h, data);
 		if(h instanceof AbstractHorse) updateHorseStats((AbstractHorse)h, data);
 	}
 
@@ -464,6 +481,9 @@ public final class HorseManager extends EvPlugin{
 		double speed = data.getDouble("speed"), jump = data.getDouble("jump");
 		int health = data.getInt("health");
 
+		getLogger().info("topSpeed.valuesSize(): "+topSpeed.valuesSize()
+			+", topSpeed.getCeilingIndex("+speed+"): "+topSpeed.getCeilingIndex(speed)
+			+", topSpeed.getFloorIndex("+speed+"): "+topSpeed.getFloorIndex(speed));
 		int higherSpeedCount = topSpeed.valuesSize() - topSpeed.getCeilingIndex(speed);
 		int equalSpeedCount = topSpeed.get(speed).size();
 		int higherJumpCount = topJump.valuesSize() - topJump.getCeilingIndex(jump);
@@ -485,7 +505,7 @@ public final class HorseManager extends EvPlugin{
 	public UUID getHorseOwner(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 		String uuid = horses.getString(horseName+".owner");
-		plugin.getLogger().info("name: '"+horseName+"', owner: '"+uuid+"'");
+		plugin.getLogger().fine("GetHorseOwner() called, name: '"+horseName+"', owner: '"+uuid+"'");
 		return uuid == null ? null : UUID.fromString(uuid);
 		/*
 		for(UUID uuid : horseOwnersMap.keySet()){
@@ -532,7 +552,7 @@ public final class HorseManager extends EvPlugin{
 		try{return EntityType.valueOf(type);}
 		catch(IllegalArgumentException ex){return null;}
 	}
-	public Location getHorseHitch(String horseName){
+	/*public Location getHorseHitch(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 		if(horses.contains(horseName+".leash-x")) return new Location(
 				getServer().getWorlds().get(0),
@@ -540,7 +560,7 @@ public final class HorseManager extends EvPlugin{
 				horses.getDouble(horseName+".leash-y"),
 				horses.getDouble(horseName+".leash-z"));
 		else return null;
-	}
+	}*/
 	public List<String> getHorseParents(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 //		return horses.getStringList(horseName+".parents");
