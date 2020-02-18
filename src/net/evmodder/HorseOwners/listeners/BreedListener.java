@@ -20,7 +20,7 @@ public class BreedListener implements Listener{
 	final boolean saveLineage, nameAtBirth, tameAtBirth, claimAtBirth, tweakStatsAtBirth, inbredMutation;
 	final int INBRED_MUT_DIST;
 	ParentType ownerAtBirth;
-	final double MAX_JUMP, MAX_SPEED, MAX_HEALTH;
+	final double MAX_JUMP, MAX_SPEED, MAX_HEALTH; // Not normalized
 	final double MIN_JUMP = 0.4D, MIN_SPEED = 0.1125D, MIN_HEALTH = 15;
 	final String[] horseNameList;
 	final Random rand;
@@ -155,9 +155,12 @@ public class BreedListener implements Listener{
 		double father_speed = father.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 		double mother_health = mother.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
 		double father_health = father.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
-		double max_jump = Math.max(MIN_JUMP, Math.min(MAX_JUMP, Math.min(mother_jump, father_jump)));
-		double max_speed = Math.max(MIN_SPEED, Math.min(MAX_SPEED, Math.min(mother_speed, father_speed)));
-		double max_health = Math.max(MIN_HEALTH, Math.min(MAX_HEALTH, Math.min(mother_health, father_health)));
+		double max_jump = Math.max(MIN_JUMP, Math.min(mother_jump, father_jump));
+		double max_speed = Math.max(MIN_SPEED, Math.min(mother_speed, father_speed));
+		double max_health = Math.max(MIN_HEALTH, Math.min(mother_health, father_health));
+		if(MAX_JUMP != -1 && max_jump > MAX_JUMP) max_jump = MAX_JUMP;
+		if(MAX_SPEED != -1 && max_speed > MAX_SPEED) max_speed = MAX_SPEED;
+		if(MAX_HEALTH != -1 && max_health > MAX_HEALTH) max_health = MAX_HEALTH;
 		//compute random 3rd parent
 		double random_jump = MIN_JUMP + rand.nextDouble()*(max_jump - MIN_JUMP);
 		double random_speed = MIN_SPEED + rand.nextDouble()*(max_speed - MIN_SPEED);
