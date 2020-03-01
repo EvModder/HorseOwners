@@ -29,7 +29,7 @@ public class SpawnListener implements Listener{
 		if(evt.getEntity() instanceof AbstractHorse){
 			plugin.getLogger().info("CreatureSpawnEvent called");
 			//if(evt.isCancelled()) return; // Still useful as a reference for later EventHandlers
-			switch(evt.getSpawnReason()){
+			/*switch(evt.getSpawnReason()){
 				case SPAWNER:
 				case SPAWNER_EGG:
 				case DISPENSE_EGG:
@@ -39,24 +39,27 @@ public class SpawnListener implements Listener{
 					break;
 				default:
 					return;
-			}
+			}*/
 			AbstractHorse horse = (AbstractHorse) evt.getEntity();
-			//jump
+			//limit jump
 			if(MAX_JUMP != -1 && horse.getJumpStrength() > MAX_JUMP) horse.setJumpStrength(MAX_JUMP);
 	
-			//speed
+			//limit speed
 			double speed = horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
 			if(MAX_SPEED != -1 && speed > MAX_SPEED) speed = MAX_SPEED;
 			horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
 	
-			//health
+			//limit health
 			double health = horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
 			if(MAX_HEALTH != -1 && health > MAX_HEALTH) health = MAX_HEALTH;
 			horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
 			horse.setHealth(health);
 		}
 		// Used to rank/record stats for wild horses (rankUnclaimed)
-		HorseLibrary.setTimeBorn(evt.getEntity(), System.currentTimeMillis());
-		if(!evt.isCancelled() && plugin.isClaimableHorseType(evt.getEntity())) plugin.updateData(evt.getEntity());
+		if(!evt.isCancelled() && plugin.isClaimableHorseType(evt.getEntity())){
+			HorseLibrary.setSpawnReason(evt.getEntity(), evt.getSpawnReason());
+			HorseLibrary.setTimeBorn(evt.getEntity(), System.currentTimeMillis());
+			plugin.updateData(evt.getEntity());
+		}
 	}
 }

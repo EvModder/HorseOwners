@@ -13,6 +13,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.metadata.FixedMetadataValue;
 
 public class HorseLibrary {
@@ -186,6 +187,12 @@ public class HorseLibrary {
 	}
 	public static Long getTimeBorn(Entity horse){
 		return horse.hasMetadata("spawn_ts") ? horse.getMetadata("spawn_ts").get(0).asLong() : null;
+	}
+	public static void setSpawnReason(Entity horse, SpawnReason reason){
+		horse.setMetadata("spawn_reason", new FixedMetadataValue(HorseManager.getPlugin(), reason));
+	}
+	public static SpawnReason getSpawnReason(Entity horse){
+		return horse.hasMetadata("spawn_ts") ? (SpawnReason)horse.getMetadata("spawn_reason").get(0).value() : null;
 	}
 	public static void setTimeClaimed(Entity horse, long timestamp){
 		horse.setMetadata("claim_ts", new FixedMetadataValue(HorseManager.getPlugin(), timestamp));

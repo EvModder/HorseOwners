@@ -142,8 +142,8 @@ inspect-untamed: false
 inspect-unclaimed: false
 
 # Enable this if you plan on frequently editing the horses.yml file
-# while the server is running. It ensure your by-hand edits are not
-# overwritten, but may introduce some minor lag on larger servers
+# while the server is running. It ensures your manual edits are not
+# overwritten, but might introduce minor lag on massive servers
 config-update-checking: false
 
 min-name-length: 3
