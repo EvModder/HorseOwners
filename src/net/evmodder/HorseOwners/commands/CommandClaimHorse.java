@@ -1,6 +1,7 @@
 package net.evmodder.HorseOwners.commands;
 
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -29,6 +30,74 @@ public class CommandClaimHorse extends HorseCommand{
 	}
 
 	@Override public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a){return null;}
+
+	enum RenameResult {FAILED, FAILED_HINT, RENAMED, NAMED};
+	public RenameResult attemptNameHorse(CommandSender sender, Entity horse, String newName){
+		if(alphanumeric) newName = newName.replaceAll("[:(),"+ChatColor.COLOR_CHAR+"<>{}\\-\\[\\]\\.'\"]", "");
+		if(sender.hasPermission("horseowners.coloredname")){
+			if(sender.hasPermission("horseowners.fullformats") == false){
+				newName = newName.replace("&k", "").replace("&m", "").replace("&n", "");
+			}
+			newName = TextUtils.translateAlternateColorCodes('&', newName);
+		}
+		newName.replaceAll("\\s{2,}", " ").trim();//remove leftover spaces
+		int newNameLength = Math.max(ChatColor.stripColor(newName).length(), TextUtils.strLen(newName, false)/6);
+
+		String oldName = horse.getCustomName();
+		if(oldName != null){
+			if(newName.equals(oldName)){
+				sender.sendMessage(ChatColor.RED+"This horse already has that name!");
+				return RenameResult.FAILED;
+			}
+			if(plugin.isLockedHorse(oldName)){
+				sender.sendMessage(ChatColor.RED+"You cannot rename "
+							+ChatColor.GRAY+ChatColor.ITALIC+oldName+ChatColor.RED+'.');
+				return RenameResult.FAILED_HINT;
+			}
+		}
+		if(newNameLength < minNameLength){
+			sender.sendMessage(ChatColor.RED+"Too short of a name!");
+			return RenameResult.FAILED;
+		}
+		if(newNameLength > maxNameLength){
+			sender.sendMessage(ChatColor.RED+"Too long of a name!");
+			return RenameResult.FAILED;
+		}
+		plugin.getLogger().info(("old name: "+oldName));
+		plugin.getLogger().info(("new name: "+newName));
+		if(plugin.horseExists(newName) && (oldName == null ||
+				!HorseLibrary.cleanName(oldName).equals(HorseLibrary.cleanName(newName)))){
+			sender.sendMessage(ChatColor.RED+"That name has already been taken!");
+			return RenameResult.FAILED;
+		}
+		if((oldName == null || oldName.equals(newName) == false)
+				&& renameNametag && sender instanceof Player && ((Player)sender).getGameMode() != GameMode.CREATIVE){
+			if(((Player)sender).getInventory().contains(Material.NAME_TAG) == false){
+				sender.sendMessage(ChatColor.RED+"You need a nametag in order to "
+					+(oldName == null ? "name/claim" : "rename")+" a horse!");
+				return RenameResult.FAILED;
+			}
+			//charge 1 nametag
+			Player p = (Player)sender;
+			ItemStack firstNametag = p.getInventory().getItem(p.getInventory().first(Material.NAME_TAG));
+			firstNametag.setAmount(firstNametag.getAmount()-1);
+			p.getInventory().setItem(p.getInventory().first(Material.NAME_TAG),
+									((firstNametag.getAmount() > 0) ? firstNametag : new ItemStack(Material.AIR)));
+		}
+
+		if(oldName != null && oldName.equals(newName) == false){//if had a name previously
+			if(plugin.renameHorse(oldName, newName) == false){
+				sender.sendMessage(ChatColor.RED+"HorseRenameEvent cancelled by a plugin");
+				return RenameResult.FAILED_HINT;
+			}
+			sender.sendMessage(ChatColor.GREEN+"Successfully renamed " + ChatColor.GRAY + ChatColor.ITALIC + oldName
+					+ ChatColor.GREEN + " to " + ChatColor.GRAY + ChatColor.ITALIC + newName + ChatColor.GREEN + "!");
+			horse.setCustomName(newName);//Change name
+			return RenameResult.RENAMED;
+		}
+		horse.setCustomName(newName);//Set name
+		return RenameResult.NAMED;
+	}
 
 	@Override
 	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
@@ -61,103 +130,33 @@ public class CommandClaimHorse extends HorseCommand{
 
 		String oldName = h.getCustomName();
 		boolean isOwner = plugin.isOwner(p.getUniqueId(), oldName);
-		
+
 		if(oldName != null && plugin.isClaimedHorse(oldName) && isOwner == false){
 			p.sendMessage(ChatColor.RED+"This horse already belongs to someone!");
 			COMMAND_SUCCESS = false;
 			return true;
 		}
 
-		if(args.length > 0){
-			String newName;
-			if(args.length == 1) newName = args[0];
-			else{
-				StringBuilder builder = new StringBuilder(args[0]);
-				for(int i=1; i<args.length; ++i) builder.append(' ').append(args[i]);
-				newName = builder.toString();
+		if(args.length == 0){
+			if(oldName == null){
+				p.sendMessage(ChatColor.RED+"Please supply a name for this horse\n"+ChatColor.GRAY+command.getUsage());
+				COMMAND_SUCCESS = false;
+				return false;
 			}
-			if(alphanumeric) newName = newName.replaceAll("[:(),"
-					+ChatColor.COLOR_CHAR+"<>{}\\-\\[\\]\\.'\"]", "");
-
-			if(p.hasPermission("horseowners.coloredname")){
-				if(p.hasPermission("horseowners.fullformats") == false){
-					newName = newName.replace("&k", "").replace("&m", "").replace("&n", "");
-				}
-				newName = TextUtils.translateAlternateColorCodes('&', newName);
-			}
-			newName.replaceAll("\\s{2,}", " ").trim();//remove leftover spaces
-
-			if(oldName != null){
-				if(newName.equals(oldName)){
-					if(isOwner){
-						p.sendMessage(ChatColor.RED+"This horse already has that name!");
-						COMMAND_SUCCESS = false;
-						return true;
-					}
-				}
-				if(plugin.isLockedHorse(oldName)){
-					sender.sendMessage(ChatColor.RED+"You cannot rename "
-								+ChatColor.GRAY+ChatColor.ITALIC+oldName+ChatColor.RED+'.');
-					COMMAND_SUCCESS = false;
-					return false;
-				}
-			}
-			if(newName.length() < minNameLength){
-				p.sendMessage(ChatColor.RED+"Too short of a name!");
+			if(isOwner){
+				p.sendMessage(ChatColor.GRAY+"You already own this horse");
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			if(newName.length() > maxNameLength){
-				p.sendMessage(ChatColor.RED+"Too long of a name!");
-				COMMAND_SUCCESS = false;
-				return true;
-			}
-			plugin.getLogger().info(("old name: "+oldName));
-			plugin.getLogger().info(("new name: "+newName));
-			if(plugin.horseExists(newName) && (oldName == null ||
-					!HorseLibrary.cleanName(oldName).equals(HorseLibrary.cleanName(newName)))){
-				p.sendMessage(ChatColor.RED+"That name has already been taken!");
-				COMMAND_SUCCESS = false;
-				return true;
-			}
-			if((oldName == null || oldName.equals(newName) == false)
-					&& renameNametag && p.getGameMode() != GameMode.CREATIVE){
-				if(p.getInventory().contains(Material.NAME_TAG) == false){
-					p.sendMessage(ChatColor.RED+"You need a nametag in order to "
-						+(oldName == null ? "name/claim" : "rename")+" a horse!");
-					COMMAND_SUCCESS = false;
-					return true;
-				}
-				//charge 1 nametag
-				ItemStack firstNametag = p.getInventory().getItem(p.getInventory().first(Material.NAME_TAG));
-				firstNametag.setAmount(firstNametag.getAmount()-1);
-				p.getInventory().setItem(p.getInventory().first(Material.NAME_TAG),
-										((firstNametag.getAmount() > 0) ? firstNametag : new ItemStack(Material.AIR)));
-			}
-
-			if(oldName != null && oldName.equals(newName) == false){//if had a name previously
-				if(plugin.renameHorse(oldName, newName) == false){
-					p.sendMessage(ChatColor.RED+"HorseRenameEvent cancelled by a plugin");
-					COMMAND_SUCCESS = false;
-					return false;
-				}
-				p.sendMessage(ChatColor.GREEN+"Successfully renamed " + ChatColor.GRAY + ChatColor.ITALIC + oldName
-						+ ChatColor.GREEN + " to " + ChatColor.GRAY + ChatColor.ITALIC + newName + ChatColor.GREEN + "!");
-				h.setCustomName(newName);//Change name
-				COMMAND_SUCCESS = true;
-				return true;
-			}
-			h.setCustomName(newName);//Set name
 		}
-		else if(oldName == null){
-			p.sendMessage(ChatColor.RED+"Please supply a name for this horse\n"+ChatColor.GRAY+command.getUsage());
-			COMMAND_SUCCESS = false;
-			return false;
-		}
-		else if(isOwner){
-			p.sendMessage(ChatColor.GRAY+"You already own this horse");
-			COMMAND_SUCCESS = false;
-			return true;
+		else{
+			String newName = StringUtils.join(args, ' ');
+			switch(attemptNameHorse(sender, h, newName)){
+				case FAILED: COMMAND_SUCCESS = false; return true;
+				case FAILED_HINT: COMMAND_SUCCESS = false; return false;
+				case RENAMED: COMMAND_SUCCESS = true; return true;
+				case NAMED: default: break;
+			}
 		}
 
 		//My horsie!
