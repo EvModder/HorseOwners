@@ -1,6 +1,8 @@
 package net.evmodder.HorseOwners.commands;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
@@ -18,11 +20,12 @@ import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class CommandInspectHorse extends HorseCommand{
-	final boolean INSPECT_UNTAMED, INSPECT_UNCLAIMED;
+	final boolean INSPECT_UNTAMED, INSPECT_UNCLAIMED, ONLY_ONE_HORSE_TYPE;
 	public CommandInspectHorse(){
 		HorseManager pl = HorseManager.getPlugin();
 		INSPECT_UNTAMED = pl.getConfig().getBoolean("inspect-untamed", true);
 		INSPECT_UNCLAIMED = pl.getConfig().getBoolean("inspect-unclaimed", true);
+		ONLY_ONE_HORSE_TYPE = pl.getConfig().getStringList("valid-horses").size() < 2;// 0 or 1
 	}
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -44,8 +47,7 @@ public class CommandInspectHorse extends HorseCommand{
 		return null;
 	}
 
-	@Override
-	public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
+	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm inspect [horse]
 		Player p = (sender instanceof Player) ? (Player)sender : null;
 		Entity horse = null;
@@ -102,6 +104,7 @@ public class CommandInspectHorse extends HorseCommand{
 		//Yay got to here! Now what's it worth?
 		String displayName, ownerName, tamerName, typeName;
 		double speed = -1, jump = -1; int health = -1;
+		long age = -1, claim_timestamp = -1;
 		int[] rank = null;
 		List<String> parents;
 		Integer locX, locZ;
@@ -128,6 +131,8 @@ public class CommandInspectHorse extends HorseCommand{
 			jump = plugin.getHorseJump(horseName);
 			health = plugin.getHorseHealth(horseName);
 			parents = plugin.getHorseParents(horseName);
+			age = plugin.getHorseAge(horseName);
+			claim_timestamp = plugin.getHorseClaimTime(horseName);
 			if(sender.hasPermission("horseowners.inspect.rankings")) rank = plugin.getRankings(horseName);
 		}
 		else{
@@ -144,13 +149,16 @@ public class CommandInspectHorse extends HorseCommand{
 			locX = horse.getLocation().getBlockX();
 			locZ = horse.getLocation().getBlockZ();
 			typeName = EvUtils.capitalizeAndSpacify(horse.getType().name(), '_');
+			Long status_or_claim_ts = HorseLibrary.getTimeClaimed(horse);
+			if(status_or_claim_ts != null) claim_timestamp = status_or_claim_ts;
+			age = horse.getTicksLived()*50L;
 		}
 
 		//Build info message
 		StringBuilder builder = new StringBuilder("\n");
 		if(sender.hasPermission("horseowners.inspect.name")) builder.append("§7Name: §f").append(displayName);
 		//TODO: hide if there is only 1 claimable type
-		if(typeName != null && sender.hasPermission("horseowners.inspect.type"))
+		if(!ONLY_ONE_HORSE_TYPE && typeName != null && sender.hasPermission("horseowners.inspect.type"))
 			builder.append("\n§7Species: §6").append(typeName);
 
 		if(speed > 0 && sender.hasPermission("horseowners.inspect.speed")){
@@ -176,6 +184,13 @@ public class CommandInspectHorse extends HorseCommand{
 				if(rank[4] != rank[5]) builder.append('-').append(rank[5]);
 				builder.append("§7]");
 			}
+		}
+		if(age > 0 && sender.hasPermission("horseowners.inspect.age")){
+			builder.append("\n§7Age: §f").append(EvUtils.formatTime(age, ChatColor.WHITE, ChatColor.RED));
+		}
+		if(claim_timestamp > 0 && sender.hasPermission("horseowners.inspect.claimtime")){
+			String formatted_date = new SimpleDateFormat("MMM.dd, YYYY").format(new Date(claim_timestamp));
+			builder.append("\n§7Claimed: §f").append(formatted_date);
 		}
 		if(sender.hasPermission("horseowners.inspect.tamer")){
 			builder.append("\n§7Tamer: §f").append(tamerName);

@@ -22,8 +22,15 @@ commands:
    claimhorse:
       description: Claim your steed
       usage: /hm claim [name]
-      aliases: [nhorse,namehorse,renamehorse,myhorse,nh]
+      aliases: [nhorse,namehorse,myhorse,nh]
       permission: horseowners.claim
+      permission-message: You do not have permission to do this.
+
+   renamehorse:
+      description: Rename an *already claimed* horse
+      usage: /hm claim [name]
+      aliases: [rhorse,reclaimhorse]
+      permission: horseowners.rename
       permission-message: You do not have permission to do this.
 
    copyhorse:
@@ -111,6 +118,26 @@ permissions:
       description: Allow all formats when naming a horse.
       default: false
 
+   horseowners.claim.remote:
+      description: Permission to claim a horse remotely, by using its existing name
+      default: op
+
+   horseowners.rename:
+      description: Permission to rename claimed horses.
+      default: true
+
+   horseowners.rename.remote:
+      description: Permission to rename a horse remotely, by using its existing name
+      default: op
+
+   horseowners.rename.others:
+      description: Permission to rename other people's horses
+      default: op
+
+   horseowners.rename.unclaimed:
+      description: Permission to rename unclaimed horses
+      default: op
+
    horseowners.copy:
       description: Permission to copy horses
       default: op
@@ -140,7 +167,7 @@ permissions:
       default: op
 
    horseowners.list.unclaimed:
-      description: The ability to see a list of even the unclaimed horses
+      description: The ability to see a list including even the unclaimed horses
       default: op
 
    horseowners.lock:
@@ -209,12 +236,24 @@ permissions:
       description: Ability to view a horse's max health
       default: op
 
+   horseowners.inspect.health:
+      description: Ability to view a horse's max health
+      default: op
+
+   horseowners.inspect.age:
+      description: Ability to view a horse's age
+      default: op
+
+   horseowners.inspect.claimtime:
+      description: Ability to view when a horse was claimed
+      default: op
+
    horseowners.inspect.lineage:
       description: Ability to view a horse's lineage
       default: op
 
    horseowners.inspect.coords:
-      description: Ability to look up a horse's location
+      description: Ability to lookup a horse's location
       default: op
 
    horseowners.inspect:
@@ -227,7 +266,10 @@ permissions:
          horseowners.inspect.jump: true
          horseowners.inspect.speed: true
          horseowners.inspect.health: true
+         horseowners.inspect.age: true
+         horseowners.inspect.claimtime: false
          horseowners.inspect.lineage: true
+         horseowners.inspect.coords: false
       default: op
 
    horseowners.inspect.others:
@@ -250,6 +292,11 @@ permissions:
          horseowners.override: true
          horseowners.commands: true
          horseowners.claim: true
+         horseowners.claim.remote: true
+         horseowners.rename: true
+         horseowners.rename.remote: true
+         horseowners.rename.others: true
+         horseowners.rename.unclaimed: true
          horseowners.coloredname: true
          horseowners.allformats: true
          horseowners.unleash: true
@@ -258,6 +305,8 @@ permissions:
          horseowners.crossworld.anywhere: true
          horseowners.crossworld.samegamemode: true
          horseowners.inspect: true
+         horseowners.inspect.claimtime: true
+         horseowners.inspect.coords: true
          horseowners.inspect.others: true
          horseowners.inspect.untamed: true
          horseowners.spawn: true

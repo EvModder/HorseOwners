@@ -48,7 +48,7 @@ public class CommandSpawnHorse extends HorseCommand{
 		final List<String> tabCompletes = new ArrayList<String>();
 		final List<String> flagVals = flags.get(flag);
 		if(flagVals != null) for(String flagVal : flagVals){
-			if(flagVal.startsWith(arg)) tabCompletes.add(flagVal);
+			if(flagVal.toLowerCase().startsWith(arg)) tabCompletes.add(flagVal);
 		}
 		else if(flag.equals("tamer:") || flag.equals("owner:")){
 			tabCompletes.add(flag);
