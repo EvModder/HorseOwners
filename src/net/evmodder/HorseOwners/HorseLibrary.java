@@ -3,7 +3,9 @@ package net.evmodder.HorseOwners;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,6 +17,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.metadata.FixedMetadataValue;
+import net.evmodder.EvLib.util.Pair;
 
 public class HorseLibrary {
 //	public static SpeedCalculator speedCalc = new SpeedCalculator(/*org.bukkit.Bukkit.getBukkitVersion()*/);
@@ -194,11 +197,16 @@ public class HorseLibrary {
 	public static SpawnReason getSpawnReason(Entity horse){
 		return horse.hasMetadata("spawn_ts") ? (SpawnReason)horse.getMetadata("spawn_reason").get(0).value() : null;
 	}
-	public static void setTimeClaimed(Entity horse, long timestamp){
-		horse.setMetadata("claim_ts", new FixedMetadataValue(HorseManager.getPlugin(), timestamp));
+	public static void setClaimedBy(Entity horse, UUID ownerUUID, long timestamp){
+		Pair<UUID, Long> claim_value = new Pair<>(ownerUUID, timestamp);
+		horse.setMetadata("claimed_by", new FixedMetadataValue(HorseManager.getPlugin(), claim_value));
 	}
+	@SuppressWarnings("unchecked")
 	public static Long getTimeClaimed(Entity horse){
-		return horse.hasMetadata("claim_ts") ? horse.getMetadata("claim_ts").get(0).asLong() : null;
+		if(!horse.hasMetadata("claimed_by")) return null;
+		Optional<Long> timestamp = horse.getMetadata("claimed_by").stream()
+				.map(metadata_val -> ((Pair<UUID, Long>)metadata_val.value()).b).max(Long::compare);
+		return timestamp.isPresent() ? timestamp.get() : null;
 	}
 
 	public static double getNormalSpeed(Attributable horse){

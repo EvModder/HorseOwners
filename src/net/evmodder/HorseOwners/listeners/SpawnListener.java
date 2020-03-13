@@ -34,7 +34,7 @@ public class SpawnListener implements Listener{
 				case SPAWNER_EGG:
 				case DISPENSE_EGG:
 				case LIGHTNING:
-				case NATURAL:
+				case NATURAL:// DEFAULT, CUSTOM
 				case BREEDING:
 					break;
 				default:

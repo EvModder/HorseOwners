@@ -30,12 +30,15 @@ import net.evmodder.HorseOwners.api.events.HorseRenameEvent;
 import net.evmodder.HorseOwners.commands.*;
 import net.evmodder.HorseOwners.listeners.*;
 
-//TODO: Make inbred mutation relative to % DNA shared (look online for calculation)
-//TODO: add /hm rename <a> <b> with perm for renaming without riding
-//TODO: store age/claim-date (sort /hm list by claim date | show in /hm inspect with perm)
-//TODO: /hm list by type (eg: /hm list type:DONKEY -> list donkeys only)
+//OBSOLETE: Make inbred mutation relative to % DNA shared (look online for calculation) // Using simulated DNA
+//OBSOLETE: Display spawn reason in /hm inspect (
+//DONE-TEST: add /hm rename <a> <b> with perm for renaming without riding
+//DONE-TEST: Display age in /hm inspect
+//TODO: /hm list by type (eg: /hm list type:DONKEY -> list donkeys only) AND/OR sort /hm list (by claim date?)
 //TODO: fix tab-complete for /hm spawn
 //TODO: BreedListener (above natural limits)
+//TODO: Add 'isClean' bool to args for all library calls to skip cleanName
+//TODO: Enable remote claiming
 public final class HorseManager extends EvPlugin{
 	private static HorseManager plugin; public static HorseManager getPlugin(){return plugin;}
 
@@ -43,7 +46,8 @@ public final class HorseManager extends EvPlugin{
 	private Set<EntityType> claimableTypes;
 	private YamlConfiguration horses;
 	private Map<UUID, Set<String>> horseOwnersMap;
-	private boolean saveCoords, saveStats, saveLineage,/* saveLeashes,*/ rankUnclaimed, safeEditing;
+	private boolean saveCoords, saveStats, saveLineage, saveAge=true, saveClaimHistory/*, saveLeashes,*/;
+	private boolean rankUnclaimed, safeEditing;
 	private IndexTreeMultiMap<Double, String> topSpeed;
 	private IndexTreeMultiMap<Double, String> topJump;
 	private IndexTreeMultiMap<Integer, String> topHealth;
@@ -168,11 +172,12 @@ public final class HorseManager extends EvPlugin{
 		new CommandShadowfax();
 		new CommandSpawnHorse();
 		if(config.getBoolean("rank-claimed-horses", false)) new CommandRankHorse();
+		new CommandRenameHorse();
 		new CommandUnleashHorse();
 	}
 
 	//--------------- Member functions ------------------------------------------------------
-	//TODO: Move into a library
+	//TODO: Move into an API
 	public Set<String> getAllClaimedHorses(){
 		Set<String> horseList = new HashSet<String>();
 		for(Set<String> horses : horseOwnersMap.values()) horseList.addAll(horses);
@@ -190,10 +195,8 @@ public final class HorseManager extends EvPlugin{
 	public boolean canAccess(Player p, String horseName){
 		if(horseName == null) return true;
 		horseName = HorseLibrary.cleanName(horseName);
-		boolean isOwner = horseOwnersMap.containsKey(p.getUniqueId())
-					&& HorseLibrary.containsIgnoreCaseAndColor(horseOwnersMap.get(p.getUniqueId()), horseName);
 		
-		if(isOwner) return true;
+		if(isOwner(p.getUniqueId(), horseName)) return true;
 		else if(isClaimedHorse(horseName) == false) return true;
 		else if(p.hasPermission("horseowners.override")){
 			p.sendMessage(ChatColor.GRAY+"Owner override");
@@ -204,10 +207,8 @@ public final class HorseManager extends EvPlugin{
 	public boolean canAccess(UUID playerUUID, String horseName){
 		if(horseName == null) return true;
 		horseName = HorseLibrary.cleanName(horseName);
-		boolean isOwner = horseOwnersMap.containsKey(playerUUID)
-				&& HorseLibrary.containsIgnoreCaseAndColor(horseOwnersMap.get(playerUUID), horseName);
 		
-		if(isOwner) return true;
+		if(isOwner(playerUUID, horseName)) return true;
 		else if(isClaimedHorse(horseName) == false) return true;
 		else{
 			Player p = getServer().getPlayer(playerUUID);
@@ -220,8 +221,9 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	public boolean isOwner(UUID uuid, String horseName){
-		return horseName != null && horseOwnersMap.containsKey(uuid) && HorseLibrary
-				.containsIgnoreCaseAndColor(horseOwnersMap.get(uuid), HorseLibrary.cleanName(horseName));
+		final Set<String> horseOwner;
+		return horseName != null && (horseOwner = horseOwnersMap.get(uuid)) != null
+				&& HorseLibrary.containsIgnoreCaseAndColor(horseOwner, HorseLibrary.cleanName(horseName));
 	}
 
 	public boolean isLockedHorse(String horseName){
@@ -243,7 +245,7 @@ public final class HorseManager extends EvPlugin{
 		return horses.isConfigurationSection(HorseLibrary.cleanName(horseName));
 	}
 
-	public boolean addClaimedHorse(UUID playerUUID, Entity horse){
+	public boolean addClaimedHorse(UUID playerUUID, Entity horse){// Or reclaim existing horse
 		if(horse.getCustomName() == null) return false;
 
 		HorseClaimEvent horseClaimEvent = new HorseClaimEvent(horse, playerUUID, horse.getCustomName());
@@ -251,15 +253,18 @@ public final class HorseManager extends EvPlugin{
 		if(horseClaimEvent.isCancelled()) return false;
 
 		String cleanName = HorseLibrary.cleanName(horse.getCustomName());
+		long timestamp_now = System.currentTimeMillis();
 
 		boolean newlyClaimed = true;
-		if(horseOwnersMap.containsKey(playerUUID)) newlyClaimed = horseOwnersMap.get(playerUUID).add(cleanName);
+		Set<String> myHorses = horseOwnersMap.get(playerUUID);
+		if(myHorses != null) newlyClaimed = myHorses.add(cleanName);
 		else horseOwnersMap.put(playerUUID, new HashSet<String>(Arrays.asList(cleanName)));
-		if(newlyClaimed) HorseLibrary.setTimeClaimed(horse, System.currentTimeMillis());
+		if(newlyClaimed) HorseLibrary.setClaimedBy(horse, playerUUID, timestamp_now);
 
 		if(safeEditing) loadHorses();
 		updateData(horse);
 		horses.set(cleanName+".owner", playerUUID.toString());
+		if(saveClaimHistory) horses.set(cleanName+".claim-ts", timestamp_now);
 		saveHorses();
 		return newlyClaimed;
 	}
@@ -278,9 +283,9 @@ public final class HorseManager extends EvPlugin{
 		return wasUnclaimed;
 	}
 
-	public boolean renameHorse(String oldNameRaw, String newNameRaw){
-		String oldName = HorseLibrary.cleanName(oldNameRaw);
-		oldNameRaw = horses.getString(oldName+".name", oldName); //Don't trust caller to give oldNameRaw
+	public boolean renameHorse(String oldName, String newNameRaw){
+		oldName = HorseLibrary.cleanName(oldName);
+		String oldNameRaw = horses.getString(oldName+".name", oldName); //Don't trust caller to give oldNameRaw
 		if(oldNameRaw.equals(newNameRaw)) return false;
 		String newName = HorseLibrary.cleanName(newNameRaw);
 		if(horses.isConfigurationSection(newName)) return false;
@@ -466,6 +471,7 @@ public final class HorseManager extends EvPlugin{
 			data.set("chunk-z", h.getLocation().getChunk().getZ());
 		}
 		if(saveLineage) updateLineage(h, data);
+		if(saveAge) data.set("age", h.getTicksLived()*50);
 
 		if(h instanceof Tameable) updateTameable((Tameable)h, data);
 		//if(h instanceof LivingEntity) updateLivingEntity((LivingEntity)h, data);
@@ -544,6 +550,16 @@ public final class HorseManager extends EvPlugin{
 		horseName = HorseLibrary.cleanName(horseName);
 		if(!saveStats || !horses.contains(horseName)) return -1;
 		return horses.getConfigurationSection(horseName).getInt("health", -1);
+	}
+	public long getHorseAge(String horseName){
+		horseName = HorseLibrary.cleanName(horseName);
+		if(!saveAge || !horses.contains(horseName)) return -1;
+		return horses.getConfigurationSection(horseName).getLong("age", -1);
+	}
+	public long getHorseClaimTime(String horseName){
+		horseName = HorseLibrary.cleanName(horseName);
+		if(!saveClaimHistory || !horses.contains(horseName)) return -1;
+		return horses.getConfigurationSection(horseName).getLong("claim-ts", -1);
 	}
 	public EntityType getHorseType(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
