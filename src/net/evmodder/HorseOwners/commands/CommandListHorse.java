@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -14,6 +13,8 @@ import net.evmodder.EvLib.extras.TabText;
 import net.evmodder.EvLib.extras.TextUtils;
 
 public class CommandListHorse extends HorseCommand{
+	//TODO: enum OrderBy{ NAME, AGE, CLAIM_TS }; ?
+
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length == 1){
 			args[0] = args[0].toLowerCase();
@@ -93,21 +94,24 @@ public class CommandListHorse extends HorseCommand{
 		}
 		Collections.sort(rawNames, String.CASE_INSENSITIVE_ORDER);
 
-		int numCols = monospaced
-				? (TextUtils.MAX_MONO_WIDTH+2) / (maxHorseNameLen+4) //4=',  '+1buffer
-				: (TextUtils.MAX_PIXEL_WIDTH+8) / (maxHorseNameLen+11); //10=',  '+1buffer
+		int numCols = monospaced ? (TextUtils.MAX_MONO_WIDTH + 2) / (maxHorseNameLen + 4) // 4=',
+																							// '+1buffer
+				: (TextUtils.MAX_PIXEL_WIDTH + 8) / (maxHorseNameLen + 11); // 10=',
+																			// '+1buffer
 		if(numCols == 0) numCols = 1;
 
 		StringBuilder builder = new StringBuilder("");
-		int nameSep = (rawNames.size()+numCols-1)/numCols;
-		for(int i=0; i<nameSep; ++i){
+		int nameSep = (rawNames.size() + numCols - 1) / numCols;
+		for(int i = 0; i < nameSep; ++i){
 			builder.append("§f").append(rawNames.get(i)).append("§a,");
-			for(int col=1; col<numCols && i+col*nameSep < rawNames.size(); ++col){
-				builder.append("  `§f").append(rawNames.get(i+col*nameSep)).append("§a,");
+			for(int col = 1; col < numCols && i + col * nameSep < rawNames.size(); ++col){
+				builder.append("  `§f").append(rawNames.get(i + col * nameSep)).append("§a,");
 			}
 			builder.append('\n');
 		}
-		int[] tabs = new int[numCols]; Arrays.fill(tabs, maxHorseNameLen+11); tabs[numCols-1] = 0;
+		int[] tabs = new int[numCols];
+		Arrays.fill(tabs, maxHorseNameLen + 11);
+		tabs[numCols - 1] = 0;
 		StringBuilder result = new StringBuilder(TabText.parse(builder.toString(), monospaced, false, tabs));
 		if(horses.size() > 9) result.append("§7Total: §f").append(horses.size());
 		return result.toString();
@@ -115,8 +119,11 @@ public class CommandListHorse extends HorseCommand{
 
 	void listAllHorses(CommandSender sender){
 		boolean monospaced = !(sender instanceof Player);
-		Set<String> horseList = sender.hasPermission("horseowners.list.unclaimed") ?
-				plugin.getAllHorses() : plugin.getAllClaimedHorses();
+		ArrayList<String> horseList = new ArrayList<String>();
+		horseList.addAll(sender.hasPermission("horseowners.list.unclaimed") ?
+				plugin.getAllHorses() : plugin.getAllClaimedHorses());
+		Collections.sort(horseList, String.CASE_INSENSITIVE_ORDER);
+
 		sender.sendMessage("§a§m}{§e§m            §7 [§aAll Horses§7] §e§m            §a§m}{");
 		StringBuilder builder = new StringBuilder();
 		int maxHorseNameLen = 0, maxOwnerNameLen = 0;
