@@ -18,10 +18,12 @@ public class BreedListener implements Listener{
 	private HorseManager plugin;
 	enum ParentType{ MOTHER, FATHER, RANDOM };
 	final boolean saveLineage, nameAtBirth, tameAtBirth, claimAtBirth, tweakStatsAtBirth, inbredMutation;
-	final int INBRED_MUT_DIST;
+	//final int INBRED_MUT_DIST;
+	final int INBRED_THRESHOLD;
 	ParentType ownerAtBirth;
 	final double MAX_JUMP, MAX_SPEED, MAX_HEALTH; // Not normalized
 	final double MIN_JUMP = 0.4D, MIN_SPEED = 0.1125D, MIN_HEALTH = 15;
+
 	final String[] horseNameList;
 	final Random rand;
 
@@ -33,7 +35,8 @@ public class BreedListener implements Listener{
 		claimAtBirth = plugin.getConfig().getBoolean("claim-at-birth", true);
 		tweakStatsAtBirth = plugin.getConfig().getBoolean("extra-random-factor-at-birth", false);
 		inbredMutation = plugin.getConfig().getBoolean("inbred-mutations", true);
-		INBRED_MUT_DIST = plugin.getConfig().getInt("inbred-mutation-distance", 2);
+		//INBRED_MUT_DIST = plugin.getConfig().getInt("inbred-mutation-distance", 2);
+		INBRED_THRESHOLD = plugin.getConfig().getInt("inbred-threshold-percent");
 		try{ownerAtBirth = ParentType.valueOf(plugin.getConfig()
 				.getString("owner-at-birth-is-owner-of", "RANDOM").toUpperCase());}
 		catch(IllegalArgumentException ex){ownerAtBirth = ParentType.RANDOM;}
@@ -131,17 +134,17 @@ public class BreedListener implements Listener{
 		//Do above, but smooth curve (point1=min, point2=max, point3=parent)
 		//jump
 		double jump = horse.getJumpStrength();
-		if(tweakStatsAtBirth) jump *= ((rand.nextInt(9)+95)/100.0);//remove up to 5% or add up to 3% of the speed
+		if(tweakStatsAtBirth) jump *= ((rand.nextInt(6)+97)/100.0);//remove up to 3% or add up to 2% of the speed
 		if(MAX_JUMP != -1 && jump > MAX_JUMP) jump = MAX_JUMP;
 		horse.setJumpStrength(jump);
 		//speed
 		double speed = horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue();
-		if(tweakStatsAtBirth) speed *= ((rand.nextInt(9)+95)/100.0);//remove up to 5% or add up to 3% of the speed
+		if(tweakStatsAtBirth) speed *= ((rand.nextInt(6)+97)/100.0);//remove up to 3% or add up to 2% of the speed
 		if(MAX_SPEED != -1 && speed > MAX_SPEED) speed = MAX_SPEED;
 		horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
 		//health
 		double health = horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
-		if(tweakStatsAtBirth) health *= ((rand.nextInt(9)+95)/100.0);//remove up to 5% or add up to 3% of the health
+		if(tweakStatsAtBirth) health *= ((rand.nextInt(6)+97)/100.0);//remove up to 3% or add up to 2% of the health
 		if(MAX_HEALTH != -1 && health > MAX_HEALTH) health = MAX_HEALTH;
 		horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
 		horse.setHealth(health);
@@ -213,24 +216,28 @@ public class BreedListener implements Listener{
 				h.setMetadata("DNA", new FixedMetadataValue(plugin, dna));
 			}
 			if(inbredMutation){
-				int overlapPercent = getGeneticOverlap(evt.getMother(), evt.getFather());
+				int overlapPercent = getGeneticOverlap(evt.getMother(), evt.getFather()); // [0,100]
 				plugin.getLogger().info("Genetic overlap of bred horses: "+overlapPercent+"%");
-				//remove up to 40% of the jump or add up to 2% of the jump
-				double percentMod = (((rand.nextInt(43)+60)*overlapPercent)/100D);
-				double jump = h.getJumpStrength() * percentMod;
-				h.setJumpStrength(jump);
-
-				//remove up to 40% of the speed or add up to 2% of the speed
-				percentMod = (((rand.nextInt(43)+60)*overlapPercent)/100D);
-				double speed = h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue() * percentMod;
-				h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
-
-				//remove up to 60% of the health or add up to 3% of the health
-				percentMod = (((rand.nextInt(64)+40)*overlapPercent)/100D);
-				double health = h.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * percentMod;
-				h.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
-				h.setHealth(health);
-				plugin.getLogger().info("Mutated jump/speed/health: "+jump+" / "+speed+" / "+health);
+				if(overlapPercent > INBRED_THRESHOLD){
+					double overlapMod = 1D + (overlapPercent/100D);
+	
+					//remove up to 40% of the jump or add up to 2% of the jump (100% overlap => 80%, 4%)
+					double percentMod = ((rand.nextInt(43)+60)/100D)*overlapMod;
+					double jump = h.getJumpStrength() * percentMod;
+					h.setJumpStrength(jump);
+	
+					//remove up to 40% of the speed or add up to 2% of the speed (100% overlap => 80%, 4%)
+					percentMod = ((rand.nextInt(43)+60)/100D)*overlapMod;
+					double speed = h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue() * percentMod;
+					h.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
+	
+					//remove up to 50% of the health or add up to 3% of the health (100% overlap => 100%, 6%)
+					percentMod = ((rand.nextInt(54)+50)/100D)*overlapMod;
+					double health = h.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * percentMod;
+					h.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
+					h.setHealth(health);
+					plugin.getLogger().info("Mutated jump/speed/health: "+jump+" / "+speed+" / "+health);
+				}
 			}
 			tweakAndLimitAttributes(h);
 			plugin.updateData(h);

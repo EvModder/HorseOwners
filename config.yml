@@ -68,9 +68,9 @@ claim-on-tame: true
 # Puts an upper limit on the stats of NATURALLY spawned/bred horses.
 # Default(vanilla) values: jump=5.29, speed=14.5125, health=30
 # Set to -1 disable limiting
-max-jump: -1
-max-speed: -1
-max-health: -1
+max-jump: 5.5
+max-speed: 15
+max-health: 30
 
 # Should the server keep track of horses' parents?
 # WARNING: Setting to false will clear existing lineage data
@@ -90,6 +90,9 @@ extra-random-factor-at-birth: true
 # Increases the random mutation effect when breeding closely related horses.
 # This makes it a bit harder to improve physical stats through inbreeding.
 inbred-mutations: true
+
+# % DNA overlap required for inbred mutations to occur [1-100].
+inbred-threshold-percent: 7
 
 # If a foal's parents are owned by different players, who does it belong to?
 # Possible values: MOTHER, FATHER, and RANDOM. Requires claim-at-birth: true
