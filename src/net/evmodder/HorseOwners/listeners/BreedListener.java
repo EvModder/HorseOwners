@@ -36,7 +36,7 @@ public class BreedListener implements Listener{
 		tweakStatsAtBirth = plugin.getConfig().getBoolean("extra-random-factor-at-birth", false);
 		inbredMutation = plugin.getConfig().getBoolean("inbred-mutations", true);
 		//INBRED_MUT_DIST = plugin.getConfig().getInt("inbred-mutation-distance", 2);
-		INBRED_THRESHOLD = plugin.getConfig().getInt("inbred-threshold-percent");
+		INBRED_THRESHOLD = plugin.getConfig().getInt("inbred-threshold-percent", 7);
 		try{ownerAtBirth = ParentType.valueOf(plugin.getConfig()
 				.getString("owner-at-birth-is-owner-of", "RANDOM").toUpperCase());}
 		catch(IllegalArgumentException ex){ownerAtBirth = ParentType.RANDOM;}
