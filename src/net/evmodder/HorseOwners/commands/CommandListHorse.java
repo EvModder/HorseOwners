@@ -21,7 +21,7 @@ public class CommandListHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			tabCompletes.add("all");
 			for(Player p : plugin.getServer().getOnlinePlayers()){
-				if(p.getName().startsWith(args[0])){
+				if(p.getName().toLowerCase().startsWith(args[0])){
 					tabCompletes.add(p.getName());
 					if(tabCompletes.size() == 20) break;
 				}
