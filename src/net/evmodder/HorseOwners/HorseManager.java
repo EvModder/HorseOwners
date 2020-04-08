@@ -334,6 +334,7 @@ public final class HorseManager extends EvPlugin{
 		if(myHorses != null && myHorses.remove(horseName)){
 			if(safeEditing) loadHorses();
 			if(removeCompletely){
+				getLogger().info("Removing all horse data for: "+horseName);
 				ConfigurationSection cs = horses.getConfigurationSection(horseName);
 				topSpeed.remove(cs.getDouble("speed", -1), horseName);
 				topJump.remove(cs.getDouble("jump", -1), horseName);

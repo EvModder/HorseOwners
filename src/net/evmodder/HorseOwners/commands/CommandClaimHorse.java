@@ -86,10 +86,19 @@ public class CommandClaimHorse extends HorseCommand{
 		}
 
 		if(oldName != null && oldName.equals(newName) == false){//if had a name previously
+			boolean needToClaimFirst = (sender instanceof Player && !plugin.isOwner(((Player)sender).getUniqueId(), oldName));
+			if(needToClaimFirst && plugin.addClaimedHorse(((Player)sender).getUniqueId(), horse) == false){
+				sender.sendMessage(ChatColor.RED+"HorseClaimEvent cancelled by a plugin");
+				COMMAND_SUCCESS = false;
+				return RenameResult.FAILED_HINT;
+			}
 			if(plugin.renameHorse(oldName, newName) == false){
 				sender.sendMessage(ChatColor.RED+"HorseRenameEvent cancelled by a plugin");
 				return RenameResult.FAILED_HINT;
 			}
+
+			if(needToClaimFirst) sender.sendMessage(ChatColor.GREEN+"Successfully claimed "+ ChatColor.GRAY + ChatColor.ITALIC + oldName
+					+ ChatColor.GREEN + " as your horse!");
 			sender.sendMessage(ChatColor.GREEN+"Successfully renamed " + ChatColor.GRAY + ChatColor.ITALIC + oldName
 					+ ChatColor.GREEN + " to " + ChatColor.GRAY + ChatColor.ITALIC + newName + ChatColor.GREEN + "!");
 			horse.setCustomName(newName);//Change name
