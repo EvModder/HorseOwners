@@ -83,8 +83,15 @@ commands:
 
    spawnhorse:
       description: Spawn a custom horse
-      usage: /hm spawn [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [-tamed]
+      usage: /hm spawn [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [r:tamer] [baby]
       permission: horseowners.spawn
+      permission-message: You do not have permission to do this.
+
+   edithorse:
+      description: Edit attributes for an existing horse
+      usage: /hm edit [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [r:tamer] [baby]
+      aliases: [modifyhorse,tweakhorse,changehorse]
+      permission: horseowners.edit
       permission-message: You do not have permission to do this.
 
    rankhorse:
@@ -110,15 +117,15 @@ permissions:
       description: Permission to claim horses.
       default: true
 
-   horseowners.claim.coloredname:
-      description: Allow colors and basic formats when naming a horse.
+   horseowners.claim.colors:
+      description: Allow colors when naming a horse.
       default: false
 
-   horseowners.claim.allformats:
-      description: Allow all formats when naming a horse.
+   horseowners.claim.formats:
+      description: Allow formats when naming a horse.
       default: false
 
-   horseowners.claim.remote:
+   horseowners.claim.remote: #TODO: NOT IMPLEMENTED YET
       description: Permission to claim a horse remotely, by using its existing name
       default: op
 
@@ -182,12 +189,16 @@ permissions:
       description: The ability to spawn a custom horse.
       default: op
 
+   horseowners.edit:
+      description: The ability to edit a horse's attributes
+      default: op
+
    horseowners.ranklist:
-      description: The ability to view a stat ranklist of all horses
+      description: The ability to view a ranked leaderboard of all horses
       default: true
 
    horseowners.unleash:
-      description: Unleash a horse (useful when the leadhitch doesn't render)
+      description: Unleash a horse (useful when the lead doesn't render)
       default: true
 
 
@@ -252,6 +263,10 @@ permissions:
       description: Ability to view a horse's lineage
       default: op
 
+   horseowners.inspect.dna:
+      description: Ability to view a horse's lineage
+      default: op
+
    horseowners.inspect.coords:
       description: Ability to lookup a horse's location
       default: op
@@ -260,6 +275,7 @@ permissions:
       description: The ability to view a horse's stats
       children:
          horseowners.inspect.name: true
+#        horseowners.inspect.type: false
          horseowners.inspect.rankings: true
          horseowners.inspect.owner: true
          horseowners.inspect.tamer: true
@@ -267,9 +283,10 @@ permissions:
          horseowners.inspect.speed: true
          horseowners.inspect.health: true
          horseowners.inspect.age: true
-         horseowners.inspect.claimtime: false
+#        horseowners.inspect.claimtime: false
          horseowners.inspect.lineage: true
-         horseowners.inspect.coords: false
+#        horseowners.inspect.dna: false
+#        horseowners.inspect.coords: false
       default: op
 
    horseowners.inspect.others:

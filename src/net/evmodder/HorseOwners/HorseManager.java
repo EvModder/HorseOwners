@@ -34,11 +34,11 @@ import net.evmodder.HorseOwners.listeners.*;
 //OBSOLETE: Display spawn reason in /hm inspect (
 //DONE-TEST: add /hm rename <a> <b> with perm for renaming without riding
 //DONE-TEST: Display age in /hm inspect
+//DONE-TEST: BreedListener above natural limits
 //TODO: /hm list by type (eg: /hm list type:DONKEY -> list donkeys only) AND/OR sort /hm list (by claim date?)
-//TODO: fix tab-complete for /hm spawn
-//TODO: BreedListener (above natural limits)
 //TODO: Add 'isClean' bool to args for all library calls to skip cleanName
 //TODO: Enable remote claiming
+//TODO: /hm spawn from console (but must provide x,y,z)
 public final class HorseManager extends EvPlugin{
 	private static HorseManager plugin; public static HorseManager getPlugin(){return plugin;}
 
@@ -164,6 +164,7 @@ public final class HorseManager extends EvPlugin{
 		new CommandAllowRide();
 		new CommandClaimHorse();
 		new CommandCopyHorse();
+		new CommandEditHorse();
 		new CommandFreeHorse();
 		new CommandGetHorse();
 		new CommandInspectHorse();
