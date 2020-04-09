@@ -47,6 +47,18 @@ public class CommandInspectHorse extends HorseCommand{
 		return null;
 	}
 
+	private char[] dnaMap = new char[]{
+			'.', ',', ':', ';', 'i', '!', '|', '\'', '¡', '¦', '·', //'´', '¸', (11+2)
+			'`', 'l', '‚', '‘', '’', '•', 'ì', 'í', //'ˆ', '¨', (8+2)
+			'[', ']', '(', ')', '{', '}', '‹', '›', '°', '¹', //'˜', (10+1)
+			//'I', 't', 'Ì', 'Í', 'Î', 'Ï', 'î', 'ï', // (8)
+	};
+	private String condenseDNA(String dna){
+		char[] dnaChs = dna.toCharArray();
+		for(int i=0; i<dnaChs.length; ++i) dnaChs[i] = dnaMap[dnaChs[i] - 'a'];// Assumes all DNA are lowercase a-z
+		return new String(dnaChs);
+	}
+
 	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm inspect [horse]
 		Player p = (sender instanceof Player) ? (Player)sender : null;
@@ -107,12 +119,14 @@ public class CommandInspectHorse extends HorseCommand{
 		long age = -1, claim_timestamp = -1;
 		int[] rank = null;
 		List<String> parents;
+		String DNA = null;
 		Integer locX, locZ;
 		if(horseName != null){
 			if(horse != null){
 				plugin.updateData(horse);
 				locX = horse.getLocation().getBlockX();
 				locZ = horse.getLocation().getBlockZ();
+				if(horse.hasMetadata("DNA")) DNA = horse.getMetadata("DNA").get(0).asString();
 			}
 			else{
 				locX = plugin.getHorseBlockX(horseName);
@@ -146,6 +160,7 @@ public class CommandInspectHorse extends HorseCommand{
 				if(horse instanceof AbstractHorse) jump = HorseLibrary.getNormalJump((AbstractHorse)horse);
 			}
 			parents = plugin.getHorseParents(horse);
+			if(horse.hasMetadata("DNA")) DNA = horse.getMetadata("DNA").get(0).asString();
 			locX = horse.getLocation().getBlockX();
 			locZ = horse.getLocation().getBlockZ();
 			typeName = EvUtils.capitalizeAndSpacify(horse.getType().name(), '_');
@@ -200,6 +215,9 @@ public class CommandInspectHorse extends HorseCommand{
 		}
 		if(sender.hasPermission("horseowners.inspect.lineage") && parents != null && !parents.isEmpty()){
 			builder.append("\n§7Parents: §f").append(String.join("§7, §f", parents));
+		}
+		if(sender.hasPermission("horseowners.inspect.dna") && DNA != null){
+			builder.append("\n§7DNA: §f").append(condenseDNA(DNA));
 		}
 		if(sender.hasPermission("horseowners.inspect.coords") && locX != null){
 			builder.append("\n§7Location: §f").append(locX).append("§cx§7, §f").append(locZ).append("§cz");
