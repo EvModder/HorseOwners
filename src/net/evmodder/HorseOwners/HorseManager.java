@@ -453,6 +453,9 @@ public final class HorseManager extends EvPlugin{
 			double speed = HorseLibrary.getNormalSpeed(h);
 			double jump = HorseLibrary.getNormalJump(h);
 			int health = HorseLibrary.getNormalMaxHealth(h);
+			if(data.getDouble("speed", speed) != speed) topSpeed.remove(data.getName(), data.getDouble("speed", speed));
+			if(data.getDouble("jump", jump) != jump) topJump.remove(data.getName(), data.getDouble("jump", jump));
+			if(data.getInt("health", health) != health) topHealth.remove(data.getName(), data.getInt("health", health));
 			data.set("speed", speed);
 			data.set("jump", jump);
 			data.set("health", health);
