@@ -27,8 +27,8 @@ commands:
       permission-message: You do not have permission to do this.
 
    renamehorse:
-      description: Rename an *already claimed* horse
-      usage: /hm claim [name]
+      description: Rename an §nalready claimed§f horse
+      usage: /hm rename [name]
       aliases: [rhorse,reclaimhorse]
       permission: horseowners.rename
       permission-message: You do not have permission to do this.
@@ -83,14 +83,14 @@ commands:
 
    spawnhorse:
       description: Spawn a custom horse
-      usage: /hm spawn [flag:value, ...]
+      usage: /hm spawn [flag:value, …]
 #     usage: /hm spawn [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [r:tamer] [baby]
       permission: horseowners.spawn
       permission-message: You do not have permission to do this.
 
    edithorse:
-      description: Edit an existing horse's attributes
-      usage: /hm edit [flag:value, ...]
+      description: Edit the attributes of a horse
+      usage: /hm modify [flag:value, …]
 #     usage: /hm edit [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [r:tamer] [baby]
       aliases: [modifyhorse,tweakhorse,changehorse]
       permission: horseowners.edit
