@@ -71,7 +71,7 @@ public class CommandListHorse extends HorseCommand{
 		Arrays.fill(tabs, (monospaced ? TextUtils.MAX_MONO_WIDTH : TextUtils.MAX_PIXEL_WIDTH)/numCols);
 		tabs[numCols - 1] = 0;
 		StringBuilder result = new StringBuilder(TabText.parse(builder.toString(), monospaced, false, tabs));
-		if(horses.size() > 9) result.append("§7Total: §f").append(horses.size());
+		if(horses.size() > 9) result.append("§7Total: §f").append(horses.size()).append('\n');
 		return result.toString();
 	}
 	void listAllHorses(CommandSender sender){
