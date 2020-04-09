@@ -49,8 +49,10 @@ public class EditableHorseAttributesUtil{
 		flags.put("baby:", Arrays.asList("baby:true", "baby:false"));
 	}
 
-	public boolean addUnusableFlag(String flag){return unusableFlags.add(flag);}
-	public boolean removeUnusableFlag(String flag){return unusableFlags.remove(flag);}
+	public boolean addUnusableFlag(String flag){
+		return unusableFlags.add(flag) && unusableFlags.add(flag+":");}
+	public boolean removeUnusableFlag(String flag){
+		return unusableFlags.remove(flag) && unusableFlags.remove(flag+":");}
 
 	List<String> getFlagCompletions(String flag, String arg){
 		final List<String> tabCompletes = new ArrayList<String>();
