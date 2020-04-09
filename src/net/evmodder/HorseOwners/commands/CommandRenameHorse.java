@@ -41,8 +41,8 @@ public class CommandRenameHorse extends HorseCommand{
 		//cmd:	/hm rename [name]
 		if(sender instanceof Player){
 			Player p = (Player)sender;
-			if(!p.isInsideVehicle() || !plugin.isClaimableHorseType(p.getVehicle())){
-				return plugin.getCommand("claimhorse").getExecutor().onCommand(sender, command, label, args);
+			if(p.isInsideVehicle() && plugin.isClaimableHorseType(p.getVehicle())){
+				return claimHorseCommandExecutor.onHorseCommand(sender, command, label, args);
 			}
 		}
 		//cmd:	/hm rename <oldName> <newName>
@@ -52,8 +52,7 @@ public class CommandRenameHorse extends HorseCommand{
 			return true;
 		}
 		if(args.length < 2){
-			sender.sendMessage(ChatColor.RED+"Too few arguments!"
-							+ChatColor.GRAY+" (Please supply an old and a new name)");
+			sender.sendMessage(ChatColor.RED+"Too few arguments!"+ChatColor.GRAY+" (Please supply an old and a new name)");
 			COMMAND_SUCCESS = false;
 			return false;
 		}

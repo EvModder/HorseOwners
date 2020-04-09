@@ -390,15 +390,13 @@ public final class HorseManager extends EvPlugin{
 	}
 
 	public Entity findClaimedHorse(String horseName, World... worlds){
-		getLogger().info("called findClaimedHorse!");
-		getLogger().info("savecoords: "+saveCoords);
-		getLogger().info("havecoords: "+horses.contains((horseName = HorseLibrary.cleanName(horseName))+".chunk-x"));
-		if(saveCoords && horses.contains((horseName = HorseLibrary.cleanName(horseName))+".chunk-x")){
-			getLogger().info("Starting horse search...");
-
+		getLogger().info("called findClaimedHorse for: "+horseName);
+		horseName = HorseLibrary.cleanName(horseName);
+		if(saveCoords && horses.contains(horseName+".chunk-x")){
+			getLogger().info("Chunk coords found, starting horse search...");
 			int x = horses.getInt(horseName+".chunk-x"), z = horses.getInt(horseName+".chunk-z");
 
-			for(World world : (worlds == null ? getServer().getWorlds() : Arrays.asList(worlds))){
+			for(World world : (worlds == null || worlds.length == 0) ? getServer().getWorlds() : Arrays.asList(worlds)){
 				Chunk chunk = world.getChunkAt(x, z);
 				chunk.load(false);
 				getLogger().info("entities in chunk: "+chunk.getEntities().length);
