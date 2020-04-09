@@ -34,11 +34,13 @@ public class CommandClaimHorse extends HorseCommand{
 	enum RenameResult {FAILED, FAILED_HINT, RENAMED, NAMED};
 	public RenameResult attemptNameHorse(CommandSender sender, Entity horse, String newName){
 		if(alphanumeric) newName = newName.replaceAll("[:(),"+ChatColor.COLOR_CHAR+"<>{}\\-\\[\\]\\.'\"]", "");
-		if(sender.hasPermission("horseowners.coloredname")){
-			if(sender.hasPermission("horseowners.fullformats") == false){
-				newName = newName.replace("&k", "").replace("&m", "").replace("&n", "");
-			}
+		if(sender.hasPermission("horseowners.colors")){
 			newName = TextUtils.translateAlternateColorCodes('&', newName);
+			if(sender.hasPermission("horseowners.formats") == false) newName = TextUtils.stripFormatsOnly(newName);
+		}
+		else if(sender.hasPermission("horseowners.formats")){
+			newName = TextUtils.translateAlternateColorCodes('&', newName);
+			newName = TextUtils.stripColorsOnly(newName);
 		}
 		newName.replaceAll("\\s{2,}", " ").trim();//remove leftover spaces
 		int newNameLength = Math.max(ChatColor.stripColor(newName).length(), TextUtils.strLen(newName, false)/6);
