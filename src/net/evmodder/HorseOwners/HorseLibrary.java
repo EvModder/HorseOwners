@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import org.bukkit.ChatColor;
@@ -171,44 +172,6 @@ public class HorseLibrary {
 		else return false;
 	}*/
 
-	public static void setMother(Entity horse, String mother){
-		horse.setMetadata("mother", new FixedMetadataValue(HorseManager.getPlugin(), cleanName(mother)));
-	}
-	public static void setFather(Entity horse, String father){
-		horse.setMetadata("father", new FixedMetadataValue(HorseManager.getPlugin(), cleanName(father)));
-	}
-
-	public static String getMother(Entity horse){
-		return horse.hasMetadata("mother") ? horse.getMetadata("mother").get(0).asString() : null;
-	}
-	public static String getFather(Entity horse){
-		return horse.hasMetadata("father") ? horse.getMetadata("father").get(0).asString() : null;
-	}
-
-	public static void setTimeBorn(Entity horse, long timestamp){
-		horse.setMetadata("spawn_ts", new FixedMetadataValue(HorseManager.getPlugin(), timestamp));
-	}
-	public static Long getTimeBorn(Entity horse){
-		return horse.hasMetadata("spawn_ts") ? horse.getMetadata("spawn_ts").get(0).asLong() : null;
-	}
-	public static void setSpawnReason(Entity horse, SpawnReason reason){
-		horse.setMetadata("spawn_reason", new FixedMetadataValue(HorseManager.getPlugin(), reason));
-	}
-	public static SpawnReason getSpawnReason(Entity horse){
-		return horse.hasMetadata("spawn_ts") ? (SpawnReason)horse.getMetadata("spawn_reason").get(0).value() : null;
-	}
-	public static void setClaimedBy(Entity horse, UUID ownerUUID, long timestamp){
-		Pair<UUID, Long> claim_value = new Pair<>(ownerUUID, timestamp);
-		horse.setMetadata("claimed_by", new FixedMetadataValue(HorseManager.getPlugin(), claim_value));
-	}
-	@SuppressWarnings("unchecked")
-	public static Long getTimeClaimed(Entity horse){
-		if(!horse.hasMetadata("claimed_by")) return null;
-		Optional<Long> timestamp = horse.getMetadata("claimed_by").stream()
-				.map(metadata_val -> ((Pair<UUID, Long>)metadata_val.value()).b).max(Long::compare);
-		return timestamp.isPresent() ? timestamp.get() : null;
-	}
-
 	public static double getNormalSpeed(Attributable horse){
 		return normalizeSpeed(horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue());
 	}
@@ -244,4 +207,59 @@ public class HorseLibrary {
 		target.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
 		target.setHealth(health);
 	}*/
+
+	/** Values set using entity Metadata **/
+	public static void setMother(Entity horse, String mother){
+		horse.setMetadata("mother", new FixedMetadataValue(HorseManager.getPlugin(), cleanName(mother)));
+	}
+	public static void setFather(Entity horse, String father){
+		horse.setMetadata("father", new FixedMetadataValue(HorseManager.getPlugin(), cleanName(father)));
+	}
+
+	public static String getMother(Entity horse){
+		return horse.hasMetadata("mother") ? horse.getMetadata("mother").get(0).asString() : null;
+	}
+	public static String getFather(Entity horse){
+		return horse.hasMetadata("father") ? horse.getMetadata("father").get(0).asString() : null;
+	}
+
+	private static String getRandomDNA(Random rand){
+		StringBuilder builder = new StringBuilder();
+		for(int i=0; i<100; ++i) builder.append((char)('a' + rand.nextInt(26)));
+		return builder.toString();
+	}
+	public static void setDNA(Entity horse, String dna){
+		horse.setMetadata("dna", new FixedMetadataValue(HorseManager.getPlugin(), dna));
+	}
+	public static String getDNA(Entity horse, Random rand){
+		if(!horse.hasMetadata("dna")){
+			if(rand == null) return null;
+			else setDNA(horse, getRandomDNA(rand));
+		}
+		return horse.getMetadata("dna").get(0).asString();
+	}
+
+	public static void setTimeBorn(Entity horse, long timestamp){
+		horse.setMetadata("spawn_ts", new FixedMetadataValue(HorseManager.getPlugin(), timestamp));
+	}
+	public static Long getTimeBorn(Entity horse){
+		return horse.hasMetadata("spawn_ts") ? horse.getMetadata("spawn_ts").get(0).asLong() : null;
+	}
+	public static void setSpawnReason(Entity horse, SpawnReason reason){
+		horse.setMetadata("spawn_reason", new FixedMetadataValue(HorseManager.getPlugin(), reason));
+	}
+	public static SpawnReason getSpawnReason(Entity horse){
+		return horse.hasMetadata("spawn_ts") ? (SpawnReason)horse.getMetadata("spawn_reason").get(0).value() : null;
+	}
+	public static void setClaimedBy(Entity horse, UUID ownerUUID, long timestamp){
+		Pair<UUID, Long> claim_value = new Pair<>(ownerUUID, timestamp);
+		horse.setMetadata("claimed_by", new FixedMetadataValue(HorseManager.getPlugin(), claim_value));
+	}
+	@SuppressWarnings("unchecked")
+	public static Long getTimeClaimed(Entity horse){
+		if(!horse.hasMetadata("claimed_by")) return null;
+		Optional<Long> timestamp = horse.getMetadata("claimed_by").stream()
+				.map(metadata_val -> ((Pair<UUID, Long>)metadata_val.value()).b).max(Long::compare);
+		return timestamp.isPresent() ? timestamp.get() : null;
+	}
 }

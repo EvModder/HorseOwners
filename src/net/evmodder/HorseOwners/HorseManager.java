@@ -39,6 +39,9 @@ import net.evmodder.HorseOwners.listeners.*;
 //TODO: Add 'isClean' bool to args for all library calls to skip cleanName
 //TODO: Enable remote claiming
 //TODO: /hm spawn from console (but must provide x,y,z)
+//TODO: more comprehensive /hm copy
+//TODO: replace flags in EditableHorseAttributes with an enum
+//TODO: when creating a baby by using a spawn egg on an adult, copy the DNA?
 public final class HorseManager extends EvPlugin{
 	private static HorseManager plugin; public static HorseManager getPlugin(){return plugin;}
 
@@ -433,6 +436,9 @@ public final class HorseManager extends EvPlugin{
 
 		if(data.contains("father")) h.setMetadata("father", new FixedMetadataValue(plugin, data.get("father")));
 		else if(h.hasMetadata("father")) data.set("father", h.getMetadata("father").get(0).asString());
+
+		if(data.contains("dna")) h.setMetadata("dna", new FixedMetadataValue(plugin, data.get("dna")));
+		else if(h.hasMetadata("dna")) data.set("dna", h.getMetadata("dna").get(0).asString());
 	}
 	private void updateTameable(Tameable h, ConfigurationSection data){
 		if(/*saveTamer &&*/h.getOwner() != null) data.set("tamer", h.getOwner().getUniqueId().toString());
@@ -582,26 +588,23 @@ public final class HorseManager extends EvPlugin{
 	public List<String> getHorseParents(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 //		return horses.getStringList(horseName+".parents");
-		if(horses.contains(horseName+".mother"))
-			return Arrays.asList(
-					horses.getString(horseName+".mother", null),
-					horses.getString(horseName+".father", null));
-		else return null;
+		String mother = horses.getString(horseName+".mother", null);
+		String father = horses.getString(horseName+".father", null);
+		if(mother != null) return father == null ? Arrays.asList(mother) : Arrays.asList(mother, father);
+		if(father != null) return Arrays.asList(father);
+		return null;
 	}
 	public List<String> getHorseParents(Entity h){
-		if(h.hasMetadata("mother"))
-			return Arrays.asList(
-					h.getMetadata("mother").get(0).asString(),
-					h.getMetadata("father").get(0).asString());
-		else if(h.getCustomName() != null){
+		String mother = h.hasMetadata("mother") ? h.getMetadata("mother").get(0).asString() : null;
+		String father = h.hasMetadata("father") ? h.getMetadata("father").get(0).asString() : null;
+		if(h.getCustomName() != null && (mother == null || father == null)){
 			String horseName = HorseLibrary.cleanName(h.getCustomName());
-			if(horses.contains(horseName+".mother")/*or father*/){
-				updateLineage(h, horses.getConfigurationSection(horseName));//Set parent metadata on entity
-				return Arrays.asList(
-						horses.getString(horseName+".mother", null),
-						horses.getString(horseName+".father", null));
-			}
+			updateLineage(h, horses.getConfigurationSection(horseName));//Set parent metadata on entity
+			if(mother == null) mother = horses.getString(horseName+".mother", null);
+			if(father == null) father = horses.getString(horseName+".father", null);
 		}
+		if(mother != null) return father == null ? Arrays.asList(mother) : Arrays.asList(mother, father);
+		if(father != null) return Arrays.asList(father);
 		return null;
 	}
 	public Integer getHorseBlockX(String horseName){

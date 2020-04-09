@@ -1,7 +1,7 @@
 name: HorseOwners
 main: net.evmodder.HorseOwners.HorseManager
 Author: EvModder
-version: 2.7.3 #7=/hm top [stat] [page], x.3=rewrite of updateData(Entity)
+version: 2.8.0 #8=/hm edit, improved TabText (half pixel precision)
 api-version: 1.13
 
 commands:
@@ -83,13 +83,15 @@ commands:
 
    spawnhorse:
       description: Spawn a custom horse
-      usage: /hm spawn [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [r:tamer] [baby]
+      usage: /hm spawn [flag:value, ...]
+#     usage: /hm spawn [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [r:tamer] [baby]
       permission: horseowners.spawn
       permission-message: You do not have permission to do this.
 
    edithorse:
-      description: Edit attributes for an existing horse
-      usage: /hm edit [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [r:tamer] [baby]
+      description: Edit an existing horse's attributes
+      usage: /hm edit [flag:value, ...]
+#     usage: /hm edit [n:name] [v:variant] [c:color] [t:style] [j:jump] [s:speed] [h:health] [r:tamer] [baby]
       aliases: [modifyhorse,tweakhorse,changehorse]
       permission: horseowners.edit
       permission-message: You do not have permission to do this.
@@ -264,7 +266,7 @@ permissions:
       default: op
 
    horseowners.inspect.dna:
-      description: Ability to view a horse's lineage
+      description: Ability to view a horse's DNA string
       default: op
 
    horseowners.inspect.coords:

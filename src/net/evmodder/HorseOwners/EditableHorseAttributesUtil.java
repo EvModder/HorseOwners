@@ -26,6 +26,7 @@ import org.bukkit.entity.Horse.Style;
 
 public class EditableHorseAttributesUtil{
 	final HashMap<String, List<String>> flags;
+	final HashSet<String> unusableFlags;
 	//final String[] variants = new String[]{"HORSE", "DONKEY", "MULE", "LLAMA", "TRADER_LLAMA", "SKELETON_HORSE", "ZOMBIE_HORSE"};
 	final Set<EntityType> claimableTypes;
 	final HorseManager plugin;
@@ -34,18 +35,22 @@ public class EditableHorseAttributesUtil{
 		plugin = pl;
 		claimableTypes = plugin.getClaimableHorseTypes();
 		flags = new HashMap<String, List<String>>();
+		unusableFlags = new HashSet<String>();
 		flags.put("name:", null);
 		flags.put("speed:", null);
 		flags.put("jump:", null);
 		flags.put("health:", null);
 		flags.put("owner:", null);
 		flags.put("tamer:", null);
-		flags.put("color:", Arrays.stream(Color.values()).map(c -> "color:"+c).collect(Collectors.toList()));
 		//flags.put("variant:", Arrays.stream(Variant.values()).map(v -> "variant:"+v).collect(Collectors.toList()));
 		flags.put("variant:", claimableTypes.stream().map(v -> "variant:"+v).collect(Collectors.toList()));
+		flags.put("color:", Arrays.stream(Color.values()).map(c -> "color:"+c).collect(Collectors.toList()));
 		flags.put("style:", Arrays.stream(Style.values()).map(s -> "style:"+s).collect(Collectors.toList()));
 		flags.put("baby:", Arrays.asList("baby:true", "baby:false"));
 	}
+
+	public boolean addUnusableFlag(String flag){return unusableFlags.add(flag);}
+	public boolean removeUnusableFlag(String flag){return unusableFlags.remove(flag);}
 
 	List<String> getFlagCompletions(String flag, String arg){
 		final List<String> tabCompletes = new ArrayList<String>();
@@ -78,6 +83,7 @@ public class EditableHorseAttributesUtil{
 			boolean oneMatchingFlag = false;
 			String matchingFlag = null;
 			for(String flag : flags.keySet()){
+				if(unusableFlags.contains(flag)) continue;
 				if(!setFlags.contains(flag)){
 					if(lastArg.startsWith(flag)){
 						return getFlagCompletions(flag, lastArg);
@@ -130,8 +136,20 @@ public class EditableHorseAttributesUtil{
 				return attributes;
 			}
 			arg = arg.toUpperCase();
-			if(arg.startsWith("N")) attributes.name = postSep;
+			if(arg.startsWith("N")){
+				/*if(unusableFlags.contains("name")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Name cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}*/
+				attributes.name = postSep;
+			}
 			else if(arg.startsWith("V") || arg.startsWith("TYPE:")){
+				if(unusableFlags.contains("variant")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"HorseType cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}
 				try{attributes.variant = EntityType.valueOf(postSep.toUpperCase());}
 				catch(IllegalArgumentException ex){
 					if(sender != null) sender.sendMessage(ChatColor.RED+"Invalid variant \""+ChatColor.GRAY+postSep
@@ -141,6 +159,11 @@ public class EditableHorseAttributesUtil{
 				}
 			}
 			else if(arg.startsWith("C")){
+				if(unusableFlags.contains("color")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Horse color cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}
 				try{attributes.color = Color.valueOf(postSep.toUpperCase());}
 				catch(IllegalArgumentException ex){
 					if(sender != null) sender.sendMessage(ChatColor.RED+"Invalid color \""+ChatColor.GRAY+postSep
@@ -148,7 +171,12 @@ public class EditableHorseAttributesUtil{
 					return attributes;
 				}
 			}
-			else if(arg.startsWith("STYLE:")){
+			else if(arg.startsWith("STYLE:") || arg.startsWith("T:")){
+				if(unusableFlags.contains("style")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Horse pattern cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}
 				try{attributes.style = Style.valueOf(postSep.toUpperCase());}
 				catch(IllegalArgumentException ex){
 					if(sender != null) sender.sendMessage(ChatColor.RED+"Invalid style \""+ChatColor.GRAY+postSep
@@ -157,6 +185,11 @@ public class EditableHorseAttributesUtil{
 				}
 			}
 			else if(arg.startsWith("J")){
+				/*if(unusableFlags.contains("jump")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Jump cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}*/
 				try{attributes.jump = Double.parseDouble(postSep);}
 				catch(NumberFormatException ex){
 					if(sender != null) sender.sendMessage(ChatColor.RED+"Invalid jump, only accepts number values");
@@ -164,6 +197,11 @@ public class EditableHorseAttributesUtil{
 				}
 			}
 			else if(arg.startsWith("S")){
+				/*if(unusableFlags.contains("speed")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Speed cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}*/
 				try{attributes.speed = Double.parseDouble(postSep);}
 				catch(NumberFormatException ex){
 					if(sender != null) sender.sendMessage(ChatColor.RED+"Invalid speed, only accepts number values");
@@ -171,6 +209,11 @@ public class EditableHorseAttributesUtil{
 				}
 			}
 			else if(arg.startsWith("H")){
+				/*if(unusableFlags.contains("health")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Health cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}*/
 				try{attributes.health = Double.parseDouble(postSep);}
 				catch(NumberFormatException ex){
 					if(sender != null) sender.sendMessage(ChatColor.RED+"Invalid health, only accepts number values");
@@ -178,6 +221,11 @@ public class EditableHorseAttributesUtil{
 				}
 			}
 			else if(arg.startsWith("R") || arg.startsWith("TAMER")){
+				/*if(unusableFlags.contains("tamer")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Tamer cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}*/
 				attributes.tamer = plugin.getServer().getOfflinePlayer(postSep);
 				if(attributes.tamer == null){
 					if(sender != null) sender.sendMessage(ChatColor.RED+"Unknown player '"+attributes.tamer+"' in tamer parameter");
@@ -185,13 +233,25 @@ public class EditableHorseAttributesUtil{
 				}
 			}
 			else if(arg.startsWith("O") || arg.startsWith("OWNER")){
+				/*if(unusableFlags.contains("owner")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Owner cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}*/
 				attributes.owner = plugin.getServer().getOfflinePlayer(postSep);
 				if(attributes.owner == null){
 					if(sender != null) sender.sendMessage(ChatColor.RED+"Unknown player '"+attributes.owner+"' in owner parameter");
 					return attributes;
 				}
 			}
-			else if(arg.startsWith("B")) attributes.baby = Boolean.parseBoolean(postSep);
+			else if(arg.startsWith("B")){
+				/*if(unusableFlags.contains("baby")){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Baby/Adult status cannot be modified for this entity");
+					attributes.parseError = true;
+					return attributes;
+				}*/
+				attributes.baby = Boolean.parseBoolean(postSep);
+			}
 			//else if(arg.startsWith("TAME")) tamed = postSep.equals("TRUE") || postSep.equals("YES");
 		}
 		attributes.success = true;

@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import com.google.common.collect.Sets;
 import net.evmodder.EvLib.EvUtils;
+import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
 
@@ -53,10 +54,12 @@ public class CommandInspectHorse extends HorseCommand{
 			'[', ']', '(', ')', '{', '}', '‹', '›', '°', '¹', //'˜', (10+1)
 			//'I', 't', 'Ì', 'Í', 'Î', 'Ï', 'î', 'ï', // (8)
 	};
-	private String condenseDNA(String dna){
-		char[] dnaChs = dna.toCharArray();
-		for(int i=0; i<dnaChs.length; ++i) dnaChs[i] = dnaMap[dnaChs[i] - 'a'];// Assumes all DNA are lowercase a-z
-		return new String(dnaChs);
+	private String getCondensedDNA(Entity horse){
+		String dna = HorseLibrary.getDNA(horse, null);
+		if(dna == null) return null;
+		char[] dnaChars = dna.toLowerCase().toCharArray();
+		for(int i=0; i<dnaChars.length; ++i) dnaChars[i] = dnaMap[(int)(dnaChars[i] - 'a')];// Assumes all DNA chars are [a-z]
+		return TextUtils.pxSubstring(new String(dnaChars), 320-6*4, false).str;
 	}
 
 	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
@@ -126,12 +129,14 @@ public class CommandInspectHorse extends HorseCommand{
 				plugin.updateData(horse);
 				locX = horse.getLocation().getBlockX();
 				locZ = horse.getLocation().getBlockZ();
-				if(horse.hasMetadata("DNA")) DNA = horse.getMetadata("DNA").get(0).asString();
+				DNA = getCondensedDNA(horse);
 			}
-			else{
+			// Added permission check because getHorseBlockX,Z is an expensive call
+			else if(sender.hasPermission("horseowners.inspect.coords")){
 				locX = plugin.getHorseBlockX(horseName);
 				locZ = plugin.getHorseBlockZ(horseName);
 			}
+			else locX = locZ = null;
 			displayName = plugin.getHorseName(horseName);
 			if(displayName == null) displayName = horseName;
 			ownerName = plugin.getHorseOwnerName(horseName);
@@ -160,7 +165,7 @@ public class CommandInspectHorse extends HorseCommand{
 				if(horse instanceof AbstractHorse) jump = HorseLibrary.getNormalJump((AbstractHorse)horse);
 			}
 			parents = plugin.getHorseParents(horse);
-			if(horse.hasMetadata("DNA")) DNA = horse.getMetadata("DNA").get(0).asString();
+			DNA = getCondensedDNA(horse);
 			locX = horse.getLocation().getBlockX();
 			locZ = horse.getLocation().getBlockZ();
 			typeName = EvUtils.capitalizeAndSpacify(horse.getType().name(), '_');
@@ -172,7 +177,6 @@ public class CommandInspectHorse extends HorseCommand{
 		//Build info message
 		StringBuilder builder = new StringBuilder("\n");
 		if(sender.hasPermission("horseowners.inspect.name")) builder.append("§7Name: §f").append(displayName);
-		//TODO: hide if there is only 1 claimable type
 		if(!ONLY_ONE_HORSE_TYPE && typeName != null && sender.hasPermission("horseowners.inspect.type"))
 			builder.append("\n§7Species: §6").append(typeName);
 
@@ -217,7 +221,7 @@ public class CommandInspectHorse extends HorseCommand{
 			builder.append("\n§7Parents: §f").append(String.join("§7, §f", parents));
 		}
 		if(sender.hasPermission("horseowners.inspect.dna") && DNA != null){
-			builder.append("\n§7DNA: §f").append(condenseDNA(DNA));
+			builder.append("\n§7DNA: §f").append(DNA);
 		}
 		if(sender.hasPermission("horseowners.inspect.coords") && locX != null){
 			builder.append("\n§7Location: §f").append(locX).append("§cx§7, §f").append(locZ).append("§cz");

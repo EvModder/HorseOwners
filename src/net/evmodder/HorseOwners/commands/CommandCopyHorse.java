@@ -11,6 +11,7 @@ import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.MetadataValue;
 import net.evmodder.HorseOwners.HorseLibrary;
 
 public class CommandCopyHorse extends HorseCommand {
@@ -83,19 +84,50 @@ public class CommandCopyHorse extends HorseCommand {
 			((Horse)newHorse).setColor(((Horse)horse).getColor());
 			((Horse)newHorse).setStyle(((Horse)horse).getStyle());
 		}
+		// Jump, Speed, Health
 		newHorse.setJumpStrength(horse.getJumpStrength());
-		newHorse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(
-				horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue());
-		newHorse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(
-				horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+		newHorse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue());
+		newHorse.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(horse.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+		// Tamed status
 		newHorse.setTamed(horse.isTamed());
+		if(horse.getOwner() != null) newHorse.setOwner(horse.getOwner());//Tamer
+		// Baby status
+		if(horse.isAdult()) newHorse.setAdult(); else newHorse.setBaby();
+//		newHorse.setTicksLived(horse.getTicksLived());
+//		newHorse.setAge(horse.getAge());
+		newHorse.setAgeLock(horse.getAgeLock());
+		// General entity data
+		newHorse.setAI(horse.hasAI());//LivingEntity
+		newHorse.setCollidable(horse.isCollidable());//LivingEntity
+		newHorse.setCustomNameVisible(horse.isCustomNameVisible());//Entity
+		newHorse.setDomestication(horse.getDomestication());//AbstractHorse
+		newHorse.setGliding(horse.isGliding());//LivingEntity
+		newHorse.setGlowing(horse.isGlowing());//Entity
+		newHorse.setGravity(horse.hasGravity());//Entity
+		newHorse.setInvulnerable(horse.isInvulnerable());//Entity
+//		newHorse.setSeed(horse.getSeed());//Lootable
+//		newHorse.setLootTable(horse.getLootTable());//Lootable
+		newHorse.setSilent(horse.isSilent());//Entity
+		newHorse.setInvulnerable(horse.isInvulnerable());//Entity
+		newHorse.setNoDamageTicks(horse.getNoDamageTicks());//LivingEntity
+		newHorse.setOp(horse.isOp());//ServerOperator
+		newHorse.setRemoveWhenFarAway(horse.getRemoveWhenFarAway());//LivingEntity
+		newHorse.setSilent(horse.isSilent());//Entity
+		newHorse.addPotionEffects(horse.getActivePotionEffects());// Might not preserve "hidden" status for particles
+		newHorse.getInventory().setContents(horse.getInventory().getContents());// Risky for duping reasons.
 
-		// Other Entity Attributes
-		if(horse.isAdult()) newHorse.setAdult();
-		//newHorse.setOwner(horse.getOwner());//Player who tamed
-		newHorse.setSilent(horse.isSilent());
+		// Metadata objects:
+		String mother = HorseLibrary.getMother(horse); if(mother != null) HorseLibrary.setMother(newHorse, mother);
+		String father = HorseLibrary.getFather(horse); if(father != null) HorseLibrary.setFather(newHorse, father);
+		String dna = HorseLibrary.getDNA(horse, null); if(dna != null) HorseLibrary.setDNA(newHorse, dna);
+		Long timeBorn = HorseLibrary.getTimeBorn(horse); if(timeBorn != null) HorseLibrary.setTimeBorn(newHorse, timeBorn);
+		for(MetadataValue claimEvt : horse.getMetadata("claimed_by")) newHorse.setMetadata("claimed_by", claimEvt);
 
-		sender.sendMessage(ChatColor.GREEN+"Successfully spawned your horse!");
+		// Not copied:
+//		HorseLibrary.setSpawnReason(newHorse, HorseLibrary.getSpawnReason(horse));
+//		newHorse.getScoreboardTags().addAll(horse.getScoreboardTags());
+
+		sender.sendMessage(ChatColor.GREEN+"Successfully copied the horse!");
 		COMMAND_SUCCESS = true;
 		return true;
 	}

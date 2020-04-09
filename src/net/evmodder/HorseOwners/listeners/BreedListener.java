@@ -9,7 +9,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityBreedEvent;
-import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.EvLib.FileIO;
 import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
@@ -65,25 +64,16 @@ public class BreedListener implements Listener{
 		return rand.nextDouble()*scale + a;
 	}
 
-	private String getRandomDNA(){
-		StringBuilder builder = new StringBuilder();
-		for(int i=0; i<100; ++i) builder.append((char)(rand.nextInt(26) + 'a'));
-		return builder.toString();
-	}
 	private String getOffspringDNA(Entity parent1, Entity parent2){
-		if(!parent1.hasMetadata("DNA")) parent1.setMetadata("DNA", new FixedMetadataValue(plugin, getRandomDNA()));
-		if(!parent2.hasMetadata("DNA")) parent2.setMetadata("DNA", new FixedMetadataValue(plugin, getRandomDNA()));
-		char[] dna1 = parent1.getMetadata("DNA").get(0).asString().toCharArray();
-		char[] dna2 = parent2.getMetadata("DNA").get(0).asString().toCharArray();
+		char[] dna1 = HorseLibrary.getDNA(parent1, rand).toCharArray();
+		char[] dna2 = HorseLibrary.getDNA(parent2, rand).toCharArray();
 		StringBuilder builder = new StringBuilder();
 		for(int i=0; i<100; ++i) builder.append(rand.nextBoolean() ? dna1[i] : dna2[i]);
 		return builder.toString();
 	}
 	int getGeneticOverlap(Entity horse1, Entity horse2){
-		if(!horse1.hasMetadata("DNA")) horse1.setMetadata("DNA", new FixedMetadataValue(plugin, getRandomDNA()));
-		if(!horse2.hasMetadata("DNA")) horse2.setMetadata("DNA", new FixedMetadataValue(plugin, getRandomDNA()));
-		char[] dna1 = horse1.getMetadata("DNA").get(0).asString().toCharArray();
-		char[] dna2 = horse2.getMetadata("DNA").get(0).asString().toCharArray();
+		char[] dna1 = HorseLibrary.getDNA(horse1, rand).toCharArray();
+		char[] dna2 = HorseLibrary.getDNA(horse2, rand).toCharArray();
 		int overlap = 0;
 		for(int i=0; i<100; ++i) if(dna1[i] == dna2[i]) ++overlap;
 		return overlap;
@@ -221,7 +211,9 @@ public class BreedListener implements Listener{
 
 				// TODO: DNA is currently only used for inbreeding mutations
 				String dna = getOffspringDNA(evt.getMother(), evt.getFather());
-				h.setMetadata("DNA", new FixedMetadataValue(plugin, dna));
+				HorseLibrary.setDNA(h, dna);
+				plugin.updateData(evt.getMother());//Update mother & father (in case DNA was generated)
+				plugin.updateData(evt.getFather());
 			}
 			if(inbredMutation){
 				int overlapPercent = getGeneticOverlap(evt.getMother(), evt.getFather()); // [0,100]
