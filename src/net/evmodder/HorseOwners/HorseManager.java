@@ -292,7 +292,7 @@ public final class HorseManager extends EvPlugin{
 		String oldNameRaw = horses.getString(oldName+".name", oldName); //Don't trust caller to give oldNameRaw
 		if(oldNameRaw.equals(newNameRaw)) return false;
 		String newName = HorseLibrary.cleanName(newNameRaw);
-		if(horses.isConfigurationSection(newName)) return false;
+		if(horses.isConfigurationSection(newName) && !oldName.equals(newName)) return false;
 
 		HorseRenameEvent horseRenameEvent = new HorseRenameEvent(oldName, newName, oldNameRaw, newNameRaw);
 		getServer().getPluginManager().callEvent(horseRenameEvent);
