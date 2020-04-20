@@ -15,7 +15,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import com.google.common.collect.Sets;
-import net.evmodder.EvLib.EvUtils;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
@@ -145,7 +144,7 @@ public class CommandInspectHorse extends HorseCommand{
 			if(tamerName == null && horse != null && horse instanceof Tameable)
 				tamerName = ((Tameable)horse).isTamed() ? "§cUnknown" : "§cN/A";
 			EntityType type = plugin.getHorseType(horseName);
-			typeName = type == null ? null : EvUtils.capitalizeAndSpacify(type.name(), '_');
+			typeName = type == null ? null : TextUtils.capitalizeAndSpacify(type.name(), '_');
 			speed = plugin.getHorseSpeed(horseName);
 			jump = plugin.getHorseJump(horseName);
 			health = plugin.getHorseHealth(horseName);
@@ -168,7 +167,7 @@ public class CommandInspectHorse extends HorseCommand{
 			DNA = getCondensedDNA(horse);
 			locX = horse.getLocation().getBlockX();
 			locZ = horse.getLocation().getBlockZ();
-			typeName = EvUtils.capitalizeAndSpacify(horse.getType().name(), '_');
+			typeName = TextUtils.capitalizeAndSpacify(horse.getType().name(), '_');
 			Long status_or_claim_ts = HorseLibrary.getTimeClaimed(horse);
 			if(status_or_claim_ts != null) claim_timestamp = status_or_claim_ts;
 			age = horse.getTicksLived()*50L;
@@ -205,7 +204,7 @@ public class CommandInspectHorse extends HorseCommand{
 			}
 		}
 		if(age > 0 && sender.hasPermission("horseowners.inspect.age")){
-			builder.append("\n§7Age: §f").append(EvUtils.formatTime(age, ChatColor.WHITE, ChatColor.RED));
+			builder.append("\n§7Age: §f").append(TextUtils.formatTime(age, ChatColor.WHITE, ChatColor.RED));
 		}
 		if(claim_timestamp > 0 && sender.hasPermission("horseowners.inspect.claimtime")){
 			String formatted_date = new SimpleDateFormat("MMM.dd, YYYY").format(new Date(claim_timestamp));
