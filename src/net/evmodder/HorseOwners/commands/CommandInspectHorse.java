@@ -204,7 +204,7 @@ public class CommandInspectHorse extends HorseCommand{
 			}
 		}
 		if(age > 0 && sender.hasPermission("horseowners.inspect.age")){
-			builder.append("\n§7Age: §f").append(TextUtils.formatTime(age, ChatColor.WHITE, ChatColor.RED));
+			builder.append("\n§7Age: §f").append(TextUtils.formatTime(age, false, ChatColor.WHITE, ChatColor.RED, ChatColor.GRAY));
 		}
 		if(claim_timestamp > 0 && sender.hasPermission("horseowners.inspect.claimtime")){
 			String formatted_date = new SimpleDateFormat("MMM.dd, YYYY").format(new Date(claim_timestamp));

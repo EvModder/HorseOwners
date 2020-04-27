@@ -42,6 +42,7 @@ import net.evmodder.HorseOwners.listeners.*;
 //TODO: more comprehensive /hm copy
 //TODO: replace flags in EditableHorseAttributes with an enum
 //TODO: when creating a baby by using a spawn egg on an adult, copy the DNA?
+//TODO: llama inventory space tracking (and leaderboard?)
 public final class HorseManager extends EvPlugin{
 	private static HorseManager plugin; public static HorseManager getPlugin(){return plugin;}
 
