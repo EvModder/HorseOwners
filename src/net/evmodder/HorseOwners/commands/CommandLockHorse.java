@@ -3,11 +3,11 @@ package net.evmodder.HorseOwners.commands;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import com.google.common.collect.Sets;
-import net.md_5.bungee.api.ChatColor;
 
 public class CommandLockHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
