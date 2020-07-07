@@ -1,13 +1,12 @@
 package net.evmodder.HorseOwners.commands;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import com.google.common.collect.Sets;
 
 public class CommandFreeHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -16,7 +15,7 @@ public class CommandFreeHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender instanceof Player
-					? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())
+					? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())
 					: plugin.getAllClaimedHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
@@ -33,7 +32,7 @@ public class CommandFreeHorse extends HorseCommand{
 		//cmd:	/hm free [-name] [-full]
 		Player p = (sender instanceof Player) ? (Player)sender : null;
 		String horseName;
-		if(args.length > 0) horseName = StringUtils.join(args, ' ');
+		if(args.length > 0) horseName = String.join(" ", args);
 		else if(p != null && p.isInsideVehicle() && plugin.isClaimableHorseType(p.getVehicle())){
 			if(p.getVehicle().getCustomName() == null || plugin.isClaimedHorse(p.getVehicle().getCustomName()) == false){
 				sender.sendMessage(ChatColor.GRAY+"This horse is already ownerless!");

@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -43,7 +42,7 @@ public class CommandRankHorse extends HorseCommand{
 		//cmd:	/hm top [#]
 
 		boolean topSpeed = true, topJump = true, topHealth = true;
-		String flags = StringUtils.join(args).toLowerCase();
+		String flags = String.join("", args).toLowerCase();
 		if(flags.isEmpty() == false){
 			topSpeed = flags.contains("s");
 			topJump = flags.contains("j");

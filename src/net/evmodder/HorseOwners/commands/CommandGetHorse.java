@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.World;
@@ -12,7 +11,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import com.google.common.collect.Sets;
 import net.evmodder.EvLib.hooks.MultiverseHook;
 import net.evmodder.HorseOwners.HorseLibrary;
 
@@ -31,7 +29,7 @@ public class CommandGetHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			//TODO: possible (but maybe laggy?): only list horses in same world if player lacks cross-world permission
 			byte shown = 0;
-			for(String horseName : plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())){
+			for(String horseName : plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
@@ -56,7 +54,7 @@ public class CommandGetHorse extends HorseCommand{
 			return false;
 		}
 		Player p = (Player) sender;
-		String target = StringUtils.join(args, ' ');
+		String target = String.join(" ", args);
 		Entity horse;
 		Set<Entity> horses = new HashSet<Entity>();
 

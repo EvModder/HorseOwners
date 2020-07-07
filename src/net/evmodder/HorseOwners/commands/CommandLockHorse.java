@@ -1,13 +1,12 @@
 package net.evmodder.HorseOwners.commands;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import com.google.common.collect.Sets;
 
 public class CommandLockHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -16,7 +15,7 @@ public class CommandLockHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender instanceof Player
-						? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())
+						? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())
 						: plugin.getAllHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
@@ -50,7 +49,7 @@ public class CommandLockHorse extends HorseCommand{
 			COMMAND_SUCCESS = false;
 			return false;
 		}
-		else horseName = StringUtils.join(args, ' ');
+		else horseName = String.join(" ", args);
 
 		//by this point, a name has been determined
 		if(plugin.isLockedHorse(horseName)){

@@ -2,14 +2,13 @@ package net.evmodder.HorseOwners.commands;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import com.google.common.collect.Sets;
 
 public class CommandRenameHorse extends HorseCommand{
 	final CommandClaimHorse claimHorseCommandExecutor;
@@ -24,7 +23,7 @@ public class CommandRenameHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender instanceof Player
-						? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())
+						? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())
 						: plugin.getAllHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
@@ -59,10 +58,10 @@ public class CommandRenameHorse extends HorseCommand{
 		String anyHorse = null, claimedHorse = null, accessHorse = null;
 		String newName = null;
 		for(int i=1; i<args.length; ++i){
-			String candidate = StringUtils.join(Arrays.copyOfRange(args, 0, i), ' ');
+			String candidate = String.join(" ", Arrays.copyOfRange(args, 0, i));
 			if(plugin.horseExists(candidate)){
 				anyHorse = candidate;
-				newName = StringUtils.join(Arrays.copyOfRange(args, i, args.length), ' ');
+				newName = String.join(" ", Arrays.copyOfRange(args, i, args.length));
 				if(plugin.isClaimedHorse(candidate)){
 					claimedHorse = candidate;
 					if(sender instanceof Player && plugin.canAccess((Player)sender, candidate)){
@@ -75,7 +74,7 @@ public class CommandRenameHorse extends HorseCommand{
 		if(anyHorse == null){
 			sender.sendMessage(ChatColor.RED+"Unknown horse '"
 					+ChatColor.GRAY+args[0]
-					+ChatColor.DARK_GRAY+"[ "+StringUtils.join(Arrays.copyOfRange(args, 1, args.length-1), ' ')+"]"
+					+ChatColor.DARK_GRAY+"[ "+String.join(" ", Arrays.copyOfRange(args, 1, args.length-1))+"]"
 					+ChatColor.RED+"'");
 			COMMAND_SUCCESS = false;
 			return false;

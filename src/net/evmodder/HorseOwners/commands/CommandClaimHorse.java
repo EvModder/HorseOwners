@@ -1,7 +1,6 @@
 package net.evmodder.HorseOwners.commands;
 
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -161,7 +160,7 @@ public class CommandClaimHorse extends HorseCommand{
 			}
 		}
 		else{
-			String newName = StringUtils.join(args, ' ');
+			String newName = String.join(" ", args);
 			switch(attemptNameHorse(sender, h, newName)){
 				case FAILED: COMMAND_SUCCESS = false; return true;
 				case FAILED_HINT: COMMAND_SUCCESS = false; return false;

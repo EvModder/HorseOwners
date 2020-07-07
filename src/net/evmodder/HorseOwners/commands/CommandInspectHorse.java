@@ -3,8 +3,8 @@ package net.evmodder.HorseOwners.commands;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.attribute.Attributable;
 import org.bukkit.command.Command;
@@ -14,7 +14,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
-import com.google.common.collect.Sets;
 import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.HorseOwners.HorseLibrary;
 import net.evmodder.HorseOwners.HorseManager;
@@ -36,7 +35,7 @@ public class CommandInspectHorse extends HorseCommand{
 			for(String horseName : sender.hasPermission("horseowners.inspect.others")
 					? (sender.hasPermission("horseowners.inspect.unclaimed")
 					? plugin.getAllHorses() : plugin.getAllClaimedHorses())
-					: plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())){
+					: plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
@@ -66,7 +65,7 @@ public class CommandInspectHorse extends HorseCommand{
 		Player p = (sender instanceof Player) ? (Player)sender : null;
 		Entity horse = null;
 		String horseName = null;
-		if((args.length > 0 && plugin.horseExists(horseName = HorseLibrary.cleanName(StringUtils.join(args, ' '))))){
+		if((args.length > 0 && plugin.horseExists(horseName = HorseLibrary.cleanName(String.join(" ", args))))){
 			if(p != null && !p.hasPermission("horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
 				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
 				COMMAND_SUCCESS = false;

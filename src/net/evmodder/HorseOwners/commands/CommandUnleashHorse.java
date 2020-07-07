@@ -1,8 +1,8 @@
 package net.evmodder.HorseOwners.commands;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -12,7 +12,6 @@ import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import com.google.common.collect.Sets;
 
 public class CommandUnleashHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -21,7 +20,7 @@ public class CommandUnleashHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender instanceof Player
-					? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), Sets.newHashSet())
+					? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())
 					: plugin.getAllHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
@@ -47,7 +46,7 @@ public class CommandUnleashHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return false;
 			}
-			String horseName = StringUtils.join(args, ' ');
+			String horseName = String.join(" ", args);
 			
 			if(plugin.isClaimedHorse(horseName) == false){
 				sender.sendMessage("§cUnknown horse (check name spelling)");

@@ -1,8 +1,8 @@
 package net.evmodder.HorseOwners.commands;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -61,7 +61,7 @@ public class CommandAllowRide extends HorseCommand{
 
 		Player p = (sender instanceof Player) ? (Player)sender : null;
 		String horseName;
-		if(args.length > 1) horseName = StringUtils.join(args, ' ', 1, args.length);
+		if(args.length > 1) horseName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 		else if(p != null && p.isInsideVehicle() && p.getVehicle() instanceof Horse){
 			if((horseName=p.getVehicle().getCustomName()) == null || plugin.isClaimedHorse(horseName) == false){
 				sender.sendMessage(ChatColor.GRAY+"This horse is ownerless, anyone can ride it!");

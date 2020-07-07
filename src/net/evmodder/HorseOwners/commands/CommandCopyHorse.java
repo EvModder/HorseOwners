@@ -2,7 +2,6 @@ package net.evmodder.HorseOwners.commands;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.Command;
@@ -48,7 +47,7 @@ public class CommandCopyHorse extends HorseCommand {
 		}
 
 		Player p = (Player)sender;
-		String target = StringUtils.join(args, ' ');
+		String target = String.join(" ",  args);
 		AbstractHorse horse;
 
 		if(safeTeleports && !HorseLibrary.safeForHorses(p.getLocation())){
