@@ -65,6 +65,10 @@ nametag-required-to-rename: false
 # Already named horses are automatically claimed when tamed
 claim-on-tame: true
 
+# Should a player be notified to claim a horse after they tame it?
+notify-on-tame:
+  "&6To name this horse and track its stats, type &2/hm claim &7<name>"
+
 # Puts an upper limit on the stats of NATURALLY spawned/bred horses.
 # Default(vanilla) values: jump=5.29, speed=14.5125, health=30
 # Set to -1 disable limiting

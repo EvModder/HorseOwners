@@ -31,7 +31,7 @@ import net.evmodder.HorseOwners.commands.*;
 import net.evmodder.HorseOwners.listeners.*;
 
 //OBSOLETE: Make inbred mutation relative to % DNA shared (look online for calculation) // Using simulated DNA
-//OBSOLETE: Display spawn reason in /hm inspect (
+//OBSOLETE: Display spawn reason in /hm inspect
 //DONE-TEST: add /hm rename <a> <b> with perm for renaming without riding
 //DONE-TEST: Display age in /hm inspect
 //DONE-TEST: BreedListener above natural limits
@@ -151,7 +151,7 @@ public final class HorseManager extends EvPlugin{
 		if(config.getBoolean("enable-teleporting", true)){
 			getServer().getPluginManager().registerEvents(new TeleportListener(), this);
 		}
-		if(config.getBoolean("claim-on-tame", true)){
+		if(config.getBoolean("claim-on-tame", true) || !config.getString("notify-on-tame", "").isBlank()){
 			getServer().getPluginManager().registerEvents(new TameListener(), this);
 		}
 		if(rankUnclaimed || MAX_JUMP != -1 || MAX_SPEED != -1 || MAX_HEALTH != -1){
