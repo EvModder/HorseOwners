@@ -12,6 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Llama;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import net.evmodder.EvLib.extras.TextUtils;
@@ -116,7 +117,7 @@ public class CommandInspectHorse extends HorseCommand{
 
 		//Yay got to here! Now what's it worth?
 		String displayName, ownerName, tamerName, typeName;
-		double speed = -1, jump = -1; int health = -1;
+		double speed = -1, jump = -1; int health = -1, strength = -1;
 		long age = -1, claim_timestamp = -1;
 		int[] rank = null;
 		List<String> parents;
@@ -147,6 +148,7 @@ public class CommandInspectHorse extends HorseCommand{
 			speed = plugin.getHorseSpeed(horseName);
 			jump = plugin.getHorseJump(horseName);
 			health = plugin.getHorseHealth(horseName);
+			strength = plugin.getLlamaStrength(horseName);
 			parents = plugin.getHorseParents(horseName);
 			age = plugin.getHorseAge(horseName);
 			claim_timestamp = plugin.getHorseClaimTime(horseName);
@@ -161,6 +163,7 @@ public class CommandInspectHorse extends HorseCommand{
 				speed = HorseLibrary.getNormalSpeed((Attributable)horse);
 				health = HorseLibrary.getNormalMaxHealth((Attributable)horse);
 				if(horse instanceof AbstractHorse) jump = HorseLibrary.getNormalJump((AbstractHorse)horse);
+				if(horse instanceof Llama) strength = ((Llama)horse).getStrength();
 			}
 			parents = plugin.getHorseParents(horse);
 			DNA = getCondensedDNA(horse);
@@ -201,6 +204,9 @@ public class CommandInspectHorse extends HorseCommand{
 				if(rank[4] != rank[5]) builder.append('-').append(rank[5]);
 				builder.append("§7]");
 			}
+		}
+		if(strength > 0 && sender.hasPermission("horseowners.inspect.strength")){
+			builder.append("\n§7Strength: §f").append(strength).append("§ch");
 		}
 		if(age > 0 && sender.hasPermission("horseowners.inspect.age")){
 			builder.append("\n§7Age: §f").append(TextUtils.formatTime(age, false, ChatColor.WHITE, ChatColor.RED, ChatColor.GRAY));

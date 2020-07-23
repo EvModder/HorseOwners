@@ -579,6 +579,11 @@ public final class HorseManager extends EvPlugin{
 		if(!saveStats || !horses.contains(horseName)) return -1;
 		return horses.getConfigurationSection(horseName).getInt("health", -1);
 	}
+	public int getLlamaStrength(String horseName){
+		horseName = HorseLibrary.cleanName(horseName);
+		if(!saveLlamaStrength || !horses.contains(horseName)) return -1;
+		return horses.getConfigurationSection(horseName).getInt("strength", -1);
+	}
 	public long getHorseAge(String horseName){
 		horseName = HorseLibrary.cleanName(horseName);
 		if(!saveAge || !horses.contains(horseName)) return -1;

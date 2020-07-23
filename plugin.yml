@@ -275,6 +275,10 @@ permissions:
       description: Ability to lookup a horse's location
       default: op
 
+   horseowners.inspect.strength:
+      description: Ability to view a llama's strength
+      default: op
+
    horseowners.inspect:
       description: The ability to view a horse's stats
       children:
@@ -291,6 +295,7 @@ permissions:
          horseowners.inspect.lineage: true
 #        horseowners.inspect.dna: false
 #        horseowners.inspect.coords: false
+         horseowners.inspect.strength: false
       default: op
 
    horseowners.inspect.others:
@@ -330,6 +335,7 @@ permissions:
          horseowners.inspect.coords: true
          horseowners.inspect.others: true
          horseowners.inspect.untamed: true
+         horseowners.inspect.strength: true
          horseowners.spawn: true
          horseowners.list: true
          horseowners.list.all: true
