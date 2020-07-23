@@ -121,6 +121,9 @@ public class CommandCopyHorse extends HorseCommand {
 		String dna = HorseLibrary.getDNA(horse, null); if(dna != null) HorseLibrary.setDNA(newHorse, dna);
 		Long timeBorn = HorseLibrary.getTimeBorn(horse); if(timeBorn != null) HorseLibrary.setTimeBorn(newHorse, timeBorn);
 		for(MetadataValue claimEvt : horse.getMetadata("claimed_by")) newHorse.setMetadata("claimed_by", claimEvt);
+		// This one left unset because, well, the "spawn reason" is /hm copy
+//		SpawnReason spawnReason = HorseLibrary.getSpawnReason(horse); if(spawnReason != null) HorseLibrary.setSpawnReason(newHorse, spawnReason);
+//		HorseLibrary.setSpawnReason(newHorse, SpawnReason.CUSTOM); // Already set in SpawnListener
 
 		// Not copied:
 //		HorseLibrary.setSpawnReason(newHorse, HorseLibrary.getSpawnReason(horse));

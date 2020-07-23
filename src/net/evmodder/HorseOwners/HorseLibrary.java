@@ -239,6 +239,7 @@ public class HorseLibrary {
 		return horse.getMetadata("dna").get(0).asString();
 	}
 
+	// Note: entity.getTicksLived()
 	public static void setTimeBorn(Entity horse, long timestamp){
 		horse.setMetadata("spawn_ts", new FixedMetadataValue(HorseManager.getPlugin(), timestamp));
 	}
@@ -262,4 +263,5 @@ public class HorseLibrary {
 				.map(metadata_val -> ((Pair<UUID, Long>)metadata_val.value()).b).max(Long::compare);
 		return timestamp.isPresent() ? timestamp.get() : null;
 	}
+
 }

@@ -13,10 +13,6 @@ rank-claimed-horses: true
 # WARNING: Requires rank-claimed-horses is set to true
 rank-unclaimed-horses: true
 
-# Should the server keep track of horses' locations?
-# WARNING: Setting to false will clear existing coordinate data
-save-horse-coordinates: true
-
 # Allow players to "lock" a horse's name
 # WARNING: Setting to false will clear existing name-lock data
 enable-name-locks: true
@@ -76,9 +72,13 @@ max-jump: 5.5
 max-speed: 15
 max-health: 30
 
-# Should the server keep track of horses' parents?
-# WARNING: Setting to false will clear existing lineage data
+# WARNING: Setting any 'save-X' settings to false will clear its existing data
+save-horse-coordinates: true
 save-horse-lineage: true
+save-horse-age: true
+save-claim-history: true
+save-spawn-data: true
+save-llama-strength: true
 
 # Assign a random name to a new foal at birth.
 # Requires modified-breeding: true

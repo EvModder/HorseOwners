@@ -19,8 +19,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Llama;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.EvLib.EvPlugin;
 import net.evmodder.EvLib.FileIO;
@@ -35,6 +37,7 @@ import net.evmodder.HorseOwners.listeners.*;
 //DONE-TEST: add /hm rename <a> <b> with perm for renaming without riding
 //DONE-TEST: Display age in /hm inspect
 //DONE-TEST: BreedListener above natural limits
+//DONE-TEST: move all "save-X" settings to config
 //TODO: /hm list by type (eg: /hm list type:DONKEY -> list donkeys only) AND/OR sort /hm list (by claim date?)
 //TODO: Add 'isClean' bool to args for all library calls to skip cleanName
 //TODO: Enable remote claiming
@@ -42,7 +45,7 @@ import net.evmodder.HorseOwners.listeners.*;
 //TODO: more comprehensive /hm copy
 //TODO: replace flags in EditableHorseAttributes with an enum
 //TODO: when creating a baby by using a spawn egg on an adult, copy the DNA?
-//TODO: llama inventory space tracking (and leaderboard?)
+//TODO: show llama strength in /hm i (and make a leaderboard?)
 public final class HorseManager extends EvPlugin{
 	private static HorseManager plugin; public static HorseManager getPlugin(){return plugin;}
 
@@ -50,7 +53,7 @@ public final class HorseManager extends EvPlugin{
 	private Set<EntityType> claimableTypes;
 	private YamlConfiguration horses;
 	private Map<UUID, Set<String>> horseOwnersMap;
-	private boolean saveCoords, saveStats, saveLineage, saveAge=true, saveClaimHistory/*, saveLeashes,*/;
+	private boolean saveCoords, saveStats, saveLineage, saveAge, saveClaimHistory/*, saveLeashes*/, saveSpawnData, saveLlamaStrength;
 	private boolean rankUnclaimed, safeEditing;
 	private IndexTreeMultiMap<Double, String> topSpeed;
 	private IndexTreeMultiMap<Double, String> topJump;
@@ -66,6 +69,11 @@ public final class HorseManager extends EvPlugin{
 		saveCoords = config.getBoolean("save-horse-coordinates", true);
 		saveStats = config.getBoolean("rank-claimed-horses", true);
 		saveLineage = config.getBoolean("save-horse-lineage", true);
+		saveAge = config.getBoolean("save-horse-age", true);
+		saveClaimHistory = config.getBoolean("save-claim-history", true);
+		saveSpawnData = config.getBoolean("save-spawn-data", true);
+		saveLlamaStrength = config.getBoolean("save-llama-strength", true);
+
 		rankUnclaimed = config.getBoolean("rank-unclaimed-horses", true);
 		safeEditing = config.getBoolean("config-update-checking", true);
 		//saveLeashes = config.getBoolean("prevent-glitch-lead-breaking", true);
@@ -482,10 +490,20 @@ public final class HorseManager extends EvPlugin{
 		}
 		if(saveLineage) updateLineage(h, data);
 		if(saveAge) data.set("age", h.getTicksLived()*50);
+		if(saveSpawnData){
+			Long timeBorn = HorseLibrary.getTimeBorn(h);
+			if(timeBorn != null) data.set("birthdate", timeBorn);
+			else if(data.contains("birthdate")) HorseLibrary.setTimeBorn(h, data.getLong("birthdate"));
+			SpawnReason spawnReason = HorseLibrary.getSpawnReason(h);
+			if(spawnReason != null) data.set("spawnreason", spawnReason.name());
+			else if(data.contains("spawnreason")) HorseLibrary.setSpawnReason(h, SpawnReason.valueOf(data.getString("spawnreason")));
+			//TODO: save claimed_by events in data (uuid+timestamp pairs)
+		}
 
 		if(h instanceof Tameable) updateTameable((Tameable)h, data);
 		//if(h instanceof LivingEntity) updateLivingEntity((LivingEntity)h, data);
 		if(h instanceof AbstractHorse) updateHorseStats((AbstractHorse)h, data);
+		if(h instanceof Llama && saveLlamaStrength) data.set("strength", ((Llama)h).getStrength());
 	}
 
 	public int[] getRankings(String horseName){
