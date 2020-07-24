@@ -22,7 +22,7 @@ public class CommandSpawnHorse extends HorseCommand{
 	}
 
 	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
-		//cmd:	usage: /hm spawn [n:name] [s:speed] [j:jump] [h:health] [c:color] [v:variant] [t:style] [o:owner] [r:tamer]
+		//cmd:	usage: /hm spawn [n:name] [s:speed] [j:jump] [h:health] [c:color] [v:variant] [t:style] [o:owner] [r:tamer] [i:strength]
 		//hm spawn n:fat c:white t:white s:50 j:20 h:60
 		if(sender instanceof Player == false){
 			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players");

@@ -23,6 +23,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.Horse.Color;
 import org.bukkit.entity.Horse.Style;
+import org.bukkit.entity.Llama;
 
 public class EditableHorseAttributesUtil{
 	final HashMap<String, List<String>> flags;
@@ -117,6 +118,7 @@ public class EditableHorseAttributesUtil{
 		public Color color = null;
 		public Style style = null;
 		public Double jump = null, speed = null, health = null;
+		public Integer strength = null;
 		public Boolean baby = null;
 		public boolean success = false, parseError = false;
 	};
@@ -254,6 +256,13 @@ public class EditableHorseAttributesUtil{
 				}*/
 				attributes.baby = Boolean.parseBoolean(postSep);
 			}
+			else if(arg.startsWith("I:") || arg.startsWith("INV") || arg.startsWith("STRENGTH:")){
+				try{attributes.strength = Integer.parseInt(postSep);}
+				catch(NumberFormatException ex){
+					if(sender != null) sender.sendMessage(ChatColor.RED+"Invalid strength, only accepts whole number values");
+					return attributes;
+				}
+			}
 			//else if(arg.startsWith("TAME")) tamed = postSep.equals("TRUE") || postSep.equals("YES");
 		}
 		attributes.success = true;
@@ -274,6 +283,7 @@ public class EditableHorseAttributesUtil{
 			}
 			if(horse instanceof AbstractHorse){
 				if(attributes.jump != null) ((AbstractHorse)horse).setJumpStrength(HorseLibrary.denormalizeJump(attributes.jump));
+				if(attributes.strength != null && horse instanceof Llama) ((Llama)horse).setStrength(attributes.strength);;
 			}
 		}
 		//if(tamed) horse.setTamed(true);
