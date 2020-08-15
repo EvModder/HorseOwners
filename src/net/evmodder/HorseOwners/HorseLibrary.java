@@ -230,9 +230,12 @@ public class HorseLibrary {
 	}
 	public static void setDNA(Entity horse, String dna){
 		horse.setMetadata("dna", new FixedMetadataValue(HorseManager.getPlugin(), dna));
+		horse.getScoreboardTags().removeIf(tag -> tag.startsWith("DNA:"));
+		horse.addScoreboardTag("DNA:"+dna);
 	}
 	public static String getDNA(Entity horse, Random rand){
 		if(!horse.hasMetadata("dna")){
+			for(String tag : horse.getScoreboardTags()) if(tag.startsWith("DNA:")) return tag.substring(4);
 			if(rand == null) return null;
 			else setDNA(horse, getRandomDNA(rand));
 		}
@@ -241,16 +244,16 @@ public class HorseLibrary {
 
 	// Note: entity.getTicksLived()
 	public static void setTimeBorn(Entity horse, long timestamp){
-		horse.setMetadata("spawn_ts", new FixedMetadataValue(HorseManager.getPlugin(), timestamp));
+		horse.setMetadata("birthdate", new FixedMetadataValue(HorseManager.getPlugin(), timestamp));
 	}
 	public static Long getTimeBorn(Entity horse){
-		return horse.hasMetadata("spawn_ts") ? horse.getMetadata("spawn_ts").get(0).asLong() : null;
+		return horse.hasMetadata("birthdate") ? horse.getMetadata("birthdate").get(0).asLong() : null;
 	}
 	public static void setSpawnReason(Entity horse, SpawnReason reason){
 		horse.setMetadata("spawn_reason", new FixedMetadataValue(HorseManager.getPlugin(), reason));
 	}
 	public static SpawnReason getSpawnReason(Entity horse){
-		return horse.hasMetadata("spawn_ts") ? (SpawnReason)horse.getMetadata("spawn_reason").get(0).value() : null;
+		return horse.hasMetadata("spawn_reason") ? (SpawnReason)horse.getMetadata("spawn_reason").get(0).value() : null;
 	}
 	public static void setClaimedBy(Entity horse, UUID ownerUUID, long timestamp){
 		Pair<UUID, Long> claim_value = new Pair<>(ownerUUID, timestamp);

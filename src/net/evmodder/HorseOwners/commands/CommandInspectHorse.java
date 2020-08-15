@@ -222,6 +222,7 @@ public class CommandInspectHorse extends HorseCommand{
 			builder.append("\n§7Owner: §f").append(ownerName);
 		}
 		if(sender.hasPermission("horseowners.inspect.lineage") && parents != null && !parents.isEmpty()){
+			parents.replaceAll(cleanName -> plugin.getHorseName(cleanName));
 			builder.append("\n§7Parents: §f").append(String.join("§7, §f", parents));
 		}
 		if(sender.hasPermission("horseowners.inspect.dna") && DNA != null){
