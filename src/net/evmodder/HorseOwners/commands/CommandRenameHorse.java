@@ -1,8 +1,8 @@
 package net.evmodder.HorseOwners.commands;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -19,18 +19,11 @@ public class CommandRenameHorse extends HorseCommand{
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length > 0){
-			String arg = String.join(" ", args).toLowerCase();
-			final List<String> tabCompletes = new ArrayList<String>();
-			byte shown = 0;
-			for(String horseName : sender instanceof Player
-						? plugin.getAPI().getHorses(((Player)sender).getUniqueId())
-						: plugin.getAPI().getAllHorses()){
-				if(horseName.startsWith(arg)){
-					tabCompletes.add(horseName);
-					if(++shown == 20) break;
-				}
-			}
-			return tabCompletes;
+			final String arg = HorseUtils.cleanName(String.join(" ", args));
+			return (sender instanceof Player
+					? plugin.getAPI().getHorses(((Player)sender).getUniqueId())
+					: plugin.getAPI().getAllHorses()
+					).stream().filter(name -> name.startsWith(arg)).limit(20).collect(Collectors.toList());
 		}
 		return null;
 	}

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.World;
@@ -25,17 +26,10 @@ public class CommandGetHorse extends HorseCommand{
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length > 0 && sender instanceof Player){
-			String arg = String.join(" ", args).toLowerCase();
-			final List<String> tabCompletes = new ArrayList<String>();
+			final String arg = HorseUtils.cleanName(String.join(" ", args));
 			//TODO: possible (but maybe laggy?): only list horses in same world if player lacks cross-world permission
-			byte shown = 0;
-			for(String horseName : plugin.getAPI().getHorses(((Player)sender).getUniqueId())){
-				if(horseName.startsWith(arg)){
-					tabCompletes.add(horseName);
-					if(++shown == 20) break;
-				}
-			}
-			return tabCompletes;
+			return plugin.getAPI().getHorses(((Player)sender).getUniqueId())
+					.stream().filter(name -> name.startsWith(arg)).limit(20).collect(Collectors.toList());
 		}
 		return null;
 	}

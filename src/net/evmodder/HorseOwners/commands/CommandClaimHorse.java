@@ -28,6 +28,7 @@ public class CommandClaimHorse extends HorseCommand{
 				"min-name-length("+minNameLength+")!");
 	}
 
+	//TODO: remote claiming w/ permission? Console claming for a player?
 	@Override public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a){return null;}
 
 	enum RenameResult {FAILED, FAILED_HINT, RENAMED, NAMED};

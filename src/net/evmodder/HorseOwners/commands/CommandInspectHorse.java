@@ -1,9 +1,9 @@
 package net.evmodder.HorseOwners.commands;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attributable;
@@ -30,19 +30,12 @@ public class CommandInspectHorse extends HorseCommand{
 
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length > 0){
-			String arg = String.join(" ", args).toLowerCase();
-			final List<String> tabCompletes = new ArrayList<String>();
-			byte shown = 0;
-			for(String horseName : sender.hasPermission("horseowners.inspect.others")
+			String arg = HorseUtils.cleanName(String.join(" ", args));
+			return (sender.hasPermission("horseowners.inspect.others")
 					? (sender.hasPermission("horseowners.inspect.unclaimed")
 					? plugin.getAPI().getAllHorses() : plugin.getAPI().getAllClaimedHorses())
-					: plugin.getAPI().getHorses(((Player)sender).getUniqueId())){
-				if(horseName.startsWith(arg)){
-					tabCompletes.add(horseName);
-					if(++shown == 20) break;
-				}
-			}
-			return tabCompletes;
+					: plugin.getAPI().getHorses(((Player)sender).getUniqueId())
+					).stream().filter(name -> name.startsWith(arg)).limit(20).collect(Collectors.toList());
 		}
 		return null;
 	}

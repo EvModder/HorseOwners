@@ -41,7 +41,7 @@ public class HorseAPI{
 	private IndexTreeMultiMap<Double, String> topSpeed;
 	private IndexTreeMultiMap<Double, String> topJump;
 	private IndexTreeMultiMap<Integer, String> topHealth;
-	final HashSet<EntityType> CLAIMABLE_TYPES;
+	final Set<EntityType> CLAIMABLE_TYPES;
 	final boolean RELOAD_CONFIG_ON_EDIT, SAVE_UNCLAIMED;
 	final boolean SAVE_EQUINE_STATS, SAVE_CLAIM_TS, SAVE_LINEAGE, SAVE_COORDS, SAVE_AGE, SAVE_SPAWN_DATA, SAVE_TAMER=true;
 
@@ -69,6 +69,12 @@ public class HorseAPI{
 		catch(IOException e){e.printStackTrace();}
 	}
 
+	Set<EntityType> parseClaimableTypes(List<String> typeNames, Set<EntityType> defaultClaimableTypes){
+		if(typeNames == null || typeNames.isEmpty()) return defaultClaimableTypes;
+		try{return typeNames.stream().map(typeName -> EntityType.valueOf(typeName.toUpperCase())).collect(Collectors.toSet());}
+		catch(IllegalArgumentException ex){ex.printStackTrace(); return defaultClaimableTypes;}
+	}
+
 	HorseAPI(HorseManager pl){
 		this.pl = pl;
 		SAVE_EQUINE_STATS = pl.getConfig().getBoolean("save-equine-stats", true);
@@ -86,17 +92,13 @@ public class HorseAPI{
 		SAVE_AGE = pl.getConfig().getBoolean("save-horse-age", true);
 		SAVE_SPAWN_DATA = pl.getConfig().getBoolean("save-spawn-data", true);
 
-		CLAIMABLE_TYPES = new HashSet<>();
-		if(pl.getConfig().contains("valid-horses"))
-			for(String type : pl.getConfig().getStringList("valid-horses"))
-				try{CLAIMABLE_TYPES.add(EntityType.valueOf(type.toUpperCase()));}
-				catch(IllegalArgumentException ex){ex.printStackTrace();}
-		else CLAIMABLE_TYPES.addAll(Arrays.asList(
-					EntityType.HORSE, EntityType.DONKEY, EntityType.MULE,
-					EntityType.SKELETON_HORSE, EntityType.ZOMBIE_HORSE,
-					EntityType.LLAMA, EntityType.TRADER_LLAMA));
-		loadHorses();
+		Set<EntityType> defaultClaimableTypes = Set.of(
+				EntityType.HORSE, EntityType.DONKEY, EntityType.MULE,
+				EntityType.SKELETON_HORSE, EntityType.ZOMBIE_HORSE,
+				EntityType.LLAMA, EntityType.TRADER_LLAMA);
+		CLAIMABLE_TYPES = parseClaimableTypes(pl.getConfig().getStringList("valid-horses"), defaultClaimableTypes);
 		oneTimeAccess = new HashSet<String>();
+		loadHorses();
 	}
 
 	//-------------------- Simple getters --------------------//
@@ -428,7 +430,7 @@ public class HorseAPI{
 				}
 			}
 		}
-		return pl.getServer().getWorlds().stream().flatMap(world -> world.getEntities().stream()).filter(
+		return pl.getServer().getWorlds().stream().flatMap(world -> world.getEntities().stream()).parallel().filter(
 			e -> e.getCustomName() != null && isClaimableHorseType(e) && HorseUtils.cleanName(e.getCustomName()).equals(cleanHorseName)
 		).findAny().orElse(null);
 	}
@@ -448,5 +450,4 @@ public class HorseAPI{
 	public boolean useOneTimeAccess(UUID playerUUID, String horseName){
 		return oneTimeAccess.remove(playerUUID+":"+HorseUtils.cleanName(horseName));
 	}
-
 }

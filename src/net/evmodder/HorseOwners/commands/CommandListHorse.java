@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.Set;
 import java.util.UUID;
 import org.bukkit.ChatColor;
@@ -134,15 +136,8 @@ public class CommandListHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length == 1){
 			args[0] = args[0].toLowerCase();
-			final List<String> tabCompletes = new ArrayList<String>();
-			tabCompletes.add("all");
-			for(Player p : plugin.getServer().getOnlinePlayers()){
-				if(p.getName().toLowerCase().startsWith(args[0])){
-					tabCompletes.add(p.getName());
-					if(tabCompletes.size() == 20) break;
-				}
-			}
-			return tabCompletes;
+			return Stream.concat(Stream.of("all"), plugin.getServer().getOnlinePlayers().stream().map(p -> p.getName())
+					.filter(name -> name.toLowerCase().startsWith(args[0]))).limit(20).collect(Collectors.toList());
 		}
 		return null;
 	}

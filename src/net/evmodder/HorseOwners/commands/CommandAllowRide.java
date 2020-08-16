@@ -1,8 +1,8 @@
 package net.evmodder.HorseOwners.commands;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -15,29 +15,16 @@ public class CommandAllowRide extends HorseCommand{
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		if(args.length == 1){
-			final List<String> tabCompletes = new ArrayList<String>();
 			args[0] = args[0].toLowerCase();
-			for(Player p : plugin.getServer().getOnlinePlayers()){
-				if(p.getName().startsWith(args[0])){
-					tabCompletes.add(p.getName());
-					if(tabCompletes.size() == 20) break;
-				}
-			}
-			return tabCompletes;
+			return plugin.getServer().getOnlinePlayers().stream().map(p -> p.getName())
+					.filter(name -> name.toLowerCase().startsWith(args[0])).limit(20).collect(Collectors.toList());
 		}
 		else if(args.length > 1 && plugin.getServer().getPlayer(args[0]) != null){
-			String arg = String.join(" ", args).toLowerCase();
-			arg = arg.substring(arg.indexOf(' ')+1);
-			final List<String> tabCompletes = new ArrayList<String>();
-			byte shown = 0;
-			for(String horseName : sender instanceof Player
-					? plugin.getAPI().getHorses(((Player)sender).getUniqueId()) : plugin.getAPI().getAllClaimedHorses()){
-				if(horseName.startsWith(arg)){
-					tabCompletes.add(horseName);
-					if(++shown == 20) break;
-				}
-			}
-			return tabCompletes;
+			final String arg = HorseUtils.cleanName(String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+			return (sender instanceof Player
+					? plugin.getAPI().getHorses(((Player)sender).getUniqueId())
+					: plugin.getAPI().getAllClaimedHorses()
+					).stream().filter(name -> name.startsWith(arg)).limit(20).collect(Collectors.toList());
 		}
 		return null;
 	}
