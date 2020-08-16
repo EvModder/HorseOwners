@@ -12,7 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import net.evmodder.EvLib.hooks.MultiverseHook;
-import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseUtils;
 
 public class CommandGetHorse extends HorseCommand{
 	boolean saveCoords, safeTeleports, allowTransworld;
@@ -29,7 +29,7 @@ public class CommandGetHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			//TODO: possible (but maybe laggy?): only list horses in same world if player lacks cross-world permission
 			byte shown = 0;
-			for(String horseName : plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())){
+			for(String horseName : plugin.getAPI().getHorses(((Player)sender).getUniqueId())){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
@@ -58,7 +58,7 @@ public class CommandGetHorse extends HorseCommand{
 		Entity horse;
 		Set<Entity> horses = new HashSet<Entity>();
 
-		if(safeTeleports && HorseLibrary.safeForHorses(p.getLocation()) == false){
+		if(safeTeleports && HorseUtils.safeForHorses(p.getLocation()) == false){
 			p.sendMessage(ChatColor.RED
 					+"Unable to teleport horse - Please move to a more open area to prevent risk of horse suffocation");
 			COMMAND_SUCCESS = false;
@@ -81,9 +81,9 @@ public class CommandGetHorse extends HorseCommand{
 				}
 			}
 
-			for(String horseName : plugin.getHorseOwners().get(p.getUniqueId())){
-				p.sendMessage("Fetching: "+horseName);
-				horse = plugin.findClaimedHorse(horseName, worlds);
+			for(String cleanHorseName : plugin.getAPI().getHorses(p.getUniqueId())){
+				p.sendMessage("Fetching: "+cleanHorseName);
+				horse = plugin.getAPI().getHorse(cleanHorseName, /*loadChunk=*/true);
 				if(horse != null) horses.add(horse);
 				else ++lost;
 			}
@@ -96,18 +96,19 @@ public class CommandGetHorse extends HorseCommand{
 			}
 		}
 		else{
-			if(plugin.isClaimedHorse(target) == false){
+			String cleanHorseName = HorseUtils.cleanName(target);
+			if(plugin.getAPI().isClaimedHorse(cleanHorseName) == false){
 				sender.sendMessage(ChatColor.RED+"Unknown horse '"+ChatColor.GRAY+target+ChatColor.RED+'\'');
 //				sender.sendMessage("�cUnclaimed horses cannot be teleported via command, you must first use /claimhorse");
 				COMMAND_SUCCESS = false;
 				return false;
 			}
-			else if(plugin.canAccess(p, target) == false){
+			else if(plugin.getAPI().canAccess(p.getUniqueId(), target) == false){
 				p.sendMessage(ChatColor.RED+"You may not teleport horses which you do not own");
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			horse = plugin.findClaimedHorse(target, null);
+			horse = plugin.getAPI().getHorse(cleanHorseName, /*loadChunk=*/true);
 //			horse = HorseLibrary.findAnyHorse(target);
 			if(horse == null){
 				p.sendMessage(ChatColor.RED+"Unable to find your horse! Perhaps the chunk it was in is unloaded?");
@@ -134,8 +135,8 @@ public class CommandGetHorse extends HorseCommand{
 
 		//Yay got to here! Hi horsie!
 		for(Entity h : horses){
-			HorseLibrary.teleportEntityWithPassengers(h, p.getLocation());
-			if(saveCoords) plugin.updateData(h);
+			HorseUtils.teleportEntityWithPassengers(h, p.getLocation());
+			if(saveCoords) plugin.getAPI().updateDatabase(h);
 		}
 		p.sendMessage(ChatColor.GREEN+"Fetched your horse"+(horses.size() > 1 ? "s!" : "!"));
 		COMMAND_SUCCESS = true;

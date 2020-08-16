@@ -1,12 +1,12 @@
 package net.evmodder.HorseOwners.commands;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import net.evmodder.HorseOwners.HorseUtils;
 
 public class CommandLockHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -15,8 +15,8 @@ public class CommandLockHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender instanceof Player
-						? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())
-						: plugin.getAllHorses()){
+						? plugin.getAPI().getHorses(((Player)sender).getUniqueId())
+						: plugin.getAPI().getAllHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
@@ -34,7 +34,7 @@ public class CommandLockHorse extends HorseCommand{
 		Player p = (sender instanceof Player) ? (Player)sender : null;
 		String horseName;
 
-		if(p != null && p.isInsideVehicle() && plugin.isClaimableHorseType(p.getVehicle())){
+		if(p != null && p.isInsideVehicle() && plugin.getAPI().isClaimableHorseType(p.getVehicle())){
 			if(p.getVehicle().getCustomName() == null){
 				p.sendMessage(ChatColor.RED+"This horse is ownerless!\nTry claiming it first with /namehorse");
 				COMMAND_SUCCESS = false;
@@ -52,18 +52,19 @@ public class CommandLockHorse extends HorseCommand{
 		else horseName = String.join(" ", args);
 
 		//by this point, a name has been determined
-		if(plugin.isLockedHorse(horseName)){
+		final String cleanHorseName = HorseUtils.cleanName(horseName);
+		if(plugin.getAPI().isLockedHorse(cleanHorseName)){
 			sender.sendMessage("§7This horse's name has already been locked");
 			COMMAND_SUCCESS = false;
 			return true;
 		}
-		if(!plugin.horseExists(horseName)){
+		if(!plugin.getAPI().horseExists(cleanHorseName)){
 			sender.sendMessage("§cUnknown horse! (check spelling)§7\n"+command.getUsage());
 			COMMAND_SUCCESS = false;
 			return true;
 		}
-		if(plugin.isClaimedHorse(horseName)){
-			if(p != null && plugin.canAccess(p, horseName) == false){
+		if(plugin.getAPI().isClaimedHorse(cleanHorseName)){
+			if(p != null && plugin.getAPI().canAccess(p.getUniqueId(), cleanHorseName) == false){
 				sender.sendMessage("§cYou cannot lock horses which you do not own");
 				COMMAND_SUCCESS = false;
 				return true;
@@ -77,7 +78,7 @@ public class CommandLockHorse extends HorseCommand{
 
 		//Yay got to here! Now make it forever!
 		sender.sendMessage("§7Your horse's name been locked! Nobody can change it now.");
-		plugin.lockHorse(horseName);
+		plugin.getAPI().setHorseNameLock(cleanHorseName, /*locked=*/true);
 		COMMAND_SUCCESS = true;
 		return true;
 	}

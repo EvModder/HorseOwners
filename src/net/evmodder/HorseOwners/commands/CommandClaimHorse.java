@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.inventory.ItemStack;
 import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseUtils;
 
 public class CommandClaimHorse extends HorseCommand{
 	final boolean renameNametag, alphanumeric;
@@ -44,13 +44,18 @@ public class CommandClaimHorse extends HorseCommand{
 		newName.replaceAll("\\s{2,}", " ").trim();//remove leftover spaces
 		int newNameLength = Math.max(ChatColor.stripColor(newName).length(), TextUtils.strLen(newName, false)/6);
 
-		String oldName = horse.getCustomName();
+		final String oldName = horse.getCustomName();
+		final String oldNameClean = HorseUtils.cleanName(oldName);
+		final String newNameClean = HorseUtils.cleanName(newName);
+		plugin.getLogger().info(("old name: "+oldName));
+		plugin.getLogger().info(("new name: "+newName));
+
 		if(oldName != null){
 			if(newName.equals(oldName)){
 				sender.sendMessage(ChatColor.RED+"This horse already has that name!");
 				return RenameResult.FAILED;
 			}
-			if(plugin.isLockedHorse(oldName)){
+			if(plugin.getAPI().isLockedHorse(oldNameClean)){
 				sender.sendMessage(ChatColor.RED+"You cannot rename "
 							+ChatColor.GRAY+ChatColor.ITALIC+oldName+ChatColor.RED+'.');
 				return RenameResult.FAILED_HINT;
@@ -64,10 +69,7 @@ public class CommandClaimHorse extends HorseCommand{
 			sender.sendMessage(ChatColor.RED+"Too long of a name!");
 			return RenameResult.FAILED;
 		}
-		plugin.getLogger().info(("old name: "+oldName));
-		plugin.getLogger().info(("new name: "+newName));
-		if(plugin.horseExists(newName) && (oldName == null ||
-				!HorseLibrary.cleanName(oldName).equals(HorseLibrary.cleanName(newName)))){
+		if(plugin.getAPI().horseExists(newNameClean) && (oldName == null || !oldNameClean.equals(newNameClean))){
 			sender.sendMessage(ChatColor.RED+"That name has already been taken!");
 			return RenameResult.FAILED;
 		}
@@ -87,13 +89,13 @@ public class CommandClaimHorse extends HorseCommand{
 		}
 
 		if(oldName != null && oldName.equals(newName) == false){//if had a name previously
-			boolean needToClaimFirst = (sender instanceof Player && !plugin.isOwner(((Player)sender).getUniqueId(), oldName));
-			if(needToClaimFirst && plugin.addClaimedHorse(((Player)sender).getUniqueId(), horse) == false){
+			boolean needToClaimFirst = (sender instanceof Player && !plugin.getAPI().isOwner(((Player)sender).getUniqueId(), oldName));
+			if(needToClaimFirst && plugin.getAPI().addClaimedHorse(((Player)sender).getUniqueId(), horse) == false){
 				sender.sendMessage(ChatColor.RED+"HorseClaimEvent cancelled by a plugin");
 				COMMAND_SUCCESS = false;
 				return RenameResult.FAILED_HINT;
 			}
-			if(plugin.renameHorse(oldName, newName) == false){
+			if(plugin.getAPI().renameHorse(oldNameClean, newName) == false){
 				sender.sendMessage(ChatColor.RED+"HorseRenameEvent cancelled by a plugin");
 				return RenameResult.FAILED_HINT;
 			}
@@ -119,7 +121,7 @@ public class CommandClaimHorse extends HorseCommand{
 		}
 
 		Player p = (Player)sender;
-		if(!p.isInsideVehicle() || !plugin.isClaimableHorseType(p.getVehicle())){
+		if(!p.isInsideVehicle() || !plugin.getAPI().isClaimableHorseType(p.getVehicle())){
 			p.sendMessage(ChatColor.RED+"You must be riding on a horse to use this command");
 			COMMAND_SUCCESS = false;
 			return true;
@@ -138,10 +140,11 @@ public class CommandClaimHorse extends HorseCommand{
 			return true;
 		}
 
-		String oldName = h.getCustomName();
-		boolean isOwner = plugin.isOwner(p.getUniqueId(), oldName);
+		final String oldName = h.getCustomName();
+		final String oldNameClean = HorseUtils.cleanName(oldName);
+		boolean isOwner = plugin.getAPI().isOwner(p.getUniqueId(), oldNameClean);
 
-		if(oldName != null && plugin.isClaimedHorse(oldName) && isOwner == false){
+		if(oldName != null && plugin.getAPI().isClaimedHorse(oldNameClean) && isOwner == false){
 			p.sendMessage(ChatColor.RED+"This horse already belongs to someone!");
 			COMMAND_SUCCESS = false;
 			return true;
@@ -160,7 +163,7 @@ public class CommandClaimHorse extends HorseCommand{
 			}
 		}
 		else{
-			String newName = String.join(" ", args);
+			final String newName = String.join(" ", args);
 			switch(attemptNameHorse(sender, h, newName)){
 				case FAILED: COMMAND_SUCCESS = false; return true;
 				case FAILED_HINT: COMMAND_SUCCESS = false; return false;
@@ -170,7 +173,7 @@ public class CommandClaimHorse extends HorseCommand{
 		}
 
 		//My horsie!
-		if(plugin.addClaimedHorse(p.getUniqueId(), h) == false){
+		if(plugin.getAPI().addClaimedHorse(p.getUniqueId(), h) == false){
 			p.sendMessage(ChatColor.RED+"HorseClaimEvent cancelled by a plugin");
 			COMMAND_SUCCESS = false;
 			return true;

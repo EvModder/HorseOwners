@@ -9,8 +9,8 @@ public class DismountListener implements Listener{
 	//Clear stats on death
 	@EventHandler
 	public void onHorseDismount(EntityDismountEvent evt){
-		if(HorseManager.getPlugin().isClaimableHorseType(evt.getDismounted())){
-			HorseManager.getPlugin().updateData(evt.getDismounted());
+		if(HorseManager.getPlugin().getAPI().isClaimableHorseType(evt.getDismounted())){
+			HorseManager.getPlugin().getAPI().updateDatabase(evt.getDismounted());
 		}
 	}
 }

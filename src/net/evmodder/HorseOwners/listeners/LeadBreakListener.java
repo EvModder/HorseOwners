@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class LeadBreakListener implements Listener{
@@ -24,12 +25,12 @@ public class LeadBreakListener implements Listener{
 			LeashHitch leash = (LeashHitch) evt.getEntity();
 
 			for(Entity e : leash.getNearbyEntities(15, 15, 15)){
-				if(plugin.isClaimableHorseType(e) && e.getCustomName() != null && e instanceof LivingEntity){
+				if(plugin.getAPI().isClaimableHorseType(e) && e.getCustomName() != null && e instanceof LivingEntity){
 					LivingEntity h = (LivingEntity) e;
 					if(h.isLeashed() && h.getLeashHolder().getUniqueId().equals(leash.getUniqueId())){
 						Player p = (Player) evt.getRemover();
 
-						if(plugin.canAccess(p, h.getCustomName()) == false){
+						if(plugin.getAPI().canAccess(p.getUniqueId(), HorseUtils.cleanName(h.getCustomName())) == false){
 							evt.setCancelled(true);
 							p.sendMessage(ChatColor.RED+"You do not have permission to unleash this horse.");
 						}

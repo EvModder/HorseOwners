@@ -16,7 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
-import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.HorseManager;
 import net.evmodder.HorseOwners.commands.CommandClaimHorse;
 
@@ -57,9 +57,10 @@ public class ClickListener implements Listener{
 		AbstractHorse horse = (AbstractHorse) evt.getRightClicked();
 		ItemStack clickItem = p.getInventory().getItemInMainHand();
 
+		final String cleanHorseName = HorseUtils.cleanName(horse.getCustomName());
 		if(isUsableNametag(clickItem)){
 //			p.sendMessage(ChatColor.RED+"Use /namehorse to rename your horses.");
-			if(!plugin.canAccess(p, horse.getCustomName())){
+			if(!plugin.getAPI().canAccess(p.getUniqueId(), cleanHorseName)){
 				p.sendMessage(ChatColor.RED+"You do not have permission to rename this horse");
 				evt.setCancelled(true);
 			}
@@ -76,7 +77,7 @@ public class ClickListener implements Listener{
 			return;
 		}
 
-		if(plugin.canAccess(p, horse.getCustomName())) return;
+		if(plugin.getAPI().canAccess(p.getUniqueId(), cleanHorseName)) return;
 
 		// Plugin-handled leashing/unleashing
 		if(horse.isLeashed()){
@@ -100,20 +101,20 @@ public class ClickListener implements Listener{
 		}
 
 		//if they do NOT own the horse and are NOT performing a leashing action
-		if(plugin.isClaimedHorse(horse.getCustomName())){
-			if(breedPrivateHorse && HorseLibrary.isBreedingFood(clickItem.getType()) && horse.canBreed()){
+		if(plugin.getAPI().isClaimedHorse(cleanHorseName)){
+			if(breedPrivateHorse && HorseUtils.isBreedingFood(clickItem.getType()) && horse.canBreed()){
 				//don't cancel, but make sure a new rider isn't put on the horse
 				//if(horse.getPassengers() == null || horse.getPassengers().isEmpty())
 				delayedEject(horse, p.getUniqueId());
 			}
-			else if(feedPrivateHorse && HorseLibrary.isHorseFood(clickItem.getType())
-					&& horse.getHealth() < HorseLibrary.getNormalMaxHealth(horse))
+			else if(feedPrivateHorse && HorseUtils.isHorseFood(clickItem.getType())
+					&& horse.getHealth() < HorseUtils.getNormalMaxHealth(horse))
 			{
 				//don't cancel, but make sure a new rider isn't put on the horse
 				//if(horse.getPassengers() == null || horse.getPassengers().isEmpty())
 				delayedEject(horse, p.getUniqueId());
 			}
-			else if(plugin.useOneTimeAccess(p.getUniqueId(), horse.getCustomName())){
+			else if(plugin.getAPI().useOneTimeAccess(p.getUniqueId(), cleanHorseName)){
 				p.sendMessage(ChatColor.GREEN+"You have used a one-time-pass to mount this horse, "+
 						ChatColor.GRAY+horse.getCustomName()+ChatColor.GREEN+".");
 				//allow
@@ -165,7 +166,7 @@ public class ClickListener implements Listener{
 				if(e instanceof AbstractHorse && e.getCustomName() != null){
 					AbstractHorse h = (AbstractHorse) e;
 					if(h.isLeashed() && h.getLeashHolder().getUniqueId().equals(leash.getUniqueId())){
-						if(plugin.canAccess(p, h.getCustomName()) == false){
+						if(plugin.getAPI().canAccess(p.getUniqueId(), HorseUtils.cleanName(h.getCustomName())) == false){
 							evt.setCancelled(true);
 							p.sendMessage(ChatColor.RED+"You do not have permission to unleash this horse.");
 						}

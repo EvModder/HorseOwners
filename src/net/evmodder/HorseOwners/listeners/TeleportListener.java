@@ -11,7 +11,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import net.evmodder.EvLib.hooks.MultiverseHook;
-import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class TeleportListener implements Listener{
@@ -44,9 +44,9 @@ public class TeleportListener implements Listener{
 		}
 
 		//Teleporting must be more than 20 blocks 
-		if(HorseLibrary.notFar(evt.getFrom(), evt.getTo())) return;
+		if(HorseUtils.notFar(evt.getFrom(), evt.getTo())) return;
 
-		boolean safeForHorses = HorseLibrary.safeForHorses(evt.getTo());
+		boolean safeForHorses = HorseUtils.safeForHorses(evt.getTo());
 		if(safeForHorses == false && leashedMobs == false) return;
 
 		UUID pUUID = evt.getPlayer().getUniqueId();
@@ -67,11 +67,11 @@ public class TeleportListener implements Listener{
 					}
 				}
 				else if(unleashedHorses && isHorse){
-					boolean owned = le.getCustomName() != null && plugin.isOwner(pUUID, le.getCustomName());
+					boolean owned = le.getCustomName() != null && plugin.getAPI().isOwner(pUUID, HorseUtils.cleanName(le.getCustomName()));
 					boolean nearby = evt.getPlayer().getNearbyEntities(4, 1, 4).contains(le);
 					canTp = nearby && owned;
 				}
-				if(canTp) HorseLibrary.teleportEntityWithPassengers(e, evt.getTo());
+				if(canTp) HorseUtils.teleportEntityWithPassengers(e, evt.getTo());
 			}
 		}
 		if(failedLeashedHorseTp) evt.getPlayer().sendMessage(ChatColor.GRAY

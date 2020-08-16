@@ -9,6 +9,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
+import net.evmodder.HorseOwners.HorseUtils;
 
 public class CommandAllowRide extends HorseCommand{
 	@Override
@@ -29,8 +30,8 @@ public class CommandAllowRide extends HorseCommand{
 			arg = arg.substring(arg.indexOf(' ')+1);
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
-			for(String horseName : sender instanceof Player ?
-					plugin.getHorseOwners().get(((Player)sender).getUniqueId()) : plugin.getAllClaimedHorses()){
+			for(String horseName : sender instanceof Player
+					? plugin.getAPI().getHorses(((Player)sender).getUniqueId()) : plugin.getAPI().getAllClaimedHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
@@ -60,10 +61,11 @@ public class CommandAllowRide extends HorseCommand{
 		}
 
 		Player p = (sender instanceof Player) ? (Player)sender : null;
-		String horseName;
-		if(args.length > 1) horseName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+		String cleanHorseName;
+		if(args.length > 1) cleanHorseName = HorseUtils.cleanName(String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
 		else if(p != null && p.isInsideVehicle() && p.getVehicle() instanceof Horse){
-			if((horseName=p.getVehicle().getCustomName()) == null || plugin.isClaimedHorse(horseName) == false){
+			cleanHorseName = HorseUtils.cleanName(p.getVehicle().getCustomName());
+			if(cleanHorseName == null || plugin.getAPI().isClaimedHorse(cleanHorseName) == false){
 				sender.sendMessage(ChatColor.GRAY+"This horse is ownerless, anyone can ride it!");
 				COMMAND_SUCCESS = false;
 				return true;
@@ -76,35 +78,36 @@ public class CommandAllowRide extends HorseCommand{
 			return false;
 		}
 
-		if(!plugin.horseExists(horseName)){
+		if(!plugin.getAPI().horseExists(cleanHorseName)){
 			sender.sendMessage(ChatColor.RED+"Unknown horse! (check spelling)"+ChatColor.GRAY+'\n'+command.getUsage());
 			COMMAND_SUCCESS = false;
 			return true;
 		}
-		if(plugin.isClaimedHorse(horseName) == false){
+		if(plugin.getAPI().isClaimedHorse(cleanHorseName) == false){
 			sender.sendMessage(ChatColor.GRAY+"This horse is ownerless, anyone can ride it!");
 			COMMAND_SUCCESS = false;
 			return true;
 		}
-		if(p != null && plugin.canAccess(p, horseName) == false){
+		if(p != null && plugin.getAPI().canAccess(p.getUniqueId(), cleanHorseName) == false){
 			sender.sendMessage(ChatColor.RED+"You do not own this horse");
 			COMMAND_SUCCESS = false;
 			return true;
 		}
 
 		//Yay got to here! Now give them a boost up!
-		plugin.grantOneTimeAccess(recipient.getUniqueId(), horseName);
+		plugin.getAPI().grantOneTimeAccess(recipient.getUniqueId(), cleanHorseName);
 
 		//Tell the sender
+		final String rawHorseName = plugin.getAPI().getHorseName(cleanHorseName);
 		sender.sendMessage(ChatColor.GREEN+"Player "+ChatColor.GRAY+args[0]
 					+ChatColor.GREEN+" is now allowed one ride on the horse, "
-					+ChatColor.GRAY+horseName+ChatColor.GREEN+'.');
+					+ChatColor.GRAY+rawHorseName+ChatColor.GREEN+'.');
 		
 		//Tell the allowed rider
 		if(recipient.isOnline()) recipient.getPlayer()
 				.sendMessage(ChatColor.GRAY+sender.getName()+ChatColor.GREEN
 				+" has granted you permission for a single ride on their horse, "
-				+ChatColor.GRAY+horseName+ChatColor.GREEN+'.');
+				+ChatColor.GRAY+rawHorseName+ChatColor.GREEN+'.');
 		COMMAND_SUCCESS = true;
 		return true;
 	}

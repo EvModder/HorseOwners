@@ -46,8 +46,8 @@ public class CommandListHorse extends HorseCommand{
 	String formatHorseList(Collection<String> horses, boolean monospaced){
 		ArrayList<String> rawNames = new ArrayList<String>();
 		int maxHorseNameLen = 0;
-		for(String horseName : horses){
-			String rawName = plugin.getHorseName(horseName);
+		for(String cleanName : horses){
+			String rawName = plugin.getAPI().getHorseName(cleanName);
 			maxHorseNameLen = Math.max(maxHorseNameLen, TextUtils.strLen(rawName, monospaced));
 			rawNames.add(rawName);
 		}
@@ -76,13 +76,14 @@ public class CommandListHorse extends HorseCommand{
 	}
 	void listAllHorses(CommandSender sender){
 		boolean monospaced = !(sender instanceof Player);
-		Collection<String> horseList = sender.hasPermission("horseowners.list.unclaimed") ? plugin.getAllHorses() : plugin.getAllClaimedHorses();
+		Collection<String> horseList = sender.hasPermission("horseowners.list.unclaimed")
+				? plugin.getAPI().getAllHorses() : plugin.getAPI().getAllClaimedHorses();
 		if(horseList.size() > 50/* && sender instanceof Player*/){
 			plugin.getLogger().info("Showing compacted '/hm all' for "+sender.getName());
 			StringBuilder builder = new StringBuilder();
-			HashSet<String> unclaimed = new HashSet<>(plugin.getAllHorses());
+			HashSet<String> unclaimed = new HashSet<>(plugin.getAPI().getAllHorses());
 			int numOwners = 0;
-			for(Entry<UUID, Set<String>> horseOwner : plugin.getHorseOwners().entrySet()){
+			for(Entry<UUID, Set<String>> horseOwner : plugin.getAPI().getHorseOwnersMap().entrySet()){
 				String ownerName = getPlayerName(horseOwner.getKey());
 				if(ownerName == null || horseOwner.getValue() == null || horseOwner.getValue().isEmpty()) continue;
 				unclaimed.removeAll(horseOwner.getValue());
@@ -93,9 +94,9 @@ public class CommandListHorse extends HorseCommand{
 			if(sender.hasPermission("horseowners.list.unclaimed") && !unclaimed.isEmpty()){
 				builder.append(makeHeader("Wild", monospaced));
 				builder.append(formatHorseList(unclaimed, monospaced)).append('\n');
-				builder.append("§7Combined total: §f").append(plugin.getAllHorses().size());
+				builder.append("§7Combined total: §f").append(plugin.getAPI().getAllHorses().size());
 			}
-			else if(numOwners > 1) builder.append("§7Combined total: §f").append(plugin.getAllHorses().size()-unclaimed.size());
+			else if(numOwners > 1) builder.append("§7Combined total: §f").append(plugin.getAPI().getAllHorses().size()-unclaimed.size());
 			sender.sendMessage(builder.toString());
 			return;
 		}
@@ -105,9 +106,9 @@ public class CommandListHorse extends HorseCommand{
 
 		StringBuilder builder = new StringBuilder(makeHeader("All", monospaced));
 		int maxHorseNameLen = 0, maxOwnerNameLen = 0;
-		for(String horse : sortedHorseList){
-			String owner = plugin.getHorseOwnerName(horse);
-			String rawName = plugin.getHorseName(horse);
+		for(String cleanName : sortedHorseList){
+			String owner = plugin.getAPI().getHorseOwnerName(cleanName);
+			String rawName = plugin.getAPI().getHorseName(cleanName);
 			maxHorseNameLen = Math.max(maxHorseNameLen, TextUtils.strLen(rawName, monospaced));
 			if(owner == null) owner = "N/A";
 			else maxOwnerNameLen = Math.max(maxOwnerNameLen, TextUtils.strLen(owner, monospaced));
@@ -157,8 +158,8 @@ public class CommandListHorse extends HorseCommand{
 		else if(sender.hasPermission("horseowners.list.others") && !target.equalsIgnoreCase(sender.getName())){
 			@SuppressWarnings("deprecation")
 			OfflinePlayer targetP = plugin.getServer().getOfflinePlayer(target);
-			Set<String> targetHorses;
-			if(targetP != null && (targetHorses=plugin.getHorseOwners().get(targetP.getUniqueId())) != null && !targetHorses.isEmpty()){
+			Set<String> targetHorses = targetP == null ? null : plugin.getAPI().getHorses(targetP.getUniqueId());
+			if(targetHorses != null && !targetHorses.isEmpty()){
 				StringBuilder builder = new StringBuilder("\n");
 				builder.append(makeHeader(targetP.getName()+"'s", consoleSender));
 				builder.append(formatHorseList(targetHorses, consoleSender));
@@ -177,8 +178,8 @@ public class CommandListHorse extends HorseCommand{
 				if(horses.size() > 9) sender.sendMessage("§7Total: §f" + horses.size());
 			}
 			else sender.sendMessage("§cYou do not own any horses!");*/
-			Collection<String> horses = plugin.getHorseOwners().get(((Player)sender).getUniqueId());
-			if(horses == null){
+			Collection<String> horses = plugin.getAPI().getHorses(((Player)sender).getUniqueId());
+			if(horses == null || horses.isEmpty()){
 				sender.sendMessage("§cYou do not own any horses!");
 			}
 			else{

@@ -6,7 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class SpawnListener implements Listener{
@@ -18,8 +18,8 @@ public class SpawnListener implements Listener{
 		double normalJump = plugin.getConfig().getDouble("max-jump", 5.29);
 		double normalSpeed = plugin.getConfig().getDouble("max-speed", 14.5125);
 		double normalHealth = plugin.getConfig().getDouble("max-health", 30);
-		MAX_JUMP = normalJump > 0 ? HorseLibrary.denormalizeJump(normalJump) : -1;
-		MAX_SPEED = normalSpeed > 0 ? HorseLibrary.denormalizeSpeed(normalSpeed) : -1;
+		MAX_JUMP = normalJump > 0 ? HorseUtils.denormalizeJump(normalJump) : -1;
+		MAX_SPEED = normalSpeed > 0 ? HorseUtils.denormalizeSpeed(normalSpeed) : -1;
 		MAX_HEALTH = normalHealth > 0 ? normalHealth : -1;
 	}
 
@@ -56,10 +56,10 @@ public class SpawnListener implements Listener{
 			horse.setHealth(health);
 		}
 		// Used to rank/record stats for wild horses (rankUnclaimed)
-		if(!evt.isCancelled() && plugin.isClaimableHorseType(evt.getEntity())){
-			HorseLibrary.setSpawnReason(evt.getEntity(), evt.getSpawnReason());
-			HorseLibrary.setTimeBorn(evt.getEntity(), System.currentTimeMillis());
-			plugin.updateData(evt.getEntity());
+		if(!evt.isCancelled() && plugin.getAPI().isClaimableHorseType(evt.getEntity())){
+			HorseUtils.setSpawnReason(evt.getEntity(), evt.getSpawnReason());
+			HorseUtils.setTimeBorn(evt.getEntity(), System.currentTimeMillis());
+			plugin.getAPI().updateDatabase(evt.getEntity());
 		}
 	}
 }

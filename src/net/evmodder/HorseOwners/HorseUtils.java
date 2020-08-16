@@ -1,7 +1,6 @@
 package net.evmodder.HorseOwners;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -20,7 +19,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.EvLib.util.Pair;
 
-public class HorseLibrary {
+public class HorseUtils {
 //	public static SpeedCalculator speedCalc = new SpeedCalculator(/*org.bukkit.Bukkit.getBukkitVersion()*/);
 	//--------------- Library functions -----------------------------------------------------
 	public static boolean isHorseFood(Material mat){
@@ -121,18 +120,6 @@ public class HorseLibrary {
 				nextPassenger = passenger;//last value in "passengers" will be null.
 			}
 		}
-	}
-
-	public static AbstractHorse findAnyHorse(String horseName, World... worlds){
-		horseName = cleanName(horseName);
-		for(World world : (worlds == null ? org.bukkit.Bukkit.getWorlds() : Arrays.asList(worlds))){
-			for(AbstractHorse horse : world.getEntitiesByClass(AbstractHorse.class)){
-				if(horse.getCustomName() != null && cleanName(horse.getCustomName()).equals(horseName)){
-					return horse;
-				}
-			}
-		}
-		return null;
 	}
 
 	public static boolean isLeashableBlock(Material mat){

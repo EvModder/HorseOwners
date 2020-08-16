@@ -11,7 +11,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.MetadataValue;
-import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseUtils;
 
 public class CommandCopyHorse extends HorseCommand {
 	boolean safeTeleports;
@@ -26,8 +26,8 @@ public class CommandCopyHorse extends HorseCommand {
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender.hasPermission("horseowners.override")
-					? plugin.getAllHorses()
-					: plugin.getHorseOwners().get(((Player)sender).getUniqueId())){
+					? plugin.getAPI().getAllHorses()
+					: plugin.getAPI().getHorses(((Player)sender).getUniqueId())){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
@@ -47,28 +47,29 @@ public class CommandCopyHorse extends HorseCommand {
 		}
 
 		Player p = (Player)sender;
-		String target = String.join(" ",  args);
+		final String horseName = String.join(" ",  args);
+		final String cleanHorseName = HorseUtils.cleanName(horseName);
 		AbstractHorse horse;
 
-		if(safeTeleports && !HorseLibrary.safeForHorses(p.getLocation())){
+		if(safeTeleports && !HorseUtils.safeForHorses(p.getLocation())){
 			p.sendMessage(ChatColor.RED+
 				"Unable to spawn horse - Please move to a more open area to prevent risk of horse suffocation");
 			COMMAND_SUCCESS = false;
 			return true;
 		}
 
-		if(!plugin.isClaimedHorse(target)){
-			sender.sendMessage(ChatColor.RED+"Unknown horse '"+ChatColor.GRAY+target+ChatColor.RED+"'");
+		if(!plugin.getAPI().isClaimedHorse(cleanHorseName)){
+			sender.sendMessage(ChatColor.RED+"Unknown horse '"+ChatColor.GRAY+horseName+ChatColor.RED+"'");
 //			sender.sendMessage(ChatColor.RED+"Unclaimed horses cannot be copied via command, you must first use /claimhorse");
 			COMMAND_SUCCESS = false;
 			return false;
 		}
-		else if(!plugin.canAccess(p, target)){
+		else if(!plugin.getAPI().canAccess(p.getUniqueId(), cleanHorseName)){
 			p.sendMessage(ChatColor.RED+"You cannot copy horses which you do not own");
 			COMMAND_SUCCESS = false;
 			return true;
 		}
-		Entity e = plugin.findClaimedHorse(target, null);
+		Entity e = plugin.getAPI().getHorse(cleanHorseName, /*loadChunk=*/true);
 		horse = (e != null && e instanceof AbstractHorse) ? (AbstractHorse)e : null;
 //		horse = HorseLibrary.findAnyHorse(target);
 		if(horse == null){
@@ -116,10 +117,10 @@ public class CommandCopyHorse extends HorseCommand {
 		newHorse.getInventory().setContents(horse.getInventory().getContents());// Risky for duping reasons.
 
 		// Metadata objects:
-		String mother = HorseLibrary.getMother(horse); if(mother != null) HorseLibrary.setMother(newHorse, mother);
-		String father = HorseLibrary.getFather(horse); if(father != null) HorseLibrary.setFather(newHorse, father);
-		String dna = HorseLibrary.getDNA(horse, null); if(dna != null) HorseLibrary.setDNA(newHorse, dna);
-		Long timeBorn = HorseLibrary.getTimeBorn(horse); if(timeBorn != null) HorseLibrary.setTimeBorn(newHorse, timeBorn);
+		String mother = HorseUtils.getMother(horse); if(mother != null) HorseUtils.setMother(newHorse, mother);
+		String father = HorseUtils.getFather(horse); if(father != null) HorseUtils.setFather(newHorse, father);
+		String dna = HorseUtils.getDNA(horse, null); if(dna != null) HorseUtils.setDNA(newHorse, dna);
+		Long timeBorn = HorseUtils.getTimeBorn(horse); if(timeBorn != null) HorseUtils.setTimeBorn(newHorse, timeBorn);
 		for(MetadataValue claimEvt : horse.getMetadata("claimed_by")) newHorse.setMetadata("claimed_by", claimEvt);
 		// This one left unset because, well, the "spawn reason" is /hm copy
 //		SpawnReason spawnReason = HorseLibrary.getSpawnReason(horse); if(spawnReason != null) HorseLibrary.setSpawnReason(newHorse, spawnReason);

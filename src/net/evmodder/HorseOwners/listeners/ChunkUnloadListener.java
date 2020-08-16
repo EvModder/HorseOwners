@@ -8,6 +8,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkUnloadEvent;
+import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class ChunkUnloadListener implements Listener{
@@ -24,11 +25,11 @@ public class ChunkUnloadListener implements Listener{
 	@EventHandler
 	public void onChunkUnload(ChunkUnloadEvent evt){
 		for(Entity entity : evt.getChunk().getEntities()){
-			if(entity.getCustomName() != null && plugin.isClaimableHorseType(entity)
-				&& plugin.isClaimedHorse(entity.getCustomName()))
+			if(entity.getCustomName() != null && plugin.getAPI().isClaimableHorseType(entity)
+				&& plugin.getAPI().isClaimedHorse(HorseUtils.cleanName(entity.getCustomName())))
 			{
 				if(keepLoaded){
-					UUID uuid = plugin.getHorseOwner(entity.getCustomName());
+					UUID uuid = plugin.getAPI().getHorseOwner(HorseUtils.cleanName(entity.getCustomName()));
 					if(uuid != null){
 						OfflinePlayer owner = plugin.getServer().getOfflinePlayer(uuid);
 						if(owner != null && owner.isOnline()){
@@ -37,7 +38,7 @@ public class ChunkUnloadListener implements Listener{
 						}
 					}
 				}
-				plugin.updateData((AbstractHorse) entity);
+				plugin.getAPI().updateDatabase((AbstractHorse) entity);
 			}//if claimed
 		}//for each entity in chunk
 	}

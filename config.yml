@@ -5,14 +5,6 @@
 # Enable automatic plugin updates
 update-plugin: true
 
-# Should the server keep track of horses' ranking?
-# WARNING: Setting to false will clear existing rank data
-rank-claimed-horses: true
-
-# Should the server also record stats of unclaimed/wild horses?
-# WARNING: Requires rank-claimed-horses is set to true
-rank-unclaimed-horses: true
-
 # Allow players to "lock" a horse's name
 # WARNING: Setting to false will clear existing name-lock data
 enable-name-locks: true
@@ -72,13 +64,20 @@ max-jump: 5.5
 max-speed: 15
 max-health: 30
 
-# WARNING: Setting any 'save-X' settings to false will clear its existing data
-save-horse-coordinates: true
-save-horse-lineage: true
-save-horse-age: true
-save-claim-history: true
-save-spawn-data: true
-save-llama-strength: true
+# WARNING: Setting any "save-XXX: false" will clear its existing data
+save-horse-coordinates: true  # X and Z
+save-horse-lineage: true  # Father and Mother
+save-horse-age: true  # TicksLived
+save-claim-history: true  # Past owners, timestamps
+save-spawn-data: true  # SpawnReason, timestamp
+save-equine-stats: true  # Speed, Health, Jump, Llama-strengt
+
+# Should the server also record stats of unclaimed/wild horses?
+save-unclaimed-horses: true
+
+# Should the plugin build a ranklist for horse stats?
+# Requires save-equine-stats: true
+build-ranklists: true
 
 # Assign a random name to a new foal at birth.
 # Requires modified-breeding: true

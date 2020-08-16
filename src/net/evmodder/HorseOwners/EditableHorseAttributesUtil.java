@@ -34,7 +34,7 @@ public class EditableHorseAttributesUtil{
 
 	public EditableHorseAttributesUtil(HorseManager pl){
 		plugin = pl;
-		claimableTypes = plugin.getClaimableHorseTypes();
+		claimableTypes = plugin.getAPI().getClaimableHorseTypes();
 		flags = new HashMap<String, List<String>>();
 		unusableFlags = new HashSet<String>();
 		flags.put("name:", null);
@@ -276,13 +276,13 @@ public class EditableHorseAttributesUtil{
 		}
 		if(horse instanceof Attributable){
 			if(attributes.speed != null)
-				((AbstractHorse)horse).getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(HorseLibrary.denormalizeSpeed(attributes.speed));
+				((AbstractHorse)horse).getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(HorseUtils.denormalizeSpeed(attributes.speed));
 			if(attributes.health != null && horse instanceof Damageable){
 				((Attributable)horse).getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(attributes.health);
 				((Damageable)horse).setHealth(attributes.health);
 			}
 			if(horse instanceof AbstractHorse){
-				if(attributes.jump != null) ((AbstractHorse)horse).setJumpStrength(HorseLibrary.denormalizeJump(attributes.jump));
+				if(attributes.jump != null) ((AbstractHorse)horse).setJumpStrength(HorseUtils.denormalizeJump(attributes.jump));
 				if(attributes.strength != null && horse instanceof Llama) ((Llama)horse).setStrength(attributes.strength);;
 			}
 		}
@@ -294,6 +294,6 @@ public class EditableHorseAttributesUtil{
 		if(attributes.tamer != null && horse instanceof Tameable){
 			((Tameable)horse).setTamed(true); ((Tameable)horse).setOwner(attributes.tamer);
 		}
-		if(attributes.owner != null) plugin.addClaimedHorse(attributes.owner.getUniqueId(), horse);
+		if(attributes.owner != null) plugin.getAPI().addClaimedHorse(attributes.owner.getUniqueId(), horse);
 	}
 }

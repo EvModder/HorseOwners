@@ -2,13 +2,13 @@ package net.evmodder.HorseOwners.commands;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import net.evmodder.HorseOwners.HorseUtils;
 
 public class CommandRenameHorse extends HorseCommand{
 	final CommandClaimHorse claimHorseCommandExecutor;
@@ -23,8 +23,8 @@ public class CommandRenameHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender instanceof Player
-						? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())
-						: plugin.getAllHorses()){
+						? plugin.getAPI().getHorses(((Player)sender).getUniqueId())
+						: plugin.getAPI().getAllHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
@@ -40,7 +40,7 @@ public class CommandRenameHorse extends HorseCommand{
 		//cmd:	/hm rename [name]
 		if(sender instanceof Player){
 			Player p = (Player)sender;
-			if(p.isInsideVehicle() && plugin.isClaimableHorseType(p.getVehicle())){
+			if(p.isInsideVehicle() && plugin.getAPI().isClaimableHorseType(p.getVehicle())){
 				return claimHorseCommandExecutor.onHorseCommand(sender, command, label, args);
 			}
 		}
@@ -58,14 +58,14 @@ public class CommandRenameHorse extends HorseCommand{
 		String anyHorse = null, claimedHorse = null, accessHorse = null;
 		String newName = null;
 		for(int i=1; i<args.length; ++i){
-			String candidate = String.join(" ", Arrays.copyOfRange(args, 0, i));
-			if(plugin.horseExists(candidate)){
-				anyHorse = candidate;
+			final String cleanHorseNameCandidate = HorseUtils.cleanName(String.join(" ", Arrays.copyOfRange(args, 0, i)));
+			if(plugin.getAPI().horseExists(cleanHorseNameCandidate)){
+				anyHorse = cleanHorseNameCandidate;
 				newName = String.join(" ", Arrays.copyOfRange(args, i, args.length));
-				if(plugin.isClaimedHorse(candidate)){
-					claimedHorse = candidate;
-					if(sender instanceof Player && plugin.canAccess((Player)sender, candidate)){
-						accessHorse = candidate;
+				if(plugin.getAPI().isClaimedHorse(cleanHorseNameCandidate)){
+					claimedHorse = cleanHorseNameCandidate;
+					if(sender instanceof Player && plugin.getAPI().canAccess(((Player)sender).getUniqueId(), cleanHorseNameCandidate)){
+						accessHorse = cleanHorseNameCandidate;
 						break;
 					}
 				}
@@ -89,9 +89,9 @@ public class CommandRenameHorse extends HorseCommand{
 			COMMAND_SUCCESS = false;
 			return true;
 		}
-		String oldName = accessHorse != null ? accessHorse : claimedHorse != null ? claimedHorse : anyHorse;
+		final String oldNameClean = accessHorse != null ? accessHorse : claimedHorse != null ? claimedHorse : anyHorse;
 
-		Entity horse = plugin.findClaimedHorse(oldName);
+		Entity horse = plugin.getAPI().getHorse(oldNameClean, /*loadChunk=*/true);
 		if(horse == null){
 			sender.sendMessage(ChatColor.RED+"Unable to find horse! Perhaps the chunk it was in is unloaded?");
 			COMMAND_SUCCESS = false;

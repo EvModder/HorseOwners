@@ -7,6 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
 import net.evmodder.HorseOwners.EditableHorseAttributesUtil;
+import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.EditableHorseAttributesUtil.HorseAttributes;
 import org.bukkit.entity.Player;
 
@@ -40,7 +41,7 @@ public class CommandEditHorse extends HorseCommand{
 			return true;
 		}
 		Player p = (Player)sender;
-		if(!p.isInsideVehicle() || !plugin.isClaimableHorseType(p.getVehicle())){
+		if(!p.isInsideVehicle() || !plugin.getAPI().isClaimableHorseType(p.getVehicle())){
 			p.sendMessage(ChatColor.RED+"You must be riding on a horse to use this command");
 			COMMAND_SUCCESS = false;
 			return true;
@@ -61,14 +62,15 @@ public class CommandEditHorse extends HorseCommand{
 			return !attributes.parseError;
 		}
 		if(attributes.name != null && horse.getCustomName() != null && !attributes.name.equals(horse.getCustomName())){
-			if(plugin.renameHorse(horse.getCustomName(), attributes.name) == false){
+			final String oldNameClean = HorseUtils.cleanName(horse.getCustomName());
+			if(plugin.getAPI().renameHorse(oldNameClean, attributes.name) == false){
 				sender.sendMessage(ChatColor.RED+"HorseRenameEvent cancelled by a plugin");
 				COMMAND_SUCCESS = false;
 				return true;
 			}
 		}
 		editableAttributesUtil.applyAttributes(horse, attributes);
-		plugin.updateData(horse);
+		plugin.getAPI().updateDatabase(horse);
 
 		sender.sendMessage(ChatColor.GREEN+"Horse modification completed successfully");
 		COMMAND_SUCCESS = true;

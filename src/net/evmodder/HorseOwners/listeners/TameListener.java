@@ -19,11 +19,10 @@ public class TameListener implements Listener{
 
 	@EventHandler
 	public void onTame(EntityTameEvent evt){
-		if(evt.getEntity().getCustomName() != null && HorseManager.getPlugin().isClaimableHorseType(evt.getEntity()))
-		{
+		if(evt.getEntity().getCustomName() != null && HorseManager.getPlugin().getAPI().isClaimableHorseType(evt.getEntity())){
 			Player p = evt.getEntity().getServer().getPlayer(evt.getOwner().getUniqueId());
 			if(p != null){
-				if(CLAIM_ON_TAME) HorseManager.getPlugin().addClaimedHorse(p.getUniqueId(), evt.getEntity());
+				if(CLAIM_ON_TAME) HorseManager.getPlugin().getAPI().addClaimedHorse(p.getUniqueId(), evt.getEntity());
 				if(!NOTIFY_ON_TAME.isBlank()) p.sendMessage(NOTIFY_ON_TAME);
 			}
 		}

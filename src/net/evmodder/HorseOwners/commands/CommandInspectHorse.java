@@ -3,9 +3,9 @@ package net.evmodder.HorseOwners.commands;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.attribute.Attributable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -16,7 +16,7 @@ import org.bukkit.entity.Llama;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class CommandInspectHorse extends HorseCommand{
@@ -35,8 +35,8 @@ public class CommandInspectHorse extends HorseCommand{
 			byte shown = 0;
 			for(String horseName : sender.hasPermission("horseowners.inspect.others")
 					? (sender.hasPermission("horseowners.inspect.unclaimed")
-					? plugin.getAllHorses() : plugin.getAllClaimedHorses())
-					: plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())){
+					? plugin.getAPI().getAllHorses() : plugin.getAPI().getAllClaimedHorses())
+					: plugin.getAPI().getHorses(((Player)sender).getUniqueId())){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
@@ -54,7 +54,7 @@ public class CommandInspectHorse extends HorseCommand{
 			//'I', 't', 'Ì', 'Í', 'Î', 'Ï', 'î', 'ï', // (8)
 	};
 	private String getCondensedDNA(Entity horse){
-		String dna = HorseLibrary.getDNA(horse, null);
+		String dna = HorseUtils.getDNA(horse, null);
 		if(dna == null) return null;
 		char[] dnaChars = dna.toLowerCase().toCharArray();
 		for(int i=0; i<dnaChars.length; ++i) dnaChars[i] = dnaMap[(int)(dnaChars[i] - 'a')];// Assumes all DNA chars are [a-z]
@@ -65,20 +65,20 @@ public class CommandInspectHorse extends HorseCommand{
 		//cmd:	/hm inspect [horse]
 		Player p = (sender instanceof Player) ? (Player)sender : null;
 		Entity horse = null;
-		String horseName = null;
-		if((args.length > 0 && plugin.horseExists(horseName = HorseLibrary.cleanName(String.join(" ", args))))){
-			if(p != null && !p.hasPermission("horseowners.inspect.others") && !plugin.canAccess(p, horseName)){
+		String cleanHorseName = null;
+		if((args.length > 0 && plugin.getAPI().horseExists(cleanHorseName = HorseUtils.cleanName(String.join(" ", args))))){
+			if(p != null && !p.hasPermission("horseowners.inspect.others") && !plugin.getAPI().canAccess(p.getUniqueId(), cleanHorseName)){
 				sender.sendMessage(ChatColor.RED+"You cannot inspect horses which you do not own");
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			if(!INSPECT_UNTAMED && plugin.getHorseTamer(horseName) == null
+			if(!INSPECT_UNTAMED && plugin.getAPI().getHorseTamer(cleanHorseName) == null
 					&& !sender.hasPermission("horseowners.inspect.untamed")){
 				sender.sendMessage(ChatColor.RED+"You cannot use this command on untamed horses");
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			if(!INSPECT_UNCLAIMED && plugin.getHorseOwner(horseName) == null
+			if(!INSPECT_UNCLAIMED && plugin.getAPI().getHorseOwner(cleanHorseName) == null
 					&& !sender.hasPermission("horseowners.inspect.unclaimed")){
 				sender.sendMessage(ChatColor.RED+"You cannot use this command on unclaimed horses");
 				COMMAND_SUCCESS = false;
@@ -94,12 +94,12 @@ public class CommandInspectHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			horseName = horse.getCustomName();
-			if(!INSPECT_UNCLAIMED && (horseName == null || plugin.getHorseOwner(horseName) == null)
+			cleanHorseName = HorseUtils.cleanName(horse.getCustomName());
+			if(!INSPECT_UNCLAIMED && (cleanHorseName == null || plugin.getAPI().getHorseOwner(cleanHorseName) == null)
 					&& !sender.hasPermission("horseowners.inspect.unclaimed")){
 				sender.sendMessage(ChatColor.RED+"You cannot use this command on unclaimed horses");
 				sender.sendMessage(ChatColor.GRAY+"To claim this horse, use "
-								+ChatColor.DARK_GREEN+"/hm claim"+(horseName == null ? " <name>" : ""));
+								+ChatColor.DARK_GREEN+"/hm claim"+(cleanHorseName == null ? " <name>" : ""));
 				COMMAND_SUCCESS = false;
 				return true;
 			}
@@ -109,7 +109,7 @@ public class CommandInspectHorse extends HorseCommand{
 			COMMAND_SUCCESS = false;
 			return true;
 		}
-		else if(!plugin.horseExists(horseName)){
+		else if(!plugin.getAPI().horseExists(cleanHorseName)){
 			sender.sendMessage(ChatColor.RED+"Unknown horse! (check spelling)"+ChatColor.GRAY+'\n'+command.getUsage());
 			COMMAND_SUCCESS = false;
 			return true;
@@ -123,36 +123,37 @@ public class CommandInspectHorse extends HorseCommand{
 		List<String> parents;
 		String DNA = null;
 		Integer locX, locZ;
-		if(horseName != null){
+		if(cleanHorseName != null){
 			if(horse != null){
-				plugin.updateData(horse);
+				plugin.getAPI().updateDatabase(horse);
 				locX = horse.getLocation().getBlockX();
 				locZ = horse.getLocation().getBlockZ();
 				DNA = getCondensedDNA(horse);
 			}
-			// Added permission check because getHorseBlockX,Z is an expensive call
+			// Added permission check because getHorseLocation() is an expensive call
 			else if(sender.hasPermission("horseowners.inspect.coords")){
-				locX = plugin.getHorseBlockX(horseName);
-				locZ = plugin.getHorseBlockZ(horseName);
+				Location loc = plugin.getAPI().getHorseLocation(cleanHorseName);
+				locX = loc.getBlockX();
+				locZ = loc.getBlockZ();
 			}
 			else locX = locZ = null;
-			displayName = plugin.getHorseName(horseName);
-			if(displayName == null) displayName = horseName;
-			ownerName = plugin.getHorseOwnerName(horseName);
+			displayName = plugin.getAPI().getHorseName(cleanHorseName);
+			if(displayName == null) displayName = cleanHorseName;
+			ownerName = plugin.getAPI().getHorseOwnerName(cleanHorseName);
 			if(ownerName == null) ownerName = "§cN/A";
-			tamerName = plugin.getHorseTamerName(horseName);
+			tamerName = plugin.getAPI().getHorseTamerName(cleanHorseName);
 			if(tamerName == null && horse != null && horse instanceof Tameable)
 				tamerName = ((Tameable)horse).isTamed() ? "§cUnknown" : "§cN/A";
-			EntityType type = plugin.getHorseType(horseName);
+			EntityType type = plugin.getAPI().getHorseType(cleanHorseName);
 			typeName = type == null ? null : TextUtils.capitalizeAndSpacify(type.name(), '_');
-			speed = plugin.getHorseSpeed(horseName);
-			jump = plugin.getHorseJump(horseName);
-			health = plugin.getHorseHealth(horseName);
-			strength = plugin.getLlamaStrength(horseName);
-			parents = plugin.getHorseParents(horseName);
-			age = plugin.getHorseAge(horseName);
-			claim_timestamp = plugin.getHorseClaimTime(horseName);
-			if(sender.hasPermission("horseowners.inspect.rankings")) rank = plugin.getRankings(horseName);
+			speed = plugin.getAPI().getHorseSpeed(cleanHorseName);
+			jump = plugin.getAPI().getHorseJump(cleanHorseName);
+			health = plugin.getAPI().getHorseHealth(cleanHorseName);
+			strength = plugin.getAPI().getLlamaStrength(cleanHorseName);
+			parents = plugin.getAPI().getHorseParents(cleanHorseName);
+			age = plugin.getAPI().getHorseAge(cleanHorseName);
+			claim_timestamp = plugin.getAPI().getHorseClaimTime(cleanHorseName);
+			if(sender.hasPermission("horseowners.inspect.rankings")) rank = plugin.getAPI().getHorseRankings(cleanHorseName);
 		}
 		else{
 			displayName = horse.getCustomName() == null ? "§cN/A" : horse.getCustomName();
@@ -160,17 +161,17 @@ public class CommandInspectHorse extends HorseCommand{
 			tamerName = horse instanceof Tameable && ((Tameable)horse).isTamed() ?
 					(((Tameable)horse).getOwner() == null ? "§cUnknown" : ((Tameable)horse).getOwner().getName()) : "§cN/A";
 			if(horse instanceof Attributable){
-				speed = HorseLibrary.getNormalSpeed((Attributable)horse);
-				health = HorseLibrary.getNormalMaxHealth((Attributable)horse);
-				if(horse instanceof AbstractHorse) jump = HorseLibrary.getNormalJump((AbstractHorse)horse);
+				speed = HorseUtils.getNormalSpeed((Attributable)horse);
+				health = HorseUtils.getNormalMaxHealth((Attributable)horse);
+				if(horse instanceof AbstractHorse) jump = HorseUtils.getNormalJump((AbstractHorse)horse);
 				if(horse instanceof Llama) strength = ((Llama)horse).getStrength();
 			}
-			parents = plugin.getHorseParents(horse);
+			parents = plugin.getAPI().getHorseParents(horse);
 			DNA = getCondensedDNA(horse);
 			locX = horse.getLocation().getBlockX();
 			locZ = horse.getLocation().getBlockZ();
 			typeName = TextUtils.capitalizeAndSpacify(horse.getType().name(), '_');
-			Long status_or_claim_ts = HorseLibrary.getTimeClaimed(horse);
+			Long status_or_claim_ts = HorseUtils.getTimeClaimed(horse);
 			if(status_or_claim_ts != null) claim_timestamp = status_or_claim_ts;
 			age = horse.getTicksLived()*50L;
 		}
@@ -222,7 +223,7 @@ public class CommandInspectHorse extends HorseCommand{
 			builder.append("\n§7Owner: §f").append(ownerName);
 		}
 		if(sender.hasPermission("horseowners.inspect.lineage") && parents != null && !parents.isEmpty()){
-			parents.replaceAll(cleanName -> plugin.getHorseName(cleanName));
+			parents.replaceAll(cleanName -> plugin.getAPI().getHorseName(cleanName));
 			builder.append("\n§7Parents: §f").append(String.join("§7, §f", parents));
 		}
 		if(sender.hasPermission("horseowners.inspect.dna") && DNA != null){

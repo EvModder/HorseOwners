@@ -10,7 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityBreedEvent;
 import net.evmodder.EvLib.FileIO;
-import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class BreedListener implements Listener{
@@ -45,8 +45,8 @@ public class BreedListener implements Listener{
 		double normalJump = plugin.getConfig().getDouble("max-jump", 5.29);
 		double normalSpeed = plugin.getConfig().getDouble("max-speed", 14.5125);
 		double normalHealth = plugin.getConfig().getDouble("max-health", 30);
-		MAX_JUMP = normalJump > 0 ? HorseLibrary.denormalizeJump(normalJump) : -1;
-		MAX_SPEED = normalSpeed > 0 ? HorseLibrary.denormalizeSpeed(normalSpeed) : -1;
+		MAX_JUMP = normalJump > 0 ? HorseUtils.denormalizeJump(normalJump) : -1;
+		MAX_SPEED = normalSpeed > 0 ? HorseUtils.denormalizeSpeed(normalSpeed) : -1;
 		MAX_HEALTH = normalHealth > 0 ? normalHealth : -1;
 		rand = new Random();
 	}
@@ -54,7 +54,7 @@ public class BreedListener implements Listener{
 	String getRandomName(){
 		for(int i=0; i<20; ++i){
 			String name = horseNameList[rand.nextInt(horseNameList.length)];
-			if(!plugin.horseExists(name)) return name;
+			if(!plugin.getAPI().horseExists(HorseUtils.cleanName(name))) return name;
 		}
 		return UUID.randomUUID().toString();
 	}
@@ -65,15 +65,15 @@ public class BreedListener implements Listener{
 	}
 
 	private String getOffspringDNA(Entity parent1, Entity parent2){
-		char[] dna1 = HorseLibrary.getDNA(parent1, rand).toCharArray();
-		char[] dna2 = HorseLibrary.getDNA(parent2, rand).toCharArray();
+		char[] dna1 = HorseUtils.getDNA(parent1, rand).toCharArray();
+		char[] dna2 = HorseUtils.getDNA(parent2, rand).toCharArray();
 		StringBuilder builder = new StringBuilder();
 		for(int i=0; i<100; ++i) builder.append(rand.nextBoolean() ? dna1[i] : dna2[i]);
 		return builder.toString();
 	}
 	int getGeneticOverlap(Entity horse1, Entity horse2){
-		char[] dna1 = HorseLibrary.getDNA(horse1, rand).toCharArray();
-		char[] dna2 = HorseLibrary.getDNA(horse2, rand).toCharArray();
+		char[] dna1 = HorseUtils.getDNA(horse1, rand).toCharArray();
+		char[] dna2 = HorseUtils.getDNA(horse2, rand).toCharArray();
 		int overlap = 0;
 		for(int i=0; i<100; ++i) if(dna1[i] == dna2[i]) ++overlap;
 		return overlap;
@@ -109,8 +109,8 @@ public class BreedListener implements Listener{
 	}*/
 
 	UUID getOwnerFromParents(Entity mother, Entity father, ParentType preferredParent){
-		UUID mothersOwner = mother.getCustomName() == null ? null : plugin.getHorseOwner(mother.getCustomName());
-		UUID fathersOwner = father.getCustomName() == null ? null : plugin.getHorseOwner(father.getCustomName());
+		UUID mothersOwner = mother.getCustomName() == null ? null : plugin.getAPI().getHorseOwner(HorseUtils.cleanName(mother.getCustomName()));
+		UUID fathersOwner = father.getCustomName() == null ? null : plugin.getAPI().getHorseOwner(HorseUtils.cleanName(father.getCustomName()));
 		switch(ownerAtBirth){
 			case MOTHER:
 				return mothersOwner == null ? fathersOwner : mothersOwner;
@@ -192,7 +192,7 @@ public class BreedListener implements Listener{
 			UUID owner = getOwnerFromParents(evt.getMother(), evt.getFather(), ownerAtBirth);
 			if(nameAtBirth){
 				h.setCustomName(getRandomName());
-				if(claimAtBirth && owner != null) plugin.addClaimedHorse(owner, h);
+				if(claimAtBirth && owner != null) plugin.getAPI().addClaimedHorse(owner, h);
 			}
 			if(tameAtBirth){
 				h.setTamed(true);
@@ -206,14 +206,14 @@ public class BreedListener implements Listener{
 				String mother = evt.getMother().getCustomName();
 				String father = evt.getFather().getCustomName();
 
-				if(mother != null) HorseLibrary.setMother(h, mother);
-				if(father != null) HorseLibrary.setFather(h, father);
+				if(mother != null) HorseUtils.setMother(h, mother);
+				if(father != null) HorseUtils.setFather(h, father);
 
 				// TODO: DNA is currently only used for inbreeding mutations
 				String dna = getOffspringDNA(evt.getMother(), evt.getFather());
-				HorseLibrary.setDNA(h, dna);
-				plugin.updateData(evt.getMother());//Update mother & father (in case DNA was generated)
-				plugin.updateData(evt.getFather());
+				HorseUtils.setDNA(h, dna);
+				plugin.getAPI().updateDatabase(evt.getMother());//Update mother & father (in case DNA was generated)
+				plugin.getAPI().updateDatabase(evt.getFather());
 			}
 			if(inbredMutation){
 				int overlapPercent = getGeneticOverlap(evt.getMother(), evt.getFather()); // [0,100]
@@ -239,7 +239,7 @@ public class BreedListener implements Listener{
 				}
 			}
 			tweakAndLimitAttributes(h);
-			plugin.updateData(h);
+			plugin.getAPI().updateDatabase(h);
 		}
 	}
 }

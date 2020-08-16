@@ -1,7 +1,6 @@
 package net.evmodder.HorseOwners.commands;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -12,6 +11,7 @@ import org.bukkit.entity.LeashHitch;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import net.evmodder.HorseOwners.HorseUtils;
 
 public class CommandUnleashHorse extends HorseCommand{
 	@Override public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
@@ -20,8 +20,8 @@ public class CommandUnleashHorse extends HorseCommand{
 			final List<String> tabCompletes = new ArrayList<String>();
 			byte shown = 0;
 			for(String horseName : sender instanceof Player
-					? plugin.getHorseOwners().getOrDefault(((Player)sender).getUniqueId(), new HashSet<>())
-					: plugin.getAllHorses()){
+					? plugin.getAPI().getHorses(((Player)sender).getUniqueId())
+					: plugin.getAPI().getAllHorses()){
 				if(horseName.startsWith(arg)){
 					tabCompletes.add(horseName);
 					if(++shown == 20) break;
@@ -46,20 +46,20 @@ public class CommandUnleashHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return false;
 			}
-			String horseName = String.join(" ", args);
+			String cleanHorseName = HorseUtils.cleanName(String.join(" ", args));
 			
-			if(plugin.isClaimedHorse(horseName) == false){
+			if(plugin.getAPI().isClaimedHorse(cleanHorseName) == false){
 				sender.sendMessage("§cUnknown horse (check name spelling)");
 	//			sender.sendMessage("§cUnclaimed horses cannot be teleported via command, you must first use /claimhorse");
 				COMMAND_SUCCESS = false;
 				return false;
 			}
-			if(p != null && plugin.canAccess(p, horseName) == false){
+			if(p != null && plugin.getAPI().canAccess(p.getUniqueId(), cleanHorseName) == false){
 				sender.sendMessage("§cYou cannot unleash horses which you do not own");
 				COMMAND_SUCCESS = false;
 				return true;
 			}
-			Entity e = plugin.findClaimedHorse(horseName, null);
+			Entity e = plugin.getAPI().getHorse(cleanHorseName, /*loadChunk/*/true);
 			if(e == null || !(e instanceof AbstractHorse)){
 				sender.sendMessage("§cUnable to find specified horse! Perhaps the chunk it was in is unloaded?");
 				COMMAND_SUCCESS = false;

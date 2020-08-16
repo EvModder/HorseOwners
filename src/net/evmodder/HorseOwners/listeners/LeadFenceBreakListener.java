@@ -7,7 +7,7 @@ import org.bukkit.entity.AbstractHorse;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import net.evmodder.HorseOwners.HorseLibrary;
+import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class LeadFenceBreakListener implements Listener{
@@ -20,7 +20,7 @@ public class LeadFenceBreakListener implements Listener{
 	//Disable lead-hitch fence breaking
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent evt){
-		if(HorseLibrary.isLeashableBlock(evt.getBlock().getType())){
+		if(HorseUtils.isLeashableBlock(evt.getBlock().getType())){
 			for(Entity leash : evt.getBlock().getChunk().getEntities()){
 				if(leash.getType() == EntityType.LEASH_HITCH
 						&& leash.getLocation().equals(evt.getBlock().getLocation())){
@@ -30,7 +30,7 @@ public class LeadFenceBreakListener implements Listener{
 							AbstractHorse h = (AbstractHorse) e;
 							if(h.isLeashed() && h.getLeashHolder().getUniqueId().equals(leash.getUniqueId())){
 								
-								if(plugin.canAccess(evt.getPlayer(), h.getCustomName()) == false){
+								if(!plugin.getAPI().canAccess(evt.getPlayer().getUniqueId(), HorseUtils.cleanName(h.getCustomName()))){
 									evt.setCancelled(true);
 									evt.getPlayer().sendMessage(ChatColor.RED+
 											"You do not have permission to unleash this horse.");
