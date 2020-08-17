@@ -11,13 +11,12 @@ import net.evmodder.HorseOwners.listeners.*;
 //DONE-TEST: BreedListener above natural limits
 //DONE-TEST: move all "save-X" settings to config
 //TODO: /hm list by type (eg: /hm list type:DONKEY -> list donkeys only) AND/OR sort /hm list (by claim date?)
-//TODO: Add 'isClean' bool to args for all library calls to skip cleanName
-//TODO: Enable remote claiming
-//TODO: /hm spawn from console (but must provide x,y,z)
+//TODO: remote claiming
+//TODO: /hm spawn from console (but must provide world,x,y,z)
 //TODO: more comprehensive /hm copy
 //TODO: replace flags in EditableHorseAttributes with an enum
 //TODO: when creating a baby by using a spawn egg on an adult, copy the DNA?
-//TODO: show llama strength in /hm i (and make a leaderboard?)
+//TODO: llama strength leaderboard?
 public final class HorseManager extends EvPlugin{
 	private static HorseManager plugin; public static HorseManager getPlugin(){return plugin;}
 	private HorseAPI horseAPI; public HorseAPI getAPI(){return horseAPI;}
