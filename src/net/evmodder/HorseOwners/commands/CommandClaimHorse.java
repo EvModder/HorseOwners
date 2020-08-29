@@ -91,7 +91,7 @@ public class CommandClaimHorse extends HorseCommand{
 
 		if(oldName != null && oldName.equals(newName) == false){//if had a name previously
 			boolean needToClaimFirst = (sender instanceof Player && !plugin.getAPI().isOwner(((Player)sender).getUniqueId(), oldName));
-			if(needToClaimFirst && plugin.getAPI().addClaimedHorse(((Player)sender).getUniqueId(), horse) == false){
+			if(needToClaimFirst && !plugin.getAPI().addClaimedHorse(((Player)sender).getUniqueId(), horse)){
 				sender.sendMessage(ChatColor.RED+"HorseClaimEvent cancelled by a plugin");
 				COMMAND_SUCCESS = false;
 				return RenameResult.FAILED_HINT;
@@ -109,6 +109,13 @@ public class CommandClaimHorse extends HorseCommand{
 			return RenameResult.RENAMED;
 		}
 		horse.setCustomName(newName);//Set name
+		if(!plugin.getAPI().addClaimedHorse(((Player)sender).getUniqueId(), horse)){
+			sender.sendMessage(ChatColor.RED+"HorseClaimEvent cancelled by a plugin");
+			COMMAND_SUCCESS = false;
+			return RenameResult.FAILED_HINT;
+		}
+		sender.sendMessage(ChatColor.GREEN+"Successfully claimed " + ChatColor.GRAY + ChatColor.ITALIC + newName
+				+ ChatColor.GREEN + " as your horse!");
 		return RenameResult.NAMED;
 	}
 
@@ -162,26 +169,24 @@ public class CommandClaimHorse extends HorseCommand{
 				COMMAND_SUCCESS = false;
 				return true;
 			}
+			if(!plugin.getAPI().addClaimedHorse(p.getUniqueId(), h)){
+				p.sendMessage(ChatColor.RED+"HorseClaimEvent cancelled by a plugin");
+				COMMAND_SUCCESS = false;
+				return true;
+			}
+			sender.sendMessage(ChatColor.GREEN+"Successfully claimed " + ChatColor.GRAY + ChatColor.ITALIC
+					+ h.getCustomName() + ChatColor.GREEN + " as your horse!");
+			COMMAND_SUCCESS = true;
+			return true;
 		}
 		else{
 			final String newName = String.join(" ", args);
 			switch(attemptNameHorse(sender, h, newName)){
-				case FAILED: COMMAND_SUCCESS = false; return true;
-				case FAILED_HINT: COMMAND_SUCCESS = false; return false;
+				case NAMED: COMMAND_SUCCESS = true; return true;
 				case RENAMED: COMMAND_SUCCESS = true; return true;
-				case NAMED: default: break;
+				case FAILED: COMMAND_SUCCESS = false; return true;
+				case FAILED_HINT: default: COMMAND_SUCCESS = false; return false;
 			}
 		}
-
-		//My horsie!
-		if(plugin.getAPI().addClaimedHorse(p.getUniqueId(), h) == false){
-			p.sendMessage(ChatColor.RED+"HorseClaimEvent cancelled by a plugin");
-			COMMAND_SUCCESS = false;
-			return true;
-		}
-		sender.sendMessage(ChatColor.GREEN+"Successfully claimed " + ChatColor.GRAY + ChatColor.ITALIC
-					+ h.getCustomName() + ChatColor.GREEN + " as your horse!");
-		COMMAND_SUCCESS = true;
-		return true;
 	}
 }

@@ -138,7 +138,7 @@ public class HorseAPI{
 		if(RELOAD_CONFIG_ON_EDIT) loadHorses();
 		updateDatabase(horse);
 		horses.set(cleanName+".owner", ownerUUID.toString());
-		if(SAVE_CLAIM_TS) horses.set(cleanName+".claim-ts", timestamp_now);
+		if(SAVE_CLAIM_TS && newlyClaimed) horses.set(cleanName+".claim-ts", timestamp_now);
 		saveHorses();
 		return newlyClaimed;
 	}
