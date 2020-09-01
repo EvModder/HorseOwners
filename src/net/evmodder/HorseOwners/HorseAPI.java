@@ -121,7 +121,7 @@ public class HorseAPI{
 	//-------------------- Modifier methods --------------------//
 	public boolean addClaimedHorse(UUID ownerUUID, Entity horse){
 		if(horse.getCustomName() == null) return false;
-		if(CLAIMABLE_TYPES.contains(horse.getType())) return false;
+		if(!isClaimableHorseType(horse)) return false;
 		HorseClaimEvent horseClaimEvent = new HorseClaimEvent(horse, ownerUUID, horse.getCustomName());
 		pl.getServer().getPluginManager().callEvent(horseClaimEvent);
 		if(horseClaimEvent.isCancelled()) return false;
@@ -144,7 +144,7 @@ public class HorseAPI{
 	}
 	public boolean addHorse(Entity horse){
 		if(horse.getCustomName() == null || !SAVE_UNCLAIMED) return false;
-		if(CLAIMABLE_TYPES.contains(horse.getType())) return false;
+		if(!isClaimableHorseType(horse)) return false;
 		String cleanName = HorseUtils.cleanName(horse.getCustomName());
 		boolean newlyAdded = !horses.isConfigurationSection(cleanName);
 
