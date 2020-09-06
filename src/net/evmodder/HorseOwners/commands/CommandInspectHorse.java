@@ -54,6 +54,21 @@ public class CommandInspectHorse extends HorseCommand{
 		return TextUtils.pxSubstring(new String(dnaChars), 320-6*4, false).str;
 	}
 
+	private Entity findPhysicalHorse(Player player){
+		if(player == null) return null;
+		if(player.isInsideVehicle() && plugin.getAPI().isClaimableHorseType(player.getVehicle())){
+			return player.getVehicle();
+		}
+		if(player.getSpectatorTarget() != null && plugin.getAPI().isClaimableHorseType(player.getSpectatorTarget())){
+			return player.getSpectatorTarget();
+		}
+		if(player.getSpectatorTarget() != null && player.getSpectatorTarget().isInsideVehicle()
+			&& plugin.getAPI().isClaimableHorseType(player.getSpectatorTarget().getVehicle())){
+			return player.getSpectatorTarget().getVehicle();
+		}
+		return null;
+	}
+
 	@Override public boolean onHorseCommand(CommandSender sender, Command command, String label, String args[]){
 		//cmd:	/hm inspect [horse]
 		Player p = (sender instanceof Player) ? (Player)sender : null;
@@ -78,8 +93,7 @@ public class CommandInspectHorse extends HorseCommand{
 				return true;
 			}
 		}
-		else if(p != null && p.isInsideVehicle()){
-			horse = p.getVehicle();
+		else if((horse = findPhysicalHorse(p)) != null){
 			if(!INSPECT_UNTAMED && 
 					(horse instanceof Tameable == false || !((Tameable)horse).isTamed()) &&
 					!sender.hasPermission("horseowners.inspect.untamed")){
