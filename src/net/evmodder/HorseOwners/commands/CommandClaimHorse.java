@@ -14,12 +14,11 @@ import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.HorseOwners.HorseUtils;
 
 public class CommandClaimHorse extends HorseCommand{
-	final boolean renameNametag, alphanumeric;
+	final boolean renameNametag;
 	final int minNameLength, maxNameLength;
 
 	public CommandClaimHorse(){
 		renameNametag = plugin.getConfig().getBoolean("nametag-required-to-rename");
-		alphanumeric = plugin.getConfig().getBoolean("names-mostly-alphanumeric");
 
 		minNameLength = plugin.getConfig().getInt("min-name-length");
 		maxNameLength = plugin.getConfig().getInt("max-name-length");
@@ -33,7 +32,6 @@ public class CommandClaimHorse extends HorseCommand{
 
 	enum RenameResult {FAILED, FAILED_HINT, RENAMED, NAMED};
 	public RenameResult attemptNameHorse(CommandSender sender, Entity horse, String newName){
-		if(alphanumeric) newName = newName.replaceAll("[:(),"+ChatColor.COLOR_CHAR+"<>{}\\-\\[\\]\\.'\"]", "");
 		if(sender.hasPermission("horseowners.colors")){
 			newName = TextUtils.translateAlternateColorCodes('&', newName);
 			if(sender.hasPermission("horseowners.formats") == false) newName = TextUtils.stripFormatsOnly(newName);

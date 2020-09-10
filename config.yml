@@ -43,10 +43,6 @@ teleport-only-if-untied: true
 # Set to false to disable ALL trans-world horse teleportation
 teleport-across-worlds: true
 
-# Restrict characters in names to letters, numbers, and basic symbols
-# It is highly recommended you leave this set to true
-names-mostly-alphanumeric: true
-
 # Specify whether players must have a nametag to claim/rename horses
 nametag-required-to-rename: false
 
