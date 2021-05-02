@@ -43,7 +43,7 @@ public class HorseAPI{
 	private IndexTreeMultiMap<Integer, String> topHealth;
 	final Set<EntityType> CLAIMABLE_TYPES;
 	final boolean RELOAD_CONFIG_ON_EDIT, SAVE_UNCLAIMED;
-	final boolean SAVE_EQUINE_STATS, SAVE_CLAIM_TS, SAVE_LINEAGE, SAVE_COORDS, SAVE_AGE, SAVE_SPAWN_DATA, SAVE_TAMER=true;
+	final boolean SAVE_EQUINE_STATS, SAVE_CLAIM_TS, SAVE_LINEAGE, SAVE_COORDS, SAVE_PASSENGERS, SAVE_AGE, SAVE_SPAWN_DATA, SAVE_TAMER=true;
 
 	public void loadHorses(){
 		horses = FileIO.loadYaml("horses.yml", "#The great horse-data file\n");
@@ -89,6 +89,7 @@ public class HorseAPI{
 		SAVE_CLAIM_TS = pl.getConfig().getBoolean("save-claim-history", true);
 		SAVE_LINEAGE = pl.getConfig().getBoolean("save-horse-lineage", true);
 		SAVE_COORDS = pl.getConfig().getBoolean("save-horse-coordinates", true);
+		SAVE_PASSENGERS = pl.getConfig().getBoolean("save-passengers", true);
 		SAVE_AGE = pl.getConfig().getBoolean("save-horse-age", true);
 		SAVE_SPAWN_DATA = pl.getConfig().getBoolean("save-spawn-data", true);
 
@@ -242,6 +243,7 @@ public class HorseAPI{
 		return true;
 	}
 
+
 	private void updateLineage(Entity h, ConfigurationSection data){
 		//TODO: replace FixedMetadataValue with tags
 		if(data.contains("mother")) h.setMetadata("mother", new FixedMetadataValue(pl, data.get("mother")));
@@ -285,6 +287,10 @@ public class HorseAPI{
 		if(SAVE_COORDS){
 			data.set("chunk-x", h.getLocation().getChunk().getX());
 			data.set("chunk-z", h.getLocation().getChunk().getZ());
+		}
+		if(SAVE_PASSENGERS){
+			if(h.getPassengers().isEmpty()) data.set("passengers", null);
+			else data.set("passengers", h.getPassengers().stream().map(e -> e.getUniqueId()).collect(Collectors.toList()));
 		}
 		if(SAVE_LINEAGE) updateLineage(h, data);
 		if(SAVE_AGE) data.set("age", h.getTicksLived()*50);

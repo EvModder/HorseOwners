@@ -30,7 +30,7 @@ public final class HorseManager extends EvPlugin{
 		registerListeners();
 		registerCommands();
 	}
-	@Override public void onEvDisable(){getLogger().info("disabling...");}
+//	@Override public void onEvDisable(){getLogger().info("disabling...");}
 
 	/*public void loadHorses(){
 		horses = FileIO.loadYaml("horses.yml", "#The great horse-data file\n");
@@ -88,10 +88,18 @@ public final class HorseManager extends EvPlugin{
 		/*if(saveLeashes){
 			getServer().getPluginManager().registerEvents(new LeadBreakGlitchListener(), this);
 		}*/
-		if(config.getBoolean("save-horse-coordinates", true)){
+		if(config.getBoolean("save-horse-coordinates", true) || config.getBoolean("save-passengers", true)){
 			try{
 				Class.forName("org.spigotmc.event.entity.EntityDismountEvent");
 				getServer().getPluginManager().registerEvents(new DismountListener(), this);
+			}
+			catch(ClassNotFoundException e){}
+		}
+		if(config.getBoolean("save-passengers", true)){
+			getServer().getPluginManager().registerEvents(new PlayerLogoutListener(), this);
+			try{
+				Class.forName("org.spigotmc.event.entity.EntityMountEvent");
+				getServer().getPluginManager().registerEvents(new MountListener(), this);
 			}
 			catch(ClassNotFoundException e){}
 		}

@@ -60,13 +60,14 @@ max-jump: 5.5
 max-speed: 15
 max-health: 30
 
-# WARNING: Setting any "save-XXX: false" will clear its existing data
+# WARNING: Setting any "save-XXX: false" may clear its existing data
 save-horse-coordinates: true  # X and Z
 save-horse-lineage: true  # Father and Mother
 save-horse-age: true  # TicksLived
 save-claim-history: true  # Past owners, timestamps
 save-spawn-data: true  # SpawnReason, timestamp
-save-equine-stats: true  # Speed, Health, Jump, Llama-strengt
+save-equine-stats: true  # Speed, Health, Jump, Llama-strength
+save-passengers: true  # Passengers
 
 # Should the server also record stats of unclaimed/wild horses?
 save-unclaimed-horses: true
