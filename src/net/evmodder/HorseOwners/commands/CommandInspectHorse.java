@@ -3,6 +3,7 @@ package net.evmodder.HorseOwners.commands;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -130,6 +131,7 @@ public class CommandInspectHorse extends HorseCommand{
 		List<String> parents;
 		String DNA = null;
 		Integer locX, locZ;
+		List<UUID> passengers;
 		if(cleanHorseName != null){
 			if(horse != null){
 				plugin.getAPI().updateDatabase(horse);
@@ -144,6 +146,7 @@ public class CommandInspectHorse extends HorseCommand{
 				locZ = loc.getBlockZ();
 			}
 			else locX = locZ = null;
+			passengers = plugin.getAPI().getPassengers(cleanHorseName);
 			displayName = plugin.getAPI().getHorseName(cleanHorseName);
 			if(displayName == null) displayName = cleanHorseName;
 			ownerName = plugin.getAPI().getHorseOwnerName(cleanHorseName);
@@ -177,6 +180,7 @@ public class CommandInspectHorse extends HorseCommand{
 			DNA = getCondensedDNA(horse);
 			locX = horse.getLocation().getBlockX();
 			locZ = horse.getLocation().getBlockZ();
+			passengers = horse.getPassengers().stream().map(e -> e.getUniqueId()).collect(Collectors.toList());
 			typeName = TextUtils.capitalizeAndSpacify(horse.getType().name(), '_');
 			Long status_or_claim_ts = HorseUtils.getTimeClaimed(horse);
 			if(status_or_claim_ts != null) claim_timestamp = status_or_claim_ts;
@@ -238,6 +242,9 @@ public class CommandInspectHorse extends HorseCommand{
 		}
 		if(sender.hasPermission("horseowners.inspect.coords") && locX != null){
 			builder.append("\n§7Location: §f").append(locX).append("§cx§7, §f").append(locZ).append("§cz");
+		}
+		if(sender.hasPermission("horseowners.inspect.passengers") && passengers != null && !passengers.isEmpty()){
+			builder.append("\n§7Passengers: §f").append(passengers);
 		}
 
 		sender.sendMessage(builder.toString());

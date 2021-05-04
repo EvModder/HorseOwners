@@ -448,6 +448,12 @@ public class HorseAPI{
 		int chunkX = data.getInt("chunk-x"), chunkZ = data.getInt("chunk-z");
 		return new Location(null, chunkX*16, -1, chunkZ*16);
 	}
+	public List<UUID> getPassengers(String cleanHorseName){
+		List<String> passengers = horses.getStringList(cleanHorseName+".passengers");
+		if(passengers == null) return null;
+		try{return passengers.stream().map(s -> UUID.fromString(s)).collect(Collectors.toList());}
+		catch(IllegalArgumentException ex){return null;}
+	}
 
 	//-------------------- Things to delete? --------------------//
 	public void grantOneTimeAccess(UUID playerUUID, String horseName){

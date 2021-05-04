@@ -277,6 +277,10 @@ permissions:
       description: Ability to lookup a horse's location
       default: op
 
+   horseowners.inspect.passengers:
+      description: Ability to view a horse's passengers
+      default: op
+
    horseowners.inspect.strength:
       description: Ability to view a llama's strength
       default: op
@@ -297,6 +301,7 @@ permissions:
          horseowners.inspect.lineage: true
 #        horseowners.inspect.dna: false
 #        horseowners.inspect.coords: false
+#        horseowners.inspect.passengers: false
          horseowners.inspect.strength: false
       default: op
 
@@ -335,6 +340,7 @@ permissions:
          horseowners.inspect: true
          horseowners.inspect.claimtime: true
          horseowners.inspect.coords: true
+         horseowners.inspect.passengers: true
          horseowners.inspect.others: true
          horseowners.inspect.untamed: true
          horseowners.inspect.strength: true
