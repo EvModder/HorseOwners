@@ -53,15 +53,15 @@ public class CommandRankHorse extends HorseCommand{
 			if(shown == RESULTS_PER_PAGE) break;
 		}
 		if(playerSender){
-			header.append(TabText.parse(builder.toString(), false, false, new int[]{
+			header.append(TabText.parse(builder.toString(), /*mono=*/false, /*flexFill=*/false, /*tabs=*/new int[]{
 					62+12, // 'Speed: XX.XX'=6+6+6+6+6+2+4+6+6+2+6+6=62px + 12px(buffer) = 74
 					//	36+75+13, // 'Horse: '=6+6+6+6+6+2+4=36px + '$name'=16*[2,5,7]=[32,80,112]~=75 + 13px(buffer) = 124
-					36+maxNameLen+12,
+					36+maxNameLen+12, // 'Horse: '=6+6+6+6+6+2+4=36px + maxNameLen + 12px(buffer)
 					36+75})); // 'Owner: '=6+6+6+6+6+2+4=36px + '$name'=16*[2,6]=[32,96] = 111
 					// Total = 74 + 124 + 111 = 309(of 320)
 		}
 		else{
-			header.append(TabText.parse(builder.toString(), true, false, new int[]{
+			header.append(TabText.parse(builder.toString(), /*mono=*/true, /*flexFill=*/false, /*tabs=*/new int[]{
 					12+3, // 'Speed: XX.XX'=12ch + 3ch(buffer)
 					7+16+3, // 'Horse: '=7ch + '$name'=16ch(config) + 3ch(buffer)
 					7+16})); // 'Owner: '=7ch + '$name'=16ch(mojang-max) + 3ch(buffer)

@@ -89,12 +89,12 @@ public class CommandListHorse extends HorseCommand{
 				String ownerName = getPlayerName(horseOwner.getKey());
 				if(ownerName == null || horseOwner.getValue() == null || horseOwner.getValue().isEmpty()) continue;
 				unclaimed.removeAll(horseOwner.getValue());
-				builder.append(makeHeader(ownerName+"'s", monospaced));
+				builder.append(makeHeader(ownerName+"'s", monospaced)).append('\n');
 				builder.append(formatHorseList(horseOwner.getValue(), monospaced)).append('\n');
 				++numOwners;
 			}
 			if(sender.hasPermission("horseowners.list.unclaimed") && !unclaimed.isEmpty()){
-				builder.append(makeHeader("Wild", monospaced));
+				builder.append(makeHeader("Wild", monospaced)).append('\n');
 				builder.append(formatHorseList(unclaimed, monospaced)).append('\n');
 				builder.append("§7Combined total: §f").append(plugin.getAPI().getAllHorses().size());
 			}
@@ -106,7 +106,7 @@ public class CommandListHorse extends HorseCommand{
 		sortedHorseList.addAll(horseList);
 		Collections.sort(sortedHorseList, String.CASE_INSENSITIVE_ORDER);
 
-		StringBuilder builder = new StringBuilder(makeHeader("All", monospaced));
+		StringBuilder builder = new StringBuilder(makeHeader("All", monospaced)).append('\n');
 		int maxHorseNameLen = 0, maxOwnerNameLen = 0;
 		for(String cleanName : sortedHorseList){
 			String owner = plugin.getAPI().getHorseOwnerName(cleanName);
@@ -156,7 +156,7 @@ public class CommandListHorse extends HorseCommand{
 			Set<String> targetHorses = targetP == null ? null : plugin.getAPI().getHorses(targetP.getUniqueId());
 			if(targetHorses != null && !targetHorses.isEmpty()){
 				StringBuilder builder = new StringBuilder("\n");
-				builder.append(makeHeader(targetP.getName()+"'s", consoleSender));
+				builder.append(makeHeader(targetP.getName()+"'s", consoleSender)).append('\n');
 				builder.append(formatHorseList(targetHorses, consoleSender));
 				sender.sendMessage(builder.toString());
 				//for(String horseName : horses) sender.sendMessage("§7Horse: §f"+plugin.getHorseName(horseName));
