@@ -16,7 +16,9 @@ public class MountListener implements Listener{
 	@EventHandler
 	public void onHorseMount(EntityMountEvent evt){
 		if(plugin.getAPI().isClaimableHorseType(evt.getMount())){
-			new BukkitRunnable(){@Override public void run(){plugin.getAPI().updateDatabase(evt.getMount());}}.runTaskLater(plugin, 1);
+			new BukkitRunnable(){@Override public void run(){
+				plugin.getAPI().updateDatabase(evt.getMount());
+			}}.runTaskLater(plugin, 1);
 		}
 	}
 }

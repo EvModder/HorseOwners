@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.Set;
 import java.util.UUID;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -21,6 +20,7 @@ import net.evmodder.EvLib.extras.TextUtils;
 
 public class CommandListHorse extends HorseCommand{
 	//TODO: enum OrderBy{ NAME, AGE, CLAIM_TS }; ?
+	//TODO: hover over name for inspect?
 
 	String getPlayerName(UUID uuid){
 		Player p = plugin.getServer().getPlayer(uuid);
@@ -36,8 +36,8 @@ public class CommandListHorse extends HorseCommand{
 		int spaceMaxPxLen = mono ? 30 : 100;
 		int spacePxBefore = spaceMaxPxLen - namePxLenDiff/2;
 		int spacePxAfter = (spaceMaxPxLen - namePxLenDiff/2) - namePxLenDiff%2;
-		String spaceBefore = TabText.getPxSpaces(spacePxBefore, mono, ChatColor.YELLOW);
-		String spaceAfter = new StringBuilder(TabText.getPxSpaces(spacePxAfter, mono, ChatColor.YELLOW)).reverse().toString();
+		String spaceBefore = TabText.getPxSpaces(spacePxBefore, mono, "§e§m");
+		String spaceAfter = TabText.getPxSpaces(spacePxAfter, mono, "§e§m");
 		if(mono){
 			spaceBefore = spaceBefore.replace(' ', '-');
 			spaceAfter = spaceAfter.replace(' ', '-');

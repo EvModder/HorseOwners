@@ -290,7 +290,8 @@ public class HorseAPI{
 		}
 		if(SAVE_PASSENGERS){
 			if(h.getPassengers().isEmpty()) data.set("passengers", null);
-			else data.set("passengers", h.getPassengers().stream().map(e -> e.getUniqueId()).collect(Collectors.toList()));
+			else data.set("passengers", h.getPassengers().stream().map(e -> e.getUniqueId().toString()).collect(Collectors.toList()));
+			pl.getLogger().info("DEBUG: passengers: "+data.get("passengers"));
 		}
 		if(SAVE_LINEAGE) updateLineage(h, data);
 		if(SAVE_AGE) data.set("age", h.getTicksLived()*50);
