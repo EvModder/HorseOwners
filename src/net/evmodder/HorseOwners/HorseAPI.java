@@ -291,7 +291,6 @@ public class HorseAPI{
 		if(SAVE_PASSENGERS){
 			if(h.getPassengers().isEmpty()) data.set("passengers", null);
 			else data.set("passengers", h.getPassengers().stream().map(e -> e.getUniqueId().toString()).collect(Collectors.toList()));
-			pl.getLogger().info("DEBUG: passengers: "+data.get("passengers"));
 		}
 		if(SAVE_LINEAGE) updateLineage(h, data);
 		if(SAVE_AGE) data.set("age", h.getTicksLived()*50);
@@ -347,7 +346,7 @@ public class HorseAPI{
 		double jump = cs.getDouble("jump");
 		int health = cs.getInt("health");
 
-		pl.getLogger().info("topSpeed.valuesSize(): "+topSpeed.valuesSize()
+		pl.getLogger().fine("topSpeed.valuesSize(): "+topSpeed.valuesSize()
 			+", topSpeed.getCeilingIndex("+speed+"): "+topSpeed.getCeilingIndex(speed)
 			+", topSpeed.getFloorIndex("+speed+"): "+topSpeed.getFloorIndex(speed));
 		int higherSpeedCount = topSpeed.valuesSize() - topSpeed.getCeilingIndex(speed), equalSpeedCount = topSpeed.get(speed).size();
@@ -421,15 +420,15 @@ public class HorseAPI{
 		return null;
 	}
 	public Entity getHorse(String cleanHorseName, boolean loadChunk){
-		pl.getLogger().info("called getHorse() for: "+cleanHorseName);
+		pl.getLogger().fine("called getHorse() for: "+cleanHorseName);
 		if(horses.contains(cleanHorseName+".chunk-x")){
 			ConfigurationSection data = horses.getConfigurationSection(cleanHorseName);
 			int chunkX = data.getInt("chunk-x"), chunkZ = data.getInt("chunk-z");
-			pl.getLogger().info("Chunk coords found, starting horse search...");
+			pl.getLogger().fine("Chunk coords found, starting horse search...");
 			for(World world : pl.getServer().getWorlds()){
 				Chunk chunk = world.getChunkAt(chunkX, chunkZ);
 				if(chunk.isLoaded() || (loadChunk && chunk.load(/*generate=*/false))){
-					pl.getLogger().info("entities in chunk: "+chunk.getEntities().length);
+					pl.getLogger().fine("entities in chunk: "+chunk.getEntities().length);
 					for(Entity e : chunk.getEntities())
 						if(e.getCustomName() != null && isClaimableHorseType(e)
 							&& HorseUtils.cleanName(e.getCustomName()).equals(cleanHorseName))

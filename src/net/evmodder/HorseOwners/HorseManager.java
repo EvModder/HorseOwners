@@ -131,7 +131,7 @@ public final class HorseManager extends EvPlugin{
 		if(config.getBoolean("enable-name-locks", false)) new CommandLockHorse();
 		new CommandShadowfax();
 		new CommandSpawnHorse();
-		if(config.getBoolean("rank-claimed-horses", false)) new CommandRankHorse();
+		if(config.getBoolean("build-ranklists", false)) new CommandRankHorse();
 		new CommandRenameHorse();
 		new CommandUnleashHorse();
 	}
