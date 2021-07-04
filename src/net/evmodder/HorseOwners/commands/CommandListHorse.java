@@ -29,7 +29,7 @@ public class CommandListHorse extends HorseCommand{
 		if(offP != null) return offP.getName();
 		return null;
 	}
-	final String YOUR_HEADER = "§a}§e§m                    §7 [§aYour Horses§7] §e§m                    §a{";
+	final String YOUR_HEADER = "§a}§e§m                         §7 [§aYour Horses§7] §e§m                         §a{";
 	String makeHeader(String nameApostropheS, boolean mono){
 		int namePxLen = TextUtils.strLen(nameApostropheS, mono);
 		int namePxLenDiff = namePxLen - TextUtils.strLen("Your", mono);
