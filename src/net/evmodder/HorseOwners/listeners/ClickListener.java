@@ -114,18 +114,23 @@ public class ClickListener implements Listener{
 				//if(horse.getPassengers() == null || horse.getPassengers().isEmpty())
 				delayedEject(horse, p.getUniqueId());
 			}
-			else if(plugin.getAPI().useOneTimeAccess(p.getUniqueId(), cleanHorseName)){
-				p.sendMessage(ChatColor.GREEN+"You have used a one-time-pass to mount this horse, "+
-						ChatColor.GRAY+horse.getCustomName()+ChatColor.GREEN+".");
-				//allow
-			}
-			else if(p.isSneaking() && snoopPrivateHorse == false){
-				p.sendMessage(ChatColor.RED+"You do not have permission to view this horse's inventory.");
-				evt.setCancelled(true);
+			else if(p.isSneaking()){
+				if(snoopPrivateHorse); //allow
+				else{
+					p.sendMessage(ChatColor.RED+"You do not have permission to view this horse's inventory.");
+					evt.setCancelled(true);
+				}
 			}
 			else if(ridePrivateHorse == false){
-				p.sendMessage(ChatColor.RED+"You do not have permission to mount this horse.");
-				evt.setCancelled(true);
+				if(plugin.getAPI().useOneTimeAccess(p.getUniqueId(), cleanHorseName)){
+					p.sendMessage(ChatColor.GREEN+"You have used a one-time-pass to mount this horse, "+
+							ChatColor.GRAY+horse.getCustomName()+ChatColor.GREEN+".");
+					//allow
+				}
+				else{
+					p.sendMessage(ChatColor.RED+"You do not have permission to mount this horse.");
+					evt.setCancelled(true);
+				}
 			}
 		}
 	}

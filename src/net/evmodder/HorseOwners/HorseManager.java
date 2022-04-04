@@ -120,7 +120,7 @@ public final class HorseManager extends EvPlugin{
 
 	private void registerCommands(){
 		new CommandHorseManager();
-		new CommandAllowRide();
+		if(!config.getBoolean("ride-private-horse", false)) new CommandAllowRide();
 		new CommandClaimHorse();
 		new CommandCopyHorse();
 		new CommandEditHorse();
