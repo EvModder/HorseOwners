@@ -1,4 +1,13 @@
-/bin/
+bin/
+tmp_*
+EvLib/
+.settings/
+.classpath
+.project
+.gitignore
+export_jar.sh
+
+
 *.class
 *.un~
 .DS_Store

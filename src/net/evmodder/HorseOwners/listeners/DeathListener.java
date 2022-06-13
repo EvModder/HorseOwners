@@ -9,7 +9,6 @@ import net.evmodder.HorseOwners.HorseManager;
 import net.evmodder.HorseOwners.api.events.HorseDeathEvent;
 
 public class DeathListener implements Listener{
-
 	//Clear stats on death
 	@EventHandler
 	public void onDeath(EntityDeathEvent evt){
@@ -21,6 +20,8 @@ public class DeathListener implements Listener{
 			HorseManager.getPlugin().getServer().getPluginManager().callEvent(horseDeathEvent);
 			evt.setDroppedExp(horseDeathEvent.getDroppedExp());
 			HorseManager.getPlugin().getAPI().removeHorse(HorseUtils.cleanName(horse.getCustomName()));
+
+			//TODO: pet death msg to owner of horse
 		}
 	}
 }

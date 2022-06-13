@@ -1,8 +1,8 @@
 name: HorseOwners
 main: net.evmodder.HorseOwners.HorseManager
 author: EvModder/EvDoc
-description: Collects and tracks horse data
 website: https://github.com/EvModder/HorseOwners
+description: Collects and shows horse data.
 version: 2.9.0
 #8=/hm edit, improved TabText (half pixel precision)
 #9 = major API rewrite, config fields renamed, various cleanup
