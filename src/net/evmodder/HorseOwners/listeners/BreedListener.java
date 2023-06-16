@@ -40,7 +40,7 @@ public class BreedListener implements Listener{
 		try{ownerAtBirth = ParentType.valueOf(plugin.getConfig()
 				.getString("owner-at-birth-is-owner-of", "RANDOM").toUpperCase());}
 		catch(IllegalArgumentException ex){ownerAtBirth = ParentType.RANDOM;}
-		horseNameList = FileIO.loadResource(plugin, "horse-names.txt").split("\n");
+		horseNameList = FileIO.loadResource(plugin, "horse-names.txt", "Django").split("\n");
 
 		double normalJump = plugin.getConfig().getDouble("max-jump", 5.29);
 		double normalSpeed = plugin.getConfig().getDouble("max-speed", 14.5125);
