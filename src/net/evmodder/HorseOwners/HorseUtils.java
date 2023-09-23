@@ -1,6 +1,5 @@
 package net.evmodder.HorseOwners;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -19,9 +18,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.metadata.FixedMetadataValue;
 import net.evmodder.EvLib.util.Pair;
 
-public class HorseUtils {
-//	public static SpeedCalculator speedCalc = new SpeedCalculator(/*org.bukkit.Bukkit.getBukkitVersion()*/);
-	//--------------- Library functions -----------------------------------------------------
+public final class HorseUtils{
 	public static boolean isHorseFood(Material mat){
 		switch(mat){
 			case WHEAT:
@@ -95,33 +92,6 @@ public class HorseUtils {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	public static void teleportEntityWithPassengersOld(Entity e, Location toLoc){
-		if(e.getPassenger() == null){
-			HorseManager.getPlugin().getLogger().info("No passenger");
-			if(!e.getLocation().getChunk().isLoaded()) e.getLocation().getChunk().load();
-			e.teleport(toLoc);
-		}
-		else{
-			List<Entity> passengers = new ArrayList<Entity>();
-			Entity nextPassenger = e;
-			do{
-				passengers.add(nextPassenger.getPassenger());
-				nextPassenger.eject();
-
-				if(!nextPassenger.getLocation().getChunk().isLoaded()) nextPassenger.getLocation().getChunk().load();
-				nextPassenger.teleport(toLoc);
-				nextPassenger = passengers.get(passengers.size()-1);
-			}while(nextPassenger != null);
-
-			nextPassenger = e;
-			for(Entity passenger : passengers){
-				nextPassenger.setPassenger(passenger);
-				nextPassenger = passenger;//last value in "passengers" will be null.
-			}
-		}
-	}
-
 	public static boolean isLeashableBlock(Material mat){
 		switch(mat){
 			case OAK_FENCE:
@@ -144,17 +114,17 @@ public class HorseUtils {
 	}
 
 /*	public static boolean isSuffocating(Block b){
-	Material mat = b.getType();
-	if(mat != Material.AIR && mat != Material.TORCH && mat != Material.CARPET && mat != Material.BED &&
-	mat != Material.FENCE && mat != Material.FENCE_GATE && mat != Material.DEAD_BUSH && mat != Material.FLOWER_POT &&
-	mat != Material.RED_ROSE && mat != Material.YELLOW_FLOWER && mat != Material.SKULL_ITEM && mat != Material.CAKE_BLOCK &&
-	mat != Material.ACTIVATOR_RAIL && mat != Material.RAILS && mat != Material.POWERED_RAIL && mat != Material.VINE &&
-	mat != Material.SIGN_POST && mat != Material.WALL_SIGN && mat != Material.SUGAR_CANE_BLOCK && mat != Material.WOOD_DOOR &&
-	mat != Material.WEB && mat != Material.TRAP_DOOR &&  mat != Material.WOOD_STAIRS && mat != Material.TRAPPED_CHEST &&
-	mat != Material.WOOD_BUTTON && mat != Material.CHEST && mat != Material.LEVER && mat != Material.LEAVES &&
-	mat != Material.SNOW && mat != Material.DIODE_BLOCK_OFF && mat != Material.REDSTONE && mat != Material.REDSTONE_TORCH_ON &&
-	mat != Material.REDSTONE_TORCH_OFF && mat != Material.DIODE_BLOCK_ON && mat != Material.GLASS && mat != Material.IRON_FENCE &&
-	mat != Material.BREWING_STAND && mat != Material.STAINED_GLASS_PANE && mat != Material.DETECTOR_RAIL && mat != Material.DEAD_BUSH
+		Material mat = b.getType();
+		if(mat != Material.AIR && mat != Material.TORCH && mat != Material.CARPET && mat != Material.BED &&
+				mat != Material.FENCE && mat != Material.FENCE_GATE && mat != Material.DEAD_BUSH && mat != Material.FLOWER_POT &&
+				mat != Material.RED_ROSE && mat != Material.YELLOW_FLOWER && mat != Material.SKULL_ITEM && mat != Material.CAKE_BLOCK &&
+				mat != Material.ACTIVATOR_RAIL && mat != Material.RAILS && mat != Material.POWERED_RAIL && mat != Material.VINE &&
+				mat != Material.SIGN_POST && mat != Material.WALL_SIGN && mat != Material.SUGAR_CANE_BLOCK && mat != Material.WOOD_DOOR &&
+				mat != Material.WEB && mat != Material.TRAP_DOOR &&  mat != Material.WOOD_STAIRS && mat != Material.TRAPPED_CHEST &&
+				mat != Material.WOOD_BUTTON && mat != Material.CHEST && mat != Material.LEVER && mat != Material.LEAVES &&
+				mat != Material.SNOW && mat != Material.DIODE_BLOCK_OFF && mat != Material.REDSTONE && mat != Material.REDSTONE_TORCH_ON &&
+				mat != Material.REDSTONE_TORCH_OFF && mat != Material.DIODE_BLOCK_ON && mat != Material.GLASS && mat != Material.IRON_FENCE &&
+				mat != Material.BREWING_STAND && mat != Material.STAINED_GLASS_PANE && mat != Material.DETECTOR_RAIL && mat != Material.DEAD_BUSH
 		) return true;
 		else return false;
 	}*/
@@ -190,10 +160,6 @@ public class HorseUtils {
 		else
 			return 0.2*jump;
 	}
-	/*public static <E extends Attributable & Damageable> void setMaxHealth(E target, double health){
-		target.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(health);
-		target.setHealth(health);
-	}*/
 
 	/** Values set using entity Metadata **/
 	public static void setMother(Entity horse, String mother){
