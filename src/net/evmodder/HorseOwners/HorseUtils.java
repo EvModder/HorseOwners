@@ -129,6 +129,24 @@ public final class HorseUtils{
 		else return false;
 	}*/
 
+	private static double normalizeSpeed(double speed){
+		return Math.round(speed*4216)/100;
+	}
+	private static double normalizeJump(double jump){
+		if(0.432084373616155 <= jump && jump <= 0.966967527085333){
+			jump = -0.343930367 + 2.128599134*jump + 3.689713992*jump*jump - 0.1817584952*jump*jump*jump;
+			return Math.round(jump*100)/100;
+		}
+		else return Math.round(jump*500)/100;
+	}
+	public static double denormalizeSpeed(double speed){//TODO: protected? friend BreedListener/SpawnListener
+		return 0.02325581395348837209302325581*speed;
+	}
+	public static double denormalizeJump(double jump){//TODO: protected? friend BreedListener/SpawnListener
+		if(1.25 <= jump && jump <= 5) return 0.1675804 + 0.237535*jump - 0.0223934*jump*jump + 0.00137289*jump*jump*jump;
+		else return 0.2*jump;
+	}
+
 	public static double getNormalSpeed(Attributable horse){
 		return normalizeSpeed(horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).getBaseValue());
 	}
@@ -141,25 +159,7 @@ public final class HorseUtils{
 	public static int getNormalCurrentHealth(LivingEntity horse){
 		return (int)horse.getHealth();
 	}
-	public static double normalizeSpeed(double speed){
-		return Math.rint(speed/0.0002325581395348837209302325581)/100;
-	}
-	public static double normalizeJump(double jump){
-		if(0.432084373616155 <= jump && jump <= 0.966967527085333){
-			jump = -0.343930367 + 2.128599134*jump + 3.689713992*jump*jump - 0.1817584952*jump*jump*jump;
-			return Math.rint(jump*100)/100;
-		}
-		else return Math.rint(jump*500)/100;
-	}
-	public static double denormalizeSpeed(double speed){
-		return 0.02325581395348837209302325581*speed;
-	}
-	public static double denormalizeJump(double jump){
-		if(1.25 <= jump && jump <= 5)
-			return 0.1675804 + 0.237535*jump - 0.0223934*jump*jump + 0.00137289*jump*jump*jump;
-		else
-			return 0.2*jump;
-	}
+
 
 	/** Values set using entity Metadata **/
 	public static void setMother(Entity horse, String mother){
