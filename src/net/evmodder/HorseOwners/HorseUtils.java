@@ -130,7 +130,7 @@ public final class HorseUtils{
 	}*/
 
 	private static double normalizeSpeed(double speed){
-		return Math.round(speed*4216)/100;
+		return Math.round(speed*4216)/100;//TODO: get proper conversion numbers
 	}
 	private static double normalizeJump(double jump){
 		if(0.432084373616155 <= jump && jump <= 0.966967527085333){
@@ -140,7 +140,7 @@ public final class HorseUtils{
 		else return Math.round(jump*500)/100;
 	}
 	public static double denormalizeSpeed(double speed){//TODO: protected? friend BreedListener/SpawnListener
-		return 0.02325581395348837209302325581*speed;
+		return 0.02325581395348837209302325581*speed;//TODO: get proper conversion numbers
 	}
 	public static double denormalizeJump(double jump){//TODO: protected? friend BreedListener/SpawnListener
 		if(1.25 <= jump && jump <= 5) return 0.1675804 + 0.237535*jump - 0.0223934*jump*jump + 0.00137289*jump*jump*jump;

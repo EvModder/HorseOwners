@@ -29,8 +29,32 @@ public final class HorseManager extends EvPlugin{
 		horseAPI = new HorseAPI(this);
 		registerListeners();
 		registerCommands();
+
+//		runSpeedTest();
 	}
 //	@Override public void onEvDisable(){getLogger().info("disabling...");}
+
+//	Location lastPos1s, lastPos5s, lastPos15s;
+//	double d1s, d5s, d15s;
+//	void runSpeedTest(){
+//		new BukkitRunnable(){@Override public void run(){
+//			Player ev = getServer().getPlayer("EvDoc");
+//			if(ev != null) {d1s = lastPos1s.distance(lastPos1s=ev.getLocation());
+//
+//			double mps1s = d1s, mps5s = d5s/5, mps15s = d15s/15;
+//			getServer().dispatchCommand(getServer().getConsoleSender(),
+//					String.format("title EvDoc actionbar \"%.4f / %.4f / %.4f\"", mps1s, mps5s, mps15s));
+//			}
+//		}}.runTaskTimer(this, 20, 20);
+//		new BukkitRunnable(){@Override public void run(){
+//			Player ev = getServer().getPlayer("EvDoc");
+//			if(ev != null) d5s = lastPos5s.distance(lastPos5s=ev.getLocation());
+//		}}.runTaskTimer(this, 5*20, 5*20);
+//		new BukkitRunnable(){@Override public void run(){
+//			Player ev = getServer().getPlayer("EvDoc");
+//			if(ev != null) d15s = lastPos15s.distance(lastPos15s=ev.getLocation());
+//		}}.runTaskTimer(this, 15*20, 15*20);
+//	}
 
 	/*public void loadHorses(){
 		horses = FileIO.loadYaml("horses.yml", "#The great horse-data file\n");
