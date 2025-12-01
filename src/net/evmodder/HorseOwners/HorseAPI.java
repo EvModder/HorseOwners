@@ -58,9 +58,9 @@ public class HorseAPI{
 				else horseOwnersMap.put(uuid, new HashSet<>(Arrays.asList(horseName)));
 			}
 			if(DO_RANKLISTS){
-				if(data.contains("speed")) topSpeed.put(data.getDouble("speed"), horseName);
-				if(data.contains("jump")) topJump.put(data.getDouble("jump"), horseName);
-				if(data.contains("health")) topHealth.put(data.getInt("health"), horseName);
+				if(data.contains("speed")) topSpeed.putOne(data.getDouble("speed"), horseName);
+				if(data.contains("jump")) topJump.putOne(data.getDouble("jump"), horseName);
+				if(data.contains("health")) topHealth.putOne(data.getInt("health"), horseName);
 			}
 		}
 	}
@@ -228,9 +228,9 @@ public class HorseAPI{
 			double speed = newHorseData.getDouble("speed", -1);
 			double jump = newHorseData.getDouble("jump", -1);
 			int health = newHorseData.getInt("health", -1);
-			if(topSpeed.remove(speed, oldNameClean)) topSpeed.put(speed, newNameClean);
-			if(topJump.remove(jump, oldNameClean)) topJump.put(jump, newNameClean);
-			if(topHealth.remove(health, oldNameClean)) topHealth.put(health, newNameClean);
+			if(topSpeed.remove(speed, oldNameClean)) topSpeed.putOne(speed, newNameClean);
+			if(topJump.remove(jump, oldNameClean)) topJump.putOne(jump, newNameClean);
+			if(topHealth.remove(health, oldNameClean)) topHealth.putOne(health, newNameClean);
 		}
 		return true;
 	}
@@ -267,9 +267,9 @@ public class HorseAPI{
 		data.set("jump", jump);
 		data.set("health", health);
 		if(DO_RANKLISTS){
-			topSpeed.put(speed, data.getName());
-			topJump.put(jump, data.getName());
-			topHealth.put(health, data.getName());
+			topSpeed.putOne(speed, data.getName());
+			topJump.putOne(jump, data.getName());
+			topHealth.putOne(health, data.getName());
 		}
 	}
 	public void updateDatabase(Entity h){
