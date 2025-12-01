@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityTameEvent;
-import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.TextUtils;
 import net.evmodder.HorseOwners.HorseManager;
 
 public class TameListener implements Listener{

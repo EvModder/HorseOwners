@@ -15,7 +15,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
-import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.TextUtils;
 import net.evmodder.HorseOwners.HorseUtils;
 import net.evmodder.HorseOwners.HorseManager;
 

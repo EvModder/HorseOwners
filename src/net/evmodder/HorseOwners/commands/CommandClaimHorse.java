@@ -10,7 +10,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.inventory.ItemStack;
-import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.TextUtils;
 import net.evmodder.HorseOwners.HorseUtils;
 
 public class CommandClaimHorse extends HorseCommand{

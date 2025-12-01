@@ -8,8 +8,8 @@ import java.util.Map.Entry;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import net.evmodder.EvLib.extras.TabText;
-import net.evmodder.EvLib.extras.TextUtils;
+import net.evmodder.EvLib.bukkit.TabText;
+import net.evmodder.EvLib.TextUtils;
 import net.evmodder.EvLib.util.IndexTreeMultiMap;
 
 public class CommandRankHorse extends HorseCommand{

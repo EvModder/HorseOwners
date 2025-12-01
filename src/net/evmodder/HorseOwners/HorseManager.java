@@ -1,6 +1,6 @@
 package net.evmodder.HorseOwners;
 
-import net.evmodder.EvLib.EvPlugin;
+import net.evmodder.EvLib.bukkit.EvPlugin;
 import net.evmodder.HorseOwners.commands.*;
 import net.evmodder.HorseOwners.listeners.*;
 
