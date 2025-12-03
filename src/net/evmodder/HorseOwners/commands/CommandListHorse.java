@@ -15,8 +15,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import net.evmodder.EvLib.bukkit.TabText;
 import net.evmodder.EvLib.TextUtils;
+import net.evmodder.EvLib.util.TabText;
 
 public class CommandListHorse extends HorseCommand{
 	//TODO: enum OrderBy{ NAME, AGE, CLAIM_TS }; ?
